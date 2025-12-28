@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, Eye, EyeOff, Lock } from "lucide-react";
 
 interface UnlockFormProps {
+  isError: boolean;
+  setIsError: (value: boolean) => void;
   onUnlock: (password: string) => void;
 }
 
-export function UnlockForm({ onUnlock }: UnlockFormProps) {
+export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,8 +49,14 @@ export function UnlockForm({ onUnlock }: UnlockFormProps) {
               placeholder="Enter your password"
               className="pl-9 pr-10"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => {
+                setIsError(false);
+              }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
               autoFocus
+              aria-invalid={isError}
             />
             <Button
               type="button"

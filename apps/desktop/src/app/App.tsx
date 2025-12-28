@@ -1,14 +1,7 @@
-import VaultScreen from "@/screens/vault/VaultScreen";
+import { AppRouter } from "./AppRouter";
 
 function App() {
-  return (
-    <>
-      {/* <VaultScreen /> */}
-      {/* <UnlockingScreen /> */}
-      {/* <StartScreen /> */}
-      <VaultScreen />
-    </>
-  );
+  return <AppRouter />;
 }
 
 export default App;

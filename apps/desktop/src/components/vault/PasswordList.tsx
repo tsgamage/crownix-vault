@@ -1,22 +1,10 @@
 import { Input } from "@/components/ui/input";
-import { Search, Globe, KeyRound } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-// Mock Data Type
-export interface PasswordItem {
-  id: string;
-  name: string;
-  username: string;
-  password?: string;
-  url?: string;
-  notes?: string;
-  icon?: string;
-  category: "login" | "secure-note";
-  isFavorite: boolean;
-}
+import { Search, KeyRound } from "lucide-react";
+import type { IPasswordItem } from "@/utils/types/global.types";
+import PasswordItem from "./PasswordItem";
 
 interface PasswordListProps {
-  items: PasswordItem[];
+  items: IPasswordItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   searchQuery: string;
@@ -24,9 +12,9 @@ interface PasswordListProps {
 }
 
 export function PasswordList({
-  items,
   selectedId,
   onSelect,
+  items,
   searchQuery,
   onSearchChange,
 }: PasswordListProps) {
@@ -55,45 +43,12 @@ export function PasswordList({
             </div>
           ) : (
             items.map((item) => (
-              <button
+              <PasswordItem
                 key={item.id}
-                className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/50 focus:outline-none focus:bg-muted",
-                  selectedId === item.id &&
-                    "bg-emerald-500/10 hover:bg-emerald-500/15 ring-1 ring-emerald-500/20"
-                )}
-                onClick={() => onSelect(item.id)}
-              >
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border",
-                    selectedId === item.id
-                      ? "bg-background border-emerald-500/30 text-emerald-600"
-                      : "bg-muted border-border text-muted-foreground"
-                  )}
-                >
-                  {item.icon ? (
-                    <img src={item.icon} alt={item.name} className="w-5 h-5" />
-                  ) : (
-                    <Globe className="w-5 h-5" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className={cn(
-                      "font-medium text-sm truncate",
-                      selectedId === item.id
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-foreground"
-                    )}
-                  >
-                    {item.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {item.username}
-                  </p>
-                </div>
-              </button>
+                item={item}
+                selectedId={selectedId}
+                onSelect={onSelect}
+              />
             ))
           )}
         </div>
