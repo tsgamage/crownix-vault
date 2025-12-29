@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { RefreshCw, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useDialog } from "@/context/DialogContext";
 import {
   type IPasswordItem,
   type IPasswordCategory,
@@ -36,6 +37,7 @@ interface CreatePasswordProps {
 }
 
 export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
+  const { openDialog, closeDialog } = useDialog();
   const [formData, setFormData] = useState<Partial<IPasswordItem>>({
     title: "",
     username: "",
@@ -94,12 +96,30 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        (isFormEmpty(formData) ||
-          confirm("Are you sure you want to cancel?")) &&
+        if (isFormEmpty(formData)) {
           onCancel();
+        } else {
+          openDialog({
+            title: "Discard Changes?",
+            description:
+              "Are you sure you want to cancel? Unsaved changes will be lost.",
+            variant: "warning",
+            buttons: [
+              { label: "Keep Editing", variant: "ghost", onClick: closeDialog },
+              {
+                label: "Discard",
+                variant: "destructive",
+                onClick: () => {
+                  closeDialog();
+                  onCancel();
+                },
+              },
+            ],
+          });
+        }
       }
     },
-    [onCancel, formData]
+    [onCancel, formData, openDialog, closeDialog]
   );
   useEffect(() => {
     window.addEventListener("keydown", handleEscapePress);
@@ -117,11 +137,33 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
             variant="ghost"
             size="sm"
             className="h-6 px-2 -ml-2 gap-1 text-xs"
-            onClick={() =>
-              (isFormEmpty(formData) ||
-                confirm("Are you sure you want to cancel?")) &&
-              onCancel()
-            }
+            onClick={() => {
+              if (isFormEmpty(formData)) {
+                onCancel();
+              } else {
+                openDialog({
+                  title: "Discard Changes?",
+                  description:
+                    "Are you sure you want to cancel? Unsaved changes will be lost.",
+                  variant: "warning",
+                  buttons: [
+                    {
+                      label: "Keep Editing",
+                      variant: "ghost",
+                      onClick: closeDialog,
+                    },
+                    {
+                      label: "Discard",
+                      variant: "destructive",
+                      onClick: () => {
+                        closeDialog();
+                        onCancel();
+                      },
+                    },
+                  ],
+                });
+              }
+            }}
           >
             <ChevronLeft className="w-3 h-3" /> Back
           </Button>

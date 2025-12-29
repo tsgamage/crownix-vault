@@ -57,6 +57,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { useDialog } from "@/context/DialogContext";
 
 const CATEGORIES: IPasswordCategory[] = [
   { id: "1", name: "Social", color: "bg-blue-500" },
@@ -78,6 +79,7 @@ export function PasswordDetail({
   clearSelectedId,
   onPermanentlyDelete,
 }: PasswordDetailProps) {
+  const { openDialog, closeDialog } = useDialog();
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<IPasswordItem | null>(null);
 
@@ -202,9 +204,28 @@ export function PasswordDetail({
                 variant="outline"
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
                 onClick={() =>
-                  confirm(
-                    "Are you sure you want to delete this item permanently?"
-                  ) && onPermanentlyDelete(formData.id)
+                  openDialog({
+                    title: "Delete Permanently?",
+                    description:
+                      "Are you sure you want to delete this item permanently? This action cannot be undone.",
+                    variant: "danger",
+                    icon: Trash2,
+                    buttons: [
+                      {
+                        label: "Cancel",
+                        variant: "ghost",
+                        onClick: closeDialog,
+                      },
+                      {
+                        label: "Delete",
+                        variant: "destructive",
+                        onClick: () => {
+                          onPermanentlyDelete(formData.id);
+                          closeDialog();
+                        },
+                      },
+                    ],
+                  })
                 }
               >
                 Delete Permanently

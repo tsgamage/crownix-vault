@@ -12,6 +12,7 @@ import { CreatePassword } from "@/components/vault/RightPane/CreatePassword";
 import { useUiStore } from "@/store/ui.store";
 import { VaultFileService } from "@/services/vaultFile.service";
 import { Toaster } from "sonner";
+import Settings from "./Settings";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function VaultScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   function refresh() {
     setIsLoadingPasswords(true);
@@ -123,7 +125,7 @@ export default function VaultScreen() {
           <VaultSidebar
             onLock={handleLock}
             onNewClick={() => setIsCreating(true)}
-            onSettingsClick={() => navigate("/settings")}
+            onSettingsClick={() => setIsSettingsOpen(true)}
           />
         </div>
 
@@ -157,6 +159,13 @@ export default function VaultScreen() {
             />
           )}
         </div>
+
+        {isSettingsOpen && (
+          <Settings
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

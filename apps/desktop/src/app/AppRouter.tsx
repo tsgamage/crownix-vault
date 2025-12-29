@@ -2,7 +2,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import StartScreen from "@/screens/StartScreen";
 import UnlockScreen from "@/screens/UnlockScreen";
 import VaultScreen from "@/screens/VaultScreen";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/vault/session/ProtectedRoute";
 
 export function AppRouter() {
   return (

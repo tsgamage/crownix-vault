@@ -1,45 +1,10 @@
-export interface IBaseField {
+// --- Password Types ---
+export interface IPasswordCustomField {
   id: string;
   label: string;
-}
-
-export interface ITextField extends IBaseField {
-  type: "text";
+  type: "text" | "hidden" | "url" | "phone" | "email";
   value: string;
 }
-
-export interface IHiddenField extends IBaseField {
-  type: "hidden";
-  value: string;
-}
-
-export interface IUrlField extends IBaseField {
-  type: "url";
-  value: string;
-}
-
-export interface IPhoneField extends IBaseField {
-  type: "phone";
-  value: string;
-}
-
-export interface IEmailField extends IBaseField {
-  type: "email";
-  value: string;
-}
-
-export interface IPasswordCategory {
-  id: string;
-  name: string;
-  color: string;
-}
-
-export type IPasswordCustomField =
-  | ITextField
-  | IHiddenField
-  | IUrlField
-  | IEmailField
-  | IPhoneField;
 
 export interface IPasswordItem {
   id: string;
@@ -59,4 +24,69 @@ export interface IPasswordItem {
 
   createdAt: number;
   updatedAt: number;
+}
+
+export interface IPasswordCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+
+// --- Settings Types ---
+export type SettingType =
+  | "toggle"
+  | "select"
+  | "button"
+  | "input"
+  | "danger-button";
+
+export interface SettingOption {
+  label: string;
+  value: string;
+}
+
+export interface SettingItem {
+  id: string;
+  type: SettingType;
+  title: string;
+  description?: string;
+  value?: string | boolean;
+  options?: SettingOption[];
+  actionLabel?: string;
+  placeholder?: string;
+  danger?: boolean;
+}
+
+export interface SettingsSection {
+  id: string;
+  title: string;
+  items: SettingItem[];
+}
+
+export interface SettingsConfig {
+  sections: SettingsSection[];
+}
+
+// --- Dialog Types ---
+export type DialogButtonVariant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
+
+export interface DialogButton {
+  label: string;
+  variant?: DialogButtonVariant;
+  onClick: () => void;
+  isLoading?: boolean;
+}
+
+export interface DialogConfig {
+  title: string;
+  description?: string;
+  icon?: any; // Lucide icon or similar
+  buttons: DialogButton[];
+  variant?: "default" | "danger" | "success" | "warning"; // High-level variant for styling
 }
