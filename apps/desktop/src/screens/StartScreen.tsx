@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { useFileStore } from "@/store/file.store";
 import { VaultFileService } from "@/services/vaultFile.service";
-import { MOCK_ITEMS } from "@/data/seed";
+import { MOCK_VAULT } from "@/data/seed";
 
 export default function StartScreen() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function StartScreen() {
   }, [vaultFile]);
 
   const handleCreateVault = async (password: string) => {
-    const newVaultCreateData = MOCK_ITEMS;
+    const newVaultCreateData = MOCK_VAULT;
     const newVaultFile = await VaultFileService.createVaultFile(
       password,
       newVaultCreateData

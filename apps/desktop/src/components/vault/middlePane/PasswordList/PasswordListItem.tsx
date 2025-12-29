@@ -1,16 +1,6 @@
 import type { IPasswordItem } from "@/utils/types/global.types";
 import { cn } from "@/lib/utils";
-import {
-  Copy,
-  KeyRoundIcon,
-  Star,
-  User,
-  Trash2,
-  ExternalLink,
-  StarOff,
-  RotateCcw,
-  Check,
-} from "lucide-react";
+import { Copy, KeyRoundIcon, Star, User, Trash2, ExternalLink, StarOff, RotateCcw, Check, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
@@ -22,37 +12,32 @@ import {
 import { toast } from "sonner"; // Assuming you use sonner or similar for toasts
 import { useUiStore } from "@/store/ui.store";
 import { useState } from "react";
+import { usePasswordStore } from "@/store/vault/password.store";
+import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import { Badge } from "@/components/ui/badge";
 
 interface PasswordListItemProps {
   item: IPasswordItem;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
   onCopy: (text: string, type: "username" | "password") => void;
-  onUpdate: (data: IPasswordItem) => void;
-  clearSelectedId: () => void;
-  categoryColor?: string; // We will pass this from parent
+  categoryColor: string;
 }
 
-export function PasswordListItem({
-  item,
-  isSelected,
-  onSelect,
-  onCopy,
-  onUpdate,
-  categoryColor,
-  clearSelectedId,
-}: PasswordListItemProps) {
+export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListItemProps) {
   const activeTabId = useUiStore((state) => state.activeTabId);
+
+  const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
+  const isSelected = selectedPasswordId === item.id;
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+  const setSelectedPasswordId = usePasswordStore((state) => state.setSelectedPasswordId);
+  const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
+  const updatePasswordItem = usePasswordStore((state) => state.updatePasswordItem);
 
   const [quickCopy, setQuickCopy] = useState({
     username: false,
     password: false,
   });
 
-  const handleQuickCopy = (
-    e: React.MouseEvent,
-    type: "username" | "password"
-  ) => {
+  const handleQuickCopy = (e: React.MouseEvent, type: "username" | "password") => {
     e.stopPropagation();
     const value = type === "username" ? item.username : item.password;
     if (value) {
@@ -61,17 +46,14 @@ export function PasswordListItem({
         username: type === "username",
         password: type === "password",
       });
-      setTimeout(
-        () => setQuickCopy({ username: false, password: false }),
-        1000
-      );
+      setTimeout(() => setQuickCopy({ username: false, password: false }), 1000);
     } else {
       toast.error(`No ${type} available`);
     }
   };
 
   const handleFavorite = () => {
-    onUpdate({
+    updatePasswordItem({
       ...item,
       isFavorite: !item.isFavorite,
     });
@@ -79,14 +61,21 @@ export function PasswordListItem({
   };
 
   const handleDelete = () => {
-    onUpdate({ ...item, isDeleted: true });
+    updatePasswordItem({ ...item, isDeleted: true });
     isSelected && clearSelectedId();
   };
 
   const handleRestore = () => {
-    onUpdate({ ...item, isDeleted: false });
+    updatePasswordItem({ ...item, isDeleted: false });
     isSelected && clearSelectedId();
   };
+
+  const handleRemoveFromCategory = () => {
+    updatePasswordItem({ ...item, categoryId: undefined });
+    isSelected && clearSelectedId();
+  };
+
+  const itemCategory = passwordCategories.find((category) => category.id === item.categoryId)?.name;
 
   return (
     <ContextMenu>
@@ -98,7 +87,7 @@ export function PasswordListItem({
               ? "bg-emerald-500/10 border-emerald-500/20 shadow-xs"
               : "hover:bg-muted/60 hover:border-border/40"
           )}
-          onClick={() => onSelect(item.id)}
+          onClick={() => setSelectedPasswordId(item.id)}
         >
           {/* Icon Section */}
           <div className="relative">
@@ -110,9 +99,7 @@ export function PasswordListItem({
                   : "bg-muted/50 border-border/50 text-muted-foreground group-hover:bg-background group-hover:border-border"
               )}
             >
-              <span className="text-xl">
-                {item.icon || <KeyRoundIcon className="w-5 h-5" />}
-              </span>
+              <span className="text-xl">{item.icon || <KeyRoundIcon className="w-5 h-5" />}</span>
             </div>
             {/* Favorite Indicator */}
             {item.isFavorite && (
@@ -123,28 +110,19 @@ export function PasswordListItem({
           </div>
 
           {/* Text Info */}
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <div className="flex items-center justify-between">
-              <h3
-                className={cn(
-                  "font-medium text-sm truncate pr-2",
-                  isSelected
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-foreground"
-                )}
-              >
-                {item.title}
-              </h3>
-            </div>
-
-            <p className="text-xs text-muted-foreground truncate h-4 flex items-center gap-1.5">
-              {categoryColor && (
-                <span className={`w-1.5 h-1.5 rounded-full ${categoryColor}`} />
-              )}
-              <span className="truncate opacity-80">
-                {item.username || "No username"}
-              </span>
+          <div className="flex-1 min-w-0 flex flex-col gap-1 justify-center">
+            <h3 className="font-medium text-sm truncate">{item.title}</h3>
+            <p className="text-xs text-muted-foreground truncate flex items-center opacity-80">
+              {item.username || "No username"}
             </p>
+            {itemCategory && (
+              <Badge
+                variant="secondary"
+                className={cn("h-4 opacity-80 text-xs truncate flex items-center", categoryColor)}
+              >
+                {itemCategory}
+              </Badge>
+            )}
           </div>
 
           {/* Quick Copy */}
@@ -178,13 +156,7 @@ export function PasswordListItem({
           )}
           {activeTabId === "trash" && (
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleRestore}
-                title="Restore"
-              >
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRestore} title="Restore">
                 <RotateCcw className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -196,15 +168,11 @@ export function PasswordListItem({
       <ContextMenuContent className="w-56">
         {(activeTabId === "all" || activeTabId === "favorites") && (
           <>
-            <ContextMenuItem
-              onClick={(e) => handleQuickCopy(e as any, "password")}
-            >
+            <ContextMenuItem disabled={!item.password} onClick={(e) => handleQuickCopy(e as any, "password")}>
               <Copy /> Copy Password
             </ContextMenuItem>
 
-            <ContextMenuItem
-              onClick={(e) => handleQuickCopy(e as any, "username")}
-            >
+            <ContextMenuItem disabled={!item.username} onClick={(e) => handleQuickCopy(e as any, "username")}>
               <User /> Copy Username
             </ContextMenuItem>
             <ContextMenuItem disabled={!item.urls || item.urls.length === 0}>
@@ -230,6 +198,11 @@ export function PasswordListItem({
         {activeTabId === "trash" && (
           <ContextMenuItem onClick={handleRestore}>
             <RotateCcw /> Restore
+          </ContextMenuItem>
+        )}
+        {activeTabId === "organize" && (
+          <ContextMenuItem onClick={handleRemoveFromCategory}>
+            <XIcon /> Remove from Category
           </ContextMenuItem>
         )}
       </ContextMenuContent>

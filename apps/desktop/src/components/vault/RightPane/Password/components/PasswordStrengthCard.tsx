@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { ChevronRightIcon, ShieldCheckIcon } from "lucide-react";
+import { ShieldCheckIcon } from "lucide-react";
 
 interface PasswordStrengthCardProps {
   passwordStrength: number;

@@ -29,16 +29,16 @@ export interface IPasswordItem {
 export interface IPasswordCategory {
   id: string;
   name: string;
+  icon: string;
   color: string;
+  description?: string;
+  createdAt: number;
+  updatedAt: number;
+  isDeleted: boolean;
 }
 
 // --- Settings Types ---
-export type SettingType =
-  | "toggle"
-  | "select"
-  | "button"
-  | "input"
-  | "danger-button";
+export type SettingType = "toggle" | "select" | "button" | "input" | "danger-button";
 
 export interface SettingOption {
   label: string;
@@ -68,13 +68,7 @@ export interface SettingsConfig {
 }
 
 // --- Dialog Types ---
-export type DialogButtonVariant =
-  | "default"
-  | "destructive"
-  | "outline"
-  | "secondary"
-  | "ghost"
-  | "link";
+export type DialogButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 
 export interface DialogButton {
   label: string;
@@ -89,4 +83,12 @@ export interface DialogConfig {
   icon?: any; // Lucide icon or similar
   buttons: DialogButton[];
   variant?: "default" | "danger" | "success" | "warning"; // High-level variant for styling
+}
+
+export interface ISettings {}
+
+export interface IVault {
+  passwordItems: IPasswordItem[];
+  passwordCategories: IPasswordCategory[];
+  settings: ISettings;
 }

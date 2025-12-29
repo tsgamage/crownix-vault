@@ -3,13 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, formatDistance } from "date-fns";
 import {
   Copy,
@@ -25,13 +19,11 @@ import {
   Trash2,
   X,
   RotateCcw,
+  ChevronLeft,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import {
-  type IPasswordItem,
-  type IPasswordCategory,
-} from "@/utils/types/global.types";
+import { type IPasswordItem } from "@/utils/types/global.types";
 
 import { PasswordIconPicker } from "./components/PasswordIconPicker";
 import { UrlManager } from "./components/UrlManager";
@@ -43,42 +35,16 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
+} from "../../../ui/dropdown-menu";
 
 import { PasswordStrengthCard } from "./components/PasswordStrengthCard";
-import {
-  calculatePasswordEntropy,
-  generateVeryStrongPassword,
-  getPasswordStrength,
-} from "@/utils/pwd.utils";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+import { calculatePasswordEntropy, generateVeryStrongPassword, getPasswordStrength } from "@/utils/pwd.utils";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useDialog } from "@/context/DialogContext";
+import { usePasswordStore } from "@/store/vault/password.store";
+import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 
-const CATEGORIES: IPasswordCategory[] = [
-  { id: "1", name: "Social", color: "bg-blue-500" },
-  { id: "2", name: "Work", color: "bg-orange-500" },
-  { id: "3", name: "Finance", color: "bg-green-500" },
-  { id: "4", name: "Entertainment", color: "bg-purple-500" },
-];
-
-interface PasswordDetailProps {
-  item: IPasswordItem | null;
-  onSave: (item: IPasswordItem) => void;
-  clearSelectedId: () => void;
-  onPermanentlyDelete: (id: string) => void;
-}
-
-export function PasswordDetail({
-  item,
-  onSave,
-  clearSelectedId,
-  onPermanentlyDelete,
-}: PasswordDetailProps) {
+export function PasswordDetail({ showBackButton }: { showBackButton?: boolean }) {
   const { openDialog, closeDialog } = useDialog();
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<IPasswordItem | null>(null);
@@ -88,27 +54,30 @@ export function PasswordDetail({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  // Sync local state when item changes
-  useEffect(() => {
-    setFormData(item);
-    setIsEditMode(false);
-    setShowPassword(false);
-  }, [item]);
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+  const selectedPassword = usePasswordStore((state) => state.selectedPassword);
+  const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
+  const updatePasswordItem = usePasswordStore((state) => state.updatePasswordItem);
+  const deletePasswordItem = usePasswordStore((state) => state.deletePasswordItem);
 
   useEffect(() => {
-    setPasswordStrength(
-      Math.floor(calculatePasswordEntropy(formData?.password || ""))
-    );
+    setFormData(selectedPassword);
+    setIsEditMode(false);
+    setShowPassword(false);
+  }, [selectedPassword]);
+
+  useEffect(() => {
+    setPasswordStrength(Math.floor(calculatePasswordEntropy(formData?.password || "")));
   }, [formData?.password]);
 
   // Handle escape key press
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        item && clearSelectedId();
+        selectedPassword && clearSelectedId();
       }
     },
-    [item, clearSelectedId]
+    [selectedPassword, clearSelectedId]
   );
   useEffect(() => {
     window.addEventListener("keydown", handleEscapePress);
@@ -125,19 +94,23 @@ export function PasswordDetail({
 
   const handleSave = () => {
     if (formData) {
-      onSave({ ...formData, updatedAt: Date.now() });
+      updatePasswordItem({ ...formData, updatedAt: Date.now() });
       setIsEditMode(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData(item);
+    setFormData(selectedPassword);
     setIsEditMode(false);
   };
 
   const handleDelete = () => {
     if (formData) {
-      onSave({ ...formData, isDeleted: true, updatedAt: Date.now() });
+      updatePasswordItem({
+        ...formData,
+        isDeleted: true,
+        updatedAt: Date.now(),
+      });
       setIsEditMode(false);
       clearSelectedId();
     }
@@ -145,7 +118,7 @@ export function PasswordDetail({
 
   const handleFavorite = () => {
     if (formData) {
-      onSave({
+      updatePasswordItem({
         ...formData,
         isFavorite: !formData.isFavorite,
         updatedAt: Date.now(),
@@ -156,7 +129,11 @@ export function PasswordDetail({
 
   const handleRestore = () => {
     if (formData) {
-      onSave({ ...formData, isDeleted: false, updatedAt: Date.now() });
+      updatePasswordItem({
+        ...formData,
+        isDeleted: false,
+        updatedAt: Date.now(),
+      });
       setIsEditMode(false);
       clearSelectedId();
     }
@@ -169,9 +146,7 @@ export function PasswordDetail({
           <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
             <MoreHorizontal className="w-8 h-8 opacity-20" />
           </div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Select an item to view details
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">Select an item to view details</p>
         </div>
       </div>
     );
@@ -185,14 +160,10 @@ export function PasswordDetail({
             <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
               <Trash2 className="w-8 h-8 opacity-20" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
-              This item has been deleted
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">This item has been deleted</p>
             {formData.notes && (
               <div className="text-sm text-muted-foreground/80 py-3 px-4 rounded-md bg-muted/30 border border-border/30 max-w-sm mx-auto whitespace-pre-wrap leading-relaxed text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider block mb-1 opacity-70">
-                  Note:
-                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider block mb-1 opacity-70">Note:</span>
                 {formData.notes}
               </div>
             )}
@@ -206,8 +177,7 @@ export function PasswordDetail({
                 onClick={() =>
                   openDialog({
                     title: "Delete Permanently?",
-                    description:
-                      "Are you sure you want to delete this item permanently? This action cannot be undone.",
+                    description: "Are you sure you want to delete this item permanently? This action cannot be undone.",
                     variant: "danger",
                     icon: Trash2,
                     buttons: [
@@ -220,7 +190,7 @@ export function PasswordDetail({
                         label: "Delete",
                         variant: "destructive",
                         onClick: () => {
-                          onPermanentlyDelete(formData.id);
+                          deletePasswordItem(formData.id);
                           closeDialog();
                         },
                       },
@@ -237,12 +207,23 @@ export function PasswordDetail({
     );
   }
 
-  const currentCategory = CATEGORIES.find((c) => c.id === formData.categoryId);
+  const currentCategory = passwordCategories.find((c) => c.id === formData.categoryId);
 
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm">
       {/* --- HEADER --- */}
-      <div className="p-6 pb-4 border-b border-border/40">
+      {showBackButton && (
+        <div className="px-6 py-6">
+          <div className="flex items-center text-muted-foreground">
+            <Button variant="ghost" size="sm" className="h-6 px-2 -ml-2 gap-1 text-xs" onClick={clearSelectedId}>
+              <ChevronLeft className="w-3 h-3" /> Back
+            </Button>
+            <span className="mx-2 opacity-20">/</span>
+            <span className="text-xs font-medium uppercase tracking-wider">View Password Details</span>
+          </div>
+        </div>
+      )}
+      <div className={cn("pb-4 border-b border-border/40", showBackButton ? "px-6 " : "p-6 ")}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-5 min-w-0 flex-1">
             <ContextMenu>
@@ -254,9 +235,7 @@ export function PasswordDetail({
                 />
               </ContextMenuTrigger>
               <ContextMenuContent>
-                <ContextMenuItem
-                  onClick={() => setFormData({ ...formData, icon: "" })}
-                >
+                <ContextMenuItem onClick={() => setFormData({ ...formData, icon: "" })}>
                   <RotateCcw />
                   Reset Icon
                 </ContextMenuItem>
@@ -267,17 +246,12 @@ export function PasswordDetail({
               {isEditMode ? (
                 <Input
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="text-lg font-bold h-9"
                   placeholder="Item Title"
                 />
               ) : (
-                <h2
-                  className="text-2xl font-bold tracking-tight truncate pr-2 max-w-[235px]"
-                  title={formData.title}
-                >
+                <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-[235px]" title={formData.title}>
                   {formData.title}
                 </h2>
               )}
@@ -286,20 +260,22 @@ export function PasswordDetail({
               {isEditMode ? (
                 <Select
                   value={formData.categoryId}
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, categoryId: val })
-                  }
+                  onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
                 >
                   <SelectTrigger className="h-8 w-[200px] text-xs">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((cat) => (
+                    <SelectItem key="none" value="none">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full`} />
+                        None
+                      </div>
+                    </SelectItem>
+                    {passwordCategories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full ${cat.color}`}
-                          />
+                          <div className={`w-2 h-2 rounded-full ${cat.color}`} />
                           {cat.name}
                         </div>
                       </SelectItem>
@@ -310,11 +286,7 @@ export function PasswordDetail({
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {currentCategory ? (
                     <span className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-muted border border-border/50 text-xs font-medium">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          currentCategory.color || "bg-gray-400"
-                        }`}
-                      />
+                      <span className={`w-2 h-2 rounded-full ${currentCategory.color || "bg-gray-400"}`} />
                       {currentCategory.name}
                     </span>
                   ) : (
@@ -373,7 +345,7 @@ export function PasswordDetail({
                 </Button>
 
                 <DropdownMenu>
-                  <DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
@@ -381,10 +353,7 @@ export function PasswordDetail({
                   <DropdownMenuContent>
                     <DropdownMenuItem>Export </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={handleDelete}
-                    >
+                    <DropdownMenuItem variant="destructive" onClick={handleDelete}>
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -410,13 +379,8 @@ export function PasswordDetail({
                   <Input
                     value={formData.username || ""}
                     readOnly={!isEditMode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value })
-                    }
-                    className={cn(
-                      "font-mono text-sm",
-                      !isEditMode && "bg-muted/30 border-transparent"
-                    )}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className={cn("font-mono text-sm", !isEditMode && "bg-muted/30 border-transparent")}
                   />
                 </div>
                 {!isEditMode && (
@@ -425,16 +389,11 @@ export function PasswordDetail({
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "user" &&
-                        "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                      copiedField === "user" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
                     )}
                     onClick={() => handleCopy(formData.username || "", "user")}
                   >
-                    {copiedField === "user" ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    {copiedField === "user" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 )}
               </div>
@@ -442,24 +401,15 @@ export function PasswordDetail({
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                Password
-              </Label>
+              <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Password</Label>
               <div className="flex gap-2 group">
                 <div className="relative flex-1">
                   <Input
-                    type={
-                      isEditMode ? "text" : showPassword ? "text" : "password"
-                    }
+                    type={isEditMode ? "text" : showPassword ? "text" : "password"}
                     value={formData.password || ""}
                     readOnly={!isEditMode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    className={cn(
-                      "font-mono text-sm pr-10",
-                      !isEditMode && "bg-muted/30 border-transparent"
-                    )}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className={cn("font-mono text-sm pr-10", !isEditMode && "bg-muted/30 border-transparent")}
                     maxLength={100}
                   />
                   {/* Eye Toggle (Only in View Mode) */}
@@ -471,11 +421,7 @@ export function PasswordDetail({
                       className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   )}
                 </div>
@@ -502,16 +448,11 @@ export function PasswordDetail({
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "pass" &&
-                        "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
                     )}
                     onClick={() => handleCopy(formData.password || "", "pass")}
                   >
-                    {copiedField === "pass" ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                    {copiedField === "pass" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 )}
               </div>
@@ -524,23 +465,15 @@ export function PasswordDetail({
                       className={cn(
                         "h-full transition-all duration-500 ease-out",
                         passwordStrength <= 25 && "bg-destructive",
-                        passwordStrength > 25 &&
-                          passwordStrength <= 50 &&
-                          "bg-orange-500",
-                        passwordStrength > 50 &&
-                          passwordStrength <= 75 &&
-                          "bg-yellow-500",
+                        passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
+                        passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
                         passwordStrength > 75 && "bg-emerald-500"
                       )}
                       style={{ width: `${passwordStrength}%` }}
                     />
                   </div>
                   <span className="font-medium">{passwordStrength}%</span>
-                  <span>
-                    {getPasswordStrength(
-                      formData?.password || ""
-                    ).toUpperCase()}
-                  </span>
+                  <span>{getPasswordStrength(formData?.password || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
@@ -573,25 +506,17 @@ export function PasswordDetail({
           {/* Notes & Tags */}
           <div className="grid gap-6">
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                Notes
-              </Label>
+              <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Notes</Label>
               {isEditMode ? (
                 <Textarea
                   placeholder="Add secure notes here..."
                   className="min-h-[120px] resize-none text-sm bg-background"
                   value={formData.notes || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               ) : (
                 <div className="text-sm text-foreground/80 py-3 px-4 rounded-md bg-muted/20 border border-border/30 min-h-[100px] whitespace-pre-wrap leading-relaxed">
-                  {formData.notes || (
-                    <span className="text-muted-foreground italic">
-                      No notes added
-                    </span>
-                  )}
+                  {formData.notes || <span className="text-muted-foreground italic">No notes added</span>}
                 </div>
               )}
             </div>

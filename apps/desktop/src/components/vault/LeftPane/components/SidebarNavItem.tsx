@@ -56,7 +56,7 @@ export function SidebarNavItem({
       <span className="flex-1 truncate text-sm">{label}</span>
 
       {/* Count Badge */}
-      {count !== undefined && count > 0 && (
+      {count !== undefined && count >= 0 && (
         <span
           className={cn(
             "text-[10px] px-1.5 py-0.5 rounded-full bg-muted group-hover:bg-background transition-colors",

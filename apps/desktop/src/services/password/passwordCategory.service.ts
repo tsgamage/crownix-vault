@@ -1,37 +1,37 @@
-import { DatabaseService } from "./db.service";
-import type { IPasswordItem } from "../utils/types/global.types";
+import { DatabaseService } from "../db.service";
+import type { IPasswordCategory } from "../../utils/types/global.types";
 
-export class VaultService {
-  static loadVault(vault: IPasswordItem[]) {
+export class PasswordCategoryService {
+  static loadPasswordCategories(passwordCategories: IPasswordCategory[]) {
     const db = DatabaseService.getDB();
 
     const stmt = db.prepare(`
-      INSERT INTO vault_items (id, data)
+      INSERT INTO password_categories (id, data)
       VALUES (?, ?)
     `);
 
-    for (const item of vault) {
-      stmt.run([item.id, JSON.stringify(item)]);
+    for (const category of passwordCategories) {
+      stmt.run([category.id, JSON.stringify(category)]);
     }
 
     stmt.free();
   }
 
-  static createItem(item: IPasswordItem) {
+  static createPasswordCategory(category: IPasswordCategory) {
     const db = DatabaseService.getDB();
     const stmt = db.prepare(`
-      INSERT INTO vault_items (id, data)
+      INSERT INTO password_categories (id, data)
       VALUES (?, ?)
     `);
-    stmt.run([item.id, JSON.stringify(item)]);
+    stmt.run([category.id, JSON.stringify(category)]);
     stmt.free();
   }
 
-  static getAllItems(): IPasswordItem[] {
+  static getAllPasswordCategories(): IPasswordCategory[] {
     const db = DatabaseService.getDB();
 
     const res = db.exec(`
-      SELECT data FROM vault_items
+      SELECT data FROM password_categories
       ORDER BY json_extract(data, '$.title')
     `);
 
@@ -40,11 +40,11 @@ export class VaultService {
     return res[0].values.map((row) => JSON.parse(row[0] as string));
   }
 
-  static getItemById(id: string): IPasswordItem | null {
+  static getPasswordCategoryById(id: string): IPasswordCategory | null {
     const db = DatabaseService.getDB();
 
     const stmt = db.prepare(`
-      SELECT data FROM vault_items WHERE id = ?
+      SELECT data FROM password_categories WHERE id = ?
     `);
 
     stmt.bind([id]);
@@ -59,38 +59,38 @@ export class VaultService {
     return item;
   }
 
-  static updateItem(item: IPasswordItem) {
+  static updatePasswordCategory(category: IPasswordCategory) {
     const db = DatabaseService.getDB();
 
     const stmt = db.prepare(`
-      UPDATE vault_items
+      UPDATE password_categories
       SET data = ?
       WHERE id = ?
     `);
 
     stmt.run([
       JSON.stringify({
-        ...item,
+        ...category,
         updatedAt: Date.now(),
       }),
-      item.id,
+      category.id,
     ]);
 
     stmt.free();
   }
 
-  static deleteItem(id: string) {
+  static deletePasswordCategory(id: string) {
     const db = DatabaseService.getDB();
 
     const stmt = db.prepare(`
-      DELETE FROM vault_items WHERE id = ?
+      DELETE FROM password_categories WHERE id = ?
     `);
 
     stmt.run([id]);
     stmt.free();
   }
 
-  static exportVault() {
-    return this.getAllItems();
+  static exportPasswordCategories() {
+    return this.getAllPasswordCategories();
   }
 }

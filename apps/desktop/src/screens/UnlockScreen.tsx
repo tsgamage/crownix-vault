@@ -1,19 +1,22 @@
 import { UnlockForm } from "@/components/unlock/UnlockForm";
 import { DatabaseService } from "@/services/db.service";
 import { SessionService } from "@/services/session.service";
-import { VaultService } from "@/services/vault.service";
+import { PasswordService } from "@/services/password/password.service";
+import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
 import { VaultFileService } from "@/services/vaultFile.service";
 import { useFileStore } from "@/store/file.store";
 import { useSessionStore } from "@/store/session.store";
+import type { IVault } from "@/utils/types/global.types";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function UnlockScreen() {
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
-  const setVaultHeader = useSessionStore((state) => state.setVaultHeader);
 
   const vaultFile = useFileStore((state) => state.vaultFile);
+  const setVaultHeader = useFileStore((state) => state.setVaultHeader);
+
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
 
   const navigate = useNavigate();
@@ -22,7 +25,6 @@ export default function UnlockScreen() {
     if (!vaultFile) {
       navigate("/", { replace: true });
     }
-
     if (isUnlocked) {
       navigate("/vault", { replace: true });
     }
@@ -38,12 +40,16 @@ export default function UnlockScreen() {
       );
       SessionService.setKey(decryptedVaultFile.key);
 
+      const vault: IVault = decryptedVaultFile.vault;
+
       await DatabaseService.init();
-      VaultService.loadVault(decryptedVaultFile.vault);
+      PasswordService.loadPasswordItems(vault.passwordItems);
+      PasswordCategoryService.loadPasswordCategories(vault.passwordCategories);
 
       setVaultHeader(decryptedVaultFile.header);
       setIsUnlocked(true);
     } catch (err) {
+      console.log(err);
       setIsPasswordWrong(true);
     }
   };

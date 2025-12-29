@@ -8,11 +8,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, ListFilter, X, LayoutGrid } from "lucide-react";
-import type {
-  IPasswordItem,
-  IPasswordCategory,
-} from "@/utils/types/global.types";
+import { Search, ListFilter, X, LayoutGrid, RefreshCcw } from "lucide-react";
+import type { IPasswordItem } from "@/utils/types/global.types";
 import { PasswordListItem } from "./PasswordListItem";
 import { PasswordListSkeleton } from "./PasswordListSkeleton";
 import { useMemo, useState } from "react";
@@ -20,49 +17,53 @@ import { useUiStore } from "@/store/ui.store";
 import { getPasswordStrength } from "@/utils/pwd.utils";
 import AllTabEmptyState from "./EmptyStates/AllTabEmptyState";
 import FavoritesTabEmptyState from "./EmptyStates/FavoritesTabEmptyState";
-import TrashTabEmptyState from "../LeftPane/TrashTabEmptyState";
-
-// You might fetch categories from a store in a real app
-const CATEGORIES: IPasswordCategory[] = [
-  { id: "1", name: "Social", color: "bg-blue-500" },
-  { id: "2", name: "Work", color: "bg-orange-500" },
-  { id: "3", name: "Finance", color: "bg-green-500" },
-  { id: "4", name: "Entertainment", color: "bg-purple-500" },
-];
+import TrashTabEmptyState from "./EmptyStates/TrashTabEmptyState";
+import { MOCK_PASSWORD_CATEGORIES } from "@/data/seed";
+import { usePasswordStore } from "@/store/vault/password.store";
+import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import { toast } from "sonner";
 
 type SortOption = "name" | "recent" | "oldest";
 type GroupOption = "none" | "category" | "strength" | "name";
 
 interface PasswordListProps {
-  items: IPasswordItem[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   onAddNew: () => void;
-  onUpdate: (data: IPasswordItem) => void;
-  clearSelectedId: () => void;
 }
 
-export function PasswordList({
-  selectedId,
-  onSelect,
-  items,
-  searchQuery,
-  onSearchChange,
-  onAddNew,
-  onUpdate,
-  clearSelectedId,
-}: PasswordListProps) {
-  const [sortOption, setSortOption] = useState<SortOption>("name");
+export function PasswordList({ onAddNew }: PasswordListProps) {
+  const [sortOption, setSortOption] = useState<SortOption>("recent");
   const [groupOption, setGroupOption] = useState<GroupOption>("none");
+  const [searchQuery, setSearchQuery] = useState("");
   const isLoadingPasswords = useUiStore((state) => state.isLoadingPasswords);
   const activeTabId = useUiStore((state) => state.activeTabId);
 
+  const passwordItems = usePasswordStore((state) => state.passwordItems);
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+
+  const filteredPasswords = passwordItems.filter((item) => {
+    const matchesTab =
+      (activeTabId === "all" && !item.isDeleted) ||
+      (activeTabId === "favorites" && item.isFavorite && !item.isDeleted) ||
+      (activeTabId === "trash" && item.isDeleted);
+
+    if (!matchesTab) return false;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        item.title.toLowerCase().includes(query) ||
+        item.username?.toLowerCase().includes(query) ||
+        item.tags?.some((tag) => tag.toLowerCase().includes(query.trim().toLowerCase()))
+      );
+    }
+
+    return true;
+  });
+
   // Handle Sorting
-  const sortedItems = useMemo(() => {
+  const sortedPasswords = useMemo(() => {
     // Create a shallow copy to sort
-    const sorted = [...items];
+    const sorted = [...filteredPasswords];
     switch (sortOption) {
       case "name":
         sorted.sort((a, b) => a.title.localeCompare(b.title));
@@ -75,19 +76,19 @@ export function PasswordList({
         break;
     }
     return sorted;
-  }, [items, sortOption]);
+  }, [filteredPasswords, sortOption]);
 
   // Handle Grouping
-  const groupedItems = useMemo(() => {
-    if (groupOption === "none") return { All: sortedItems };
+  const groupedPasswords = useMemo(() => {
+    if (groupOption === "none") return { All: sortedPasswords };
 
     const groups: Record<string, IPasswordItem[]> = {};
 
-    sortedItems.forEach((item) => {
+    sortedPasswords.forEach((item) => {
       let groupName = "Other";
 
       if (groupOption === "category") {
-        const category = CATEGORIES.find((c) => c.id === item.categoryId);
+        const category = MOCK_PASSWORD_CATEGORIES.find((c) => c.id === item.categoryId);
         groupName = category ? category.name : "Uncategorized";
       } else if (groupOption === "strength") {
         const strength = getPasswordStrength(item.password);
@@ -104,11 +105,11 @@ export function PasswordList({
     });
 
     return groups;
-  }, [sortedItems, groupOption]);
+  }, [sortedPasswords, groupOption]);
 
   // Sort groups alphabetically if grouping by name
   const groupEntries = useMemo(() => {
-    const entries = Object.entries(groupedItems);
+    const entries = Object.entries(groupedPasswords);
     if (groupOption === "name") {
       return entries.sort(([a], [b]) => {
         if (a === "#") return 1;
@@ -117,15 +118,17 @@ export function PasswordList({
       });
     }
     return entries;
-  }, [groupedItems, groupOption]);
+  }, [groupedPasswords, groupOption]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
   };
 
   const getCategoryColor = (catId?: string) => {
-    return CATEGORIES.find((c) => c.id === catId)?.color;
+    return passwordCategories.find((c) => c.id === catId)?.color;
   };
+
+  const syncDB = useUiStore((state) => state.syncDB);
 
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm border-r border-border/50">
@@ -134,10 +137,7 @@ export function PasswordList({
         {/* Title Row */}
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold tracking-wide text-foreground/80">
-            Items{" "}
-            <span className="text-muted-foreground font-normal ml-1">
-              ({items.length})
-            </span>
+            Passwords <span className="text-muted-foreground font-normal ml-1">({filteredPasswords.length})</span>
           </h2>
 
           <div className="flex items-center gap-1">
@@ -148,11 +148,7 @@ export function PasswordList({
                   tabIndex={-1}
                   variant="ghost"
                   size="icon"
-                  className={`h-7 w-7 ${
-                    groupOption !== "none"
-                      ? "bg-emerald-500/10 text-emerald-600"
-                      : ""
-                  }`}
+                  className={`h-7 w-7 ${groupOption !== "none" ? "bg-emerald-500/30 text-emerald-600" : ""}`}
                   title="Group By"
                 >
                   <LayoutGrid className="w-4 h-4 text-muted-foreground group-active:text-emerald-600" />
@@ -160,22 +156,11 @@ export function PasswordList({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuLabel>Group By</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={groupOption}
-                  onValueChange={(v) => setGroupOption(v as GroupOption)}
-                >
-                  <DropdownMenuRadioItem value="none">
-                    None
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="name">
-                    Name
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="category">
-                    Category
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="strength">
-                    Strength
-                  </DropdownMenuRadioItem>
+                <DropdownMenuRadioGroup value={groupOption} onValueChange={(v) => setGroupOption(v as GroupOption)}>
+                  <DropdownMenuRadioItem value="none">None</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="category">Category</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="strength">Strength</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -183,34 +168,37 @@ export function PasswordList({
             {/* Sort Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  tabIndex={-1}
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  title="Sort By"
-                >
+                <Button tabIndex={-1} variant="ghost" size="icon" className="h-7 w-7" title="Sort By">
                   <ListFilter className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={sortOption}
-                  onValueChange={(v) => setSortOption(v as SortOption)}
-                >
-                  <DropdownMenuRadioItem value="name">
-                    Name (A-Z)
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="recent">
-                    Recently Updated
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="oldest">
-                    Oldest First
-                  </DropdownMenuRadioItem>
+                <DropdownMenuRadioGroup value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
+                  <DropdownMenuRadioItem value="name">Name (A-Z)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="recent">Recently Updated</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="oldest">Oldest First</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              tabIndex={-1}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 group"
+              title="Refresh"
+              onClick={() => {
+                try {
+                  syncDB();
+                  toast.success("Vault refreshed successfully");
+                } catch (error) {
+                  toast.error("Failed to refresh vault");
+                }
+              }}
+            >
+              <RefreshCcw className="w-4 h-4 group-active:rotate-180 transition-transform text-muted-foreground group-active:text-emerald-600" />
+            </Button>
           </div>
         </div>
 
@@ -222,13 +210,13 @@ export function PasswordList({
             placeholder="Search vault..."
             className="pl-9 pr-8 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
             <button
               tabIndex={-1}
               title="Clear search"
-              onClick={() => onSearchChange("")}
+              onClick={() => setSearchQuery("")}
               className="absolute right-2.5 top-1/2 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-3 w-3" />
@@ -243,18 +231,18 @@ export function PasswordList({
           <PasswordListSkeleton />
         ) : (
           <div className="flex flex-col gap-1 p-2 pb-10">
-            {sortedItems.length === 0 && activeTabId === "all" && (
+            {sortedPasswords.length === 0 && activeTabId === "all" && (
               <AllTabEmptyState onAddNew={onAddNew} searchQuery={searchQuery} />
             )}
-            {sortedItems.length === 0 && activeTabId === "favorites" && (
+            {sortedPasswords.length === 0 && activeTabId === "favorites" && (
               <FavoritesTabEmptyState searchQuery={searchQuery} />
             )}
-            {sortedItems.length === 0 && activeTabId === "trash" && (
+            {sortedPasswords.length === 0 && activeTabId === "trash" && (
               <TrashTabEmptyState searchQuery={searchQuery} />
             )}
-            {sortedItems.length > 0 &&
+            {sortedPasswords.length > 0 &&
               groupEntries.map(([groupName, groupItems]) => (
-                <div key={groupName} className="flex flex-col gap-1">
+                <div key={groupName} className="flex flex-col gap-1.5">
                   {groupOption !== "none" && (
                     <div className="px-2 py-1 mt-2 first:mt-0">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -266,12 +254,8 @@ export function PasswordList({
                     <PasswordListItem
                       key={item.id}
                       item={item}
-                      isSelected={selectedId === item.id}
-                      onSelect={onSelect}
                       onCopy={handleCopy}
-                      categoryColor={getCategoryColor(item.categoryId)}
-                      onUpdate={onUpdate}
-                      clearSelectedId={clearSelectedId}
+                      categoryColor={getCategoryColor(item.categoryId) || ""}
                     />
                   ))}
                 </div>

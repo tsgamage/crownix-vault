@@ -13,7 +13,14 @@ export class DatabaseService {
     this.db = new SQL.Database(); // :memory:
 
     this.db.run(`
-      CREATE TABLE vault_items (
+      CREATE TABLE password_items (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL
+      );
+    `);
+
+    this.db.run(`
+      CREATE TABLE password_categories (
         id TEXT PRIMARY KEY,
         data TEXT NOT NULL
       );

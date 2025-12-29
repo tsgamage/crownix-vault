@@ -297,3 +297,124 @@ export const generatePassphrase = (wordCount: number = 4): string => {
 
   return words.join("-") + Math.floor(Math.random() * 100);
 };
+
+import type { IPasswordItem } from "./types/global.types";
+
+/**
+ * Calculate the overall health score of the vault (0-100)
+ */
+export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
+  if (items.length === 0) return 100;
+
+  const validItems = items.filter((i) => !i.isDeleted && i.password);
+  if (validItems.length === 0) return 100;
+
+  let totalScore = 0;
+  const reusedGroups = findReusedPasswords(items); // Groups of reused passwords
+  const reusedCount = reusedGroups.length;
+
+  validItems.forEach((item) => {
+    const strength = calculatePasswordEntropy(item.password);
+    // entropy 80 is roughly "strong" (score 100)
+    // entropy 0 is score 0
+    let itemScore = Math.min(100, (strength / 80) * 100);
+    totalScore += itemScore;
+  });
+
+  let averageScore = totalScore / validItems.length;
+
+  // Penalize for reused passwords
+  // If 10% of items are reused, deduct 10 points, etc.
+  const reusePenalty = Math.min(30, (reusedCount / validItems.length) * 100);
+
+  return Math.max(0, Math.floor(averageScore - reusePenalty));
+};
+
+/**
+ * Find items with reused passwords
+ * Returns list of items that share passwords with others
+ */
+export const findReusedPasswords = (
+  items: IPasswordItem[]
+): IPasswordItem[] => {
+  const activeItems = items.filter((i) => !i.isDeleted && i.password);
+  const passwordMap = new Map<string, IPasswordItem[]>();
+
+  activeItems.forEach((item) => {
+    const pwd = item.password;
+    if (!passwordMap.has(pwd)) {
+      passwordMap.set(pwd, []);
+    }
+    passwordMap.get(pwd)?.push(item);
+  });
+
+  const reusedItems: IPasswordItem[] = [];
+  passwordMap.forEach((group) => {
+    if (group.length > 1) {
+      reusedItems.push(...group);
+    }
+  });
+
+  return reusedItems;
+};
+
+/**
+ * Find items with weak passwords
+ */
+export const findWeakPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
+  return items.filter((item) => {
+    if (item.isDeleted || !item.password) return false;
+    const strength = getPasswordStrength(item.password);
+    // Consider 'weak' and 'medium' as warning-worthy, or just 'weak'
+    return strength === "weak" || strength === "medium";
+  });
+};
+
+/**
+ * Find active items (not deleted)
+ */
+export const getActiveItems = (items: IPasswordItem[]): IPasswordItem[] => {
+  return items.filter((i) => !i.isDeleted);
+};
+
+// Top 20 most common passwords (in reality this should be a larger list or loaded from a file)
+const COMMON_PASSWORDS = new Set([
+  "123456",
+  "password",
+  "123456789",
+  "12345678",
+  "12345",
+  "111111",
+  "1234567",
+  "sunshine",
+  "qwerty",
+  "iloveyou",
+  "princess",
+  "admin",
+  "welcome",
+  "clover",
+  "secret",
+  "profile",
+  "cookie",
+  "monkey",
+  "dragon",
+  "123123",
+  "987654321",
+  "football",
+  "baseball",
+  "superman",
+  "charlie",
+  "angel",
+]);
+
+/**
+ * Find items with common passwords
+ */
+export const findCommonPasswords = (
+  items: IPasswordItem[]
+): IPasswordItem[] => {
+  return items.filter((item) => {
+    if (item.isDeleted || !item.password) return false;
+    return COMMON_PASSWORDS.has(item.password.toLowerCase());
+  });
+};

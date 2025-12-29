@@ -1,6 +1,5 @@
 import { SettingsModal } from "@/modals/settings/Settings";
 import type { SettingsConfig } from "@/utils/types/global.types";
-import React from "react";
 
 interface SettingsProps {
   isOpen: boolean;

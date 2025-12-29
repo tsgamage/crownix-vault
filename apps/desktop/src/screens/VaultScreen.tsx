@@ -1,116 +1,101 @@
 import { useEffect, useState } from "react";
-import { VaultSidebar } from "@/components/vault/LeftPane/VaultSidebar";
-import { PasswordList } from "@/components/vault/middlePane/PasswordList";
-import { PasswordDetail } from "@/components/vault/RightPane/PasswordDetail";
 import { useNavigate } from "react-router-dom";
+import type { IVault } from "@/utils/types/global.types";
 import { downloadVaultFile } from "@/utils/utils";
-import { SessionService } from "@/services/session.service";
-import { useSessionStore } from "@/store/session.store";
-import { VaultService } from "@/services/vault.service";
-import type { IPasswordItem } from "@/utils/types/global.types";
-import { CreatePassword } from "@/components/vault/RightPane/CreatePassword";
-import { useUiStore } from "@/store/ui.store";
-import { VaultFileService } from "@/services/vaultFile.service";
-import { Toaster } from "sonner";
+
+import { VaultSidebar } from "@/components/vault/LeftPane/VaultSidebar";
+import { PasswordList } from "@/components/vault/middlePane/PasswordList/PasswordList";
+import CategoryList from "@/components/vault/middlePane/CategoryList/CategoryList";
+import { PasswordDetail } from "@/components/vault/RightPane/Password/PasswordDetail";
+import { CreatePassword } from "@/components/vault/RightPane/Password/CreatePassword";
 import Settings from "./Settings";
+import { Toaster } from "sonner";
+
+import { useUiStore } from "@/store/ui.store";
+import { useSessionStore } from "@/store/session.store";
+
+import CreateCategory from "@/components/vault/RightPane/Category/CreateCategory";
+import CategoryDetails from "@/components/vault/RightPane/Category/CategoryDetails";
+import SecurityPage from "@/components/vault/security/SecurityPage";
+import { useFileStore } from "@/store/file.store";
+
+import { VaultFileService } from "@/services/vaultFile.service";
+import { SessionService } from "@/services/session.service";
+import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
+import { PasswordService } from "@/services/password/password.service";
+import { usePasswordStore } from "@/store/vault/password.store";
+import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
 
+  const vaultHeader = useFileStore((state) => state.vaultHeader);
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
-  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
-  const vaultHeader = useSessionStore((state) => state.vaultHeader);
-  const [pwItems, setPwItems] = useState<IPasswordItem[]>([]);
-
   const activeTabId = useUiStore((state) => state.activeTabId);
-  const setIsLoadingPasswords = useUiStore(
-    (state) => state.setIsLoadingPasswords
-  );
+  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const syncDB = useUiStore((state) => state.syncDB);
 
-  function refresh() {
-    setIsLoadingPasswords(true);
-    setPwItems(VaultService.getAllItems());
-    setIsLoadingPasswords(false);
-  }
+  const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
+  const selectedCategoryId = usePasswordCategoryStore((state) => state.selectedCategoryId);
+  const clearSelectedPasswordId = usePasswordStore((state) => state.clearSelectedPasswordId);
+  const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
 
   useEffect(() => {
     setIsCreating(false);
-  }, [selectedId]);
+  }, [selectedPasswordId]);
 
   useEffect(() => {
     if (!isUnlocked) {
       navigate("/", { replace: true });
     }
-    setSelectedId(null);
-    refresh();
+    clearSelectedPasswordId();
+    syncDB();
   }, [isUnlocked]);
 
   const handleLock = async () => {
     if (!vaultHeader) return;
 
-    const vaultData = VaultService.exportVault();
+    const passwordItems = PasswordService.exportPasswordItems();
+    const passwordCategories = PasswordCategoryService.exportPasswordCategories();
+
+    const vault: IVault = {
+      passwordItems,
+      passwordCategories,
+      settings: {},
+    };
+
     const key = SessionService.getKey();
-    const vaultFile = await VaultFileService.buildVaultFileWithKey(
-      vaultData,
-      key,
-      vaultHeader
-    );
+    const vaultFile = await VaultFileService.buildVaultFileWithKey(vault, key, vaultHeader);
 
     downloadVaultFile(vaultFile);
-
     SessionService.lock();
     setIsUnlocked(false);
   };
 
-  const filteredItems = pwItems.filter((item) => {
-    const matchesTab =
-      (activeTabId === "all" && !item.isDeleted) ||
-      (activeTabId === "favorites" && item.isFavorite && !item.isDeleted) ||
-      (activeTabId === "trash" && item.isDeleted);
-
-    if (!matchesTab) return false;
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        item.title.toLowerCase().includes(query) ||
-        item.username?.toLowerCase().includes(query) ||
-        item.tags?.some((tag) =>
-          tag.toLowerCase().includes(query.trim().toLowerCase())
-        )
-      );
-    }
-
-    return true;
-  });
-
   useEffect(() => {
-    setSelectedId(null);
+    clearSelectedPasswordId();
+    clearSelectedCategoryId();
     setIsCreating(false);
   }, [activeTabId]);
 
-  const selectedItem = pwItems.find((item) => item.id === selectedId) || null;
+  // Handle Category Selection
+  useEffect(() => {
+    if (selectedCategoryId) {
+      setIsCreating(false);
+    }
+  }, [selectedCategoryId]);
 
-  const handleCreatePasswordData = (data: IPasswordItem) => {
-    VaultService.createItem(data);
-    refresh();
-    setIsCreating(false);
-  };
+  const isAllTab = activeTabId === "all";
+  const isFavoritesTab = activeTabId === "favorites";
+  const isTrashTab = activeTabId === "trash";
 
-  const handleUpdatePasswordData = (data: IPasswordItem) => {
-    VaultService.updateItem(data);
-    refresh();
-  };
-
-  const hanleDeletePasswordData = (id: string) => {
-    VaultService.deleteItem(id);
-    refresh();
-  };
+  const isPasswordTab = isAllTab || isFavoritesTab || isTrashTab;
+  const isOrganizeTab = activeTabId === "organize";
+  const isSecurityTab = activeTabId === "security";
 
   return (
     <div
@@ -124,48 +109,51 @@ export default function VaultScreen() {
         <div className="w-[18%] min-w-[200px] h-full">
           <VaultSidebar
             onLock={handleLock}
-            onNewClick={() => setIsCreating(true)}
+            onNewClick={() => {
+              setIsCreating(true);
+            }}
             onSettingsClick={() => setIsSettingsOpen(true)}
           />
         </div>
 
-        {/* List */}
-        <div className="w-[30%] min-w-[300px] h-full">
-          <PasswordList
-            items={filteredItems}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onAddNew={() => setIsCreating(true)}
-            onUpdate={handleUpdatePasswordData}
-            clearSelectedId={() => setSelectedId(null)}
-          />
-        </div>
+        {isSecurityTab && <SecurityPage />}
 
-        {/* Detail */}
-        <div className="flex-1 h-full">
-          {isCreating ? (
-            <CreatePassword
-              onSave={handleCreatePasswordData}
-              onCancel={() => setIsCreating(false)}
-            />
-          ) : (
-            <PasswordDetail
-              item={selectedItem}
-              onSave={handleUpdatePasswordData}
-              clearSelectedId={() => setSelectedId(null)}
-              onPermanentlyDelete={hanleDeletePasswordData}
-            />
-          )}
-        </div>
+        {!isSecurityTab && (
+          <>
+            {/* Middle Pane */}
+            <div className="w-[30%] min-w-[300px] h-full">
+              {isPasswordTab && <PasswordList onAddNew={() => setIsCreating(true)} />}
+              {isOrganizeTab && <CategoryList />}
+            </div>
 
-        {isSettingsOpen && (
-          <Settings
-            isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-          />
+            {/* Right Pane */}
+            <div className="flex-1 h-full">
+              {isPasswordTab &&
+                (isCreating ? <CreatePassword onCancel={() => setIsCreating(false)} /> : <PasswordDetail />)}
+              {isOrganizeTab &&
+                (isCreating ? (
+                  <CreateCategory
+                    onCancel={() => {
+                      setIsCreating(false);
+                      setIsEditingCategory(false);
+                    }}
+                    isEditing={isEditingCategory}
+                  />
+                ) : (
+                  <>
+                    {selectedPasswordId && <PasswordDetail showBackButton />}
+                    <CategoryDetails
+                      onEditing={() => {
+                        setIsCreating(true);
+                        setIsEditingCategory(true);
+                      }}
+                    />
+                  </>
+                ))}
+            </div>
+          </>
         )}
+        {isSettingsOpen && <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
       </div>
     </div>
   );
