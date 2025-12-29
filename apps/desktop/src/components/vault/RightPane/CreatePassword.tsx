@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshCw, Eye, EyeOff, Save, X, ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { RefreshCw, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type IPasswordItem,
   type IPasswordCategory,
@@ -49,6 +49,23 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
     categoryId: "",
   });
 
+  const isFormEmpty = (formData: Partial<IPasswordItem>) => {
+    if (
+      formData.title ||
+      formData.username ||
+      formData.password ||
+      formData.notes
+    ) {
+      return false;
+    }
+
+    if (formData.urls?.length !== 0 || formData.fields?.length !== 0) {
+      return false;
+    }
+
+    return true;
+  };
+
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSave = () => {
@@ -74,6 +91,23 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
     onSave(newItem);
   };
 
+  const handleEscapePress = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        (isFormEmpty(formData) ||
+          confirm("Are you sure you want to cancel?")) &&
+          onCancel();
+      }
+    },
+    [onCancel, formData]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", handleEscapePress);
+    return () => {
+      window.removeEventListener("keydown", handleEscapePress);
+    };
+  }, [handleEscapePress]);
+
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in fade-in slide-in-from-right-4 duration-300">
       {/* --- HEADER --- */}
@@ -83,7 +117,11 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
             variant="ghost"
             size="sm"
             className="h-6 px-2 -ml-2 gap-1 text-xs"
-            onClick={onCancel}
+            onClick={() =>
+              (isFormEmpty(formData) ||
+                confirm("Are you sure you want to cancel?")) &&
+              onCancel()
+            }
           >
             <ChevronLeft className="w-3 h-3" /> Back
           </Button>
@@ -271,7 +309,7 @@ export function CreatePassword({ onSave, onCancel }: CreatePasswordProps) {
             <TagManager
               tags={formData.tags || []}
               isEditing={true}
-              onChange={(tags) => setFormData({ ...formData, tags })}
+              onSave={(tags) => setFormData({ ...formData, tags })}
             />
           </div>
         </div>

@@ -79,7 +79,6 @@ export function PasswordList({
     return CATEGORIES.find((c) => c.id === catId)?.color;
   };
 
-
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm border-r border-border/50">
       {/* --- HEADER --- */}
@@ -96,7 +95,12 @@ export function PasswordList({
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button
+                tabIndex={-1}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+              >
                 <ListFilter className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
@@ -123,6 +127,7 @@ export function PasswordList({
         <div className="relative group">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
           <Input
+            tabIndex={-1}
             placeholder="Search vault..."
             className="pl-9 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
             value={searchQuery}

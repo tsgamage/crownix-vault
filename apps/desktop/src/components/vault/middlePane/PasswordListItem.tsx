@@ -135,26 +135,41 @@ export function PasswordListItem({
           </div>
 
           {/* Quick Copy */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={(e) => handleQuickCopy(e, "username")}
-              title="Copy Username"
-            >
-              <User className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={(e) => handleQuickCopy(e, "password")}
-              title="Copy Password"
-            >
-              <Copy className="w-3.5 h-3.5" />
-            </Button>
-          </div>
+          {activeTabId !== "trash" && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => handleQuickCopy(e, "username")}
+                title="Copy Username"
+              >
+                <User className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => handleQuickCopy(e, "password")}
+                title="Copy Password"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
+          {activeTabId === "trash" && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleRestore}
+                title="Restore"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
       </ContextMenuTrigger>
 

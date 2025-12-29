@@ -62,6 +62,7 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
               type="button"
               variant="ghost"
               size="icon"
+              tabIndex={-1}
               className="absolute right-0 top-0 h-full w-10 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowPassword(!showPassword)}
             >

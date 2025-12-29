@@ -3,7 +3,6 @@ import { VaultSidebar } from "@/components/vault/LeftPane/VaultSidebar";
 import { PasswordList } from "@/components/vault/middlePane/PasswordList";
 import { PasswordDetail } from "@/components/vault/RightPane/PasswordDetail";
 import { useNavigate } from "react-router-dom";
-import { useFileStore } from "@/store/file.store";
 import { downloadVaultFile } from "@/utils/utils";
 import { SessionService } from "@/services/session.service";
 import { useSessionStore } from "@/store/session.store";
@@ -11,10 +10,7 @@ import { VaultService } from "@/services/vault.service";
 import type { IPasswordItem } from "@/utils/types/global.types";
 import { CreatePassword } from "@/components/vault/RightPane/CreatePassword";
 import { useUiStore } from "@/store/ui.store";
-import {
-  VaultFileService,
-  type IVaultFile,
-} from "@/services/vaultFile.service";
+import { VaultFileService } from "@/services/vaultFile.service";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -80,7 +76,10 @@ export default function VaultScreen() {
       const query = searchQuery.toLowerCase();
       return (
         item.title.toLowerCase().includes(query) ||
-        item.username?.toLowerCase().includes(query)
+        item.username?.toLowerCase().includes(query) ||
+        item.tags?.some((tag) =>
+          tag.toLowerCase().includes(query.trim().toLowerCase())
+        )
       );
     }
 

@@ -25,7 +25,7 @@ export default function AllTabEmptyState({
         </p>
       </div>
 
-      {onAddNew && (
+      {onAddNew && !searchQuery && (
         <Button variant="outline" size="sm" onClick={onAddNew} className="mt-2">
           <PlusIcon className="w-3 h-3 mr-2" /> Add New Item
         </Button>

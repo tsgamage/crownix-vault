@@ -27,7 +27,7 @@ import {
   KeyRoundIcon,
   RotateCcw,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   type IPasswordItem,
@@ -100,6 +100,22 @@ export function PasswordDetail({
     );
   }, [formData?.password]);
 
+  // Handle escape key press
+  const handleEscapePress = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        item && clearSelectedId();
+      }
+    },
+    [item, clearSelectedId]
+  );
+  useEffect(() => {
+    window.addEventListener("keydown", handleEscapePress);
+    return () => {
+      window.removeEventListener("keydown", handleEscapePress);
+    };
+  }, [handleEscapePress]);
+
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -162,32 +178,42 @@ export function PasswordDetail({
 
   if (formData.isDeleted) {
     return (
-      <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
-            <Trash2 className="w-8 h-8 opacity-20" />
-          </div>
-          <p className="text-sm font-medium text-muted-foreground">
-            This item has been deleted
-          </p>
-          <div className="flex flex-col items-center gap-2">
-            <Button variant="outline" onClick={handleRestore}>
-              Restore
-            </Button>
-            <Button
-              variant="outline"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-              onClick={() =>
-                confirm(
-                  "Are you sure you want to delete this item permanently?"
-                ) && onPermanentlyDelete(formData.id)
-              }
-            >
-              Delete Permanently
-            </Button>
+      <>
+        <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
+              <Trash2 className="w-8 h-8 opacity-20" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">
+              This item has been deleted
+            </p>
+            {formData.notes && (
+              <div className="text-sm text-muted-foreground/80 py-3 px-4 rounded-md bg-muted/30 border border-border/30 max-w-sm mx-auto whitespace-pre-wrap leading-relaxed text-left">
+                <span className="text-xs font-semibold uppercase tracking-wider block mb-1 opacity-70">
+                  Note:
+                </span>
+                {formData.notes}
+              </div>
+            )}
+            <div className="flex flex-col items-center gap-2">
+              <Button variant="outline" onClick={handleRestore}>
+                Restore
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                onClick={() =>
+                  confirm(
+                    "Are you sure you want to delete this item permanently?"
+                  ) && onPermanentlyDelete(formData.id)
+                }
+              >
+                Delete Permanently
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -553,7 +579,7 @@ export function PasswordDetail({
             <TagManager
               tags={formData.tags || []}
               isEditing={isEditMode}
-              onChange={(tags) => setFormData({ ...formData, tags })}
+              onSave={(tags) => setFormData({ ...formData, tags })}
             />
           </div>
 
