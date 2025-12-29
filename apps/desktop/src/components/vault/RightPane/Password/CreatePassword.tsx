@@ -179,7 +179,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
                 value={formData.categoryId}
                 onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
               >
-                <SelectTrigger className="h-8 w-[200px] text-xs">
+                <SelectTrigger tabIndex={-1} className="h-8 w-[200px] text-xs">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,6 +199,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
           {/* Header Actions */}
           <div className="flex gap-2">
             <Button
+              tabIndex={-1}
               variant="default"
               size="sm"
               className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 gap-2"
@@ -212,14 +213,14 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
       </div>
 
       {/* --- SCROLLABLE CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar" tabIndex={-1} >
         <div className="p-6 space-y-8 max-w-3xl mx-auto">
           {/* Main Credentials */}
           <div className="space-y-5 p-5 rounded-xl border border-border/40 bg-card/50 shadow-xs">
             {/* Username */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                Username / Email
+                Username / Email / Phone
               </Label>
               <Input
                 value={formData.username}
@@ -234,6 +235,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
               <div className="flex justify-between items-center">
                 <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Password</Label>
                 <Button
+                  tabIndex={-1} 
                   variant="link"
                   size="sm"
                   className="h-auto p-0 text-xs text-emerald-600"
@@ -257,6 +259,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
                     className="font-mono text-sm pr-10"
                   />
                   <Button
+                  tabIndex={-1} 
                     type="button"
                     variant="ghost"
                     size="icon"

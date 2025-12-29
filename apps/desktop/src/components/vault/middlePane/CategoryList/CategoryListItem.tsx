@@ -51,16 +51,18 @@ export default function CategoryListItem({
             <Icon className="w-5 h-5" />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 relative">
             <div className="flex items-center justify-between mb-0.5">
               <span className={cn("font-medium truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
                 {category.name}
               </span>
             </div>
             <div className="text-xs text-muted-foreground flex items-center justify-between">
-              <span className="truncate pr-2">{category.description || "No description"}</span>
-              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs font-mono">{categoryItemsCount}</span>
+              {category.description && <span className="truncate pr-2">{category.description}</span>}
             </div>
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 bg-muted rounded-full px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
+              {categoryItemsCount}
+            </span>
           </div>
         </button>
         {/* Context Menu Content */}

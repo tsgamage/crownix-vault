@@ -25,10 +25,7 @@ export default function StartScreen() {
 
   const handleCreateVault = async (password: string) => {
     const newVaultCreateData = MOCK_VAULT;
-    const newVaultFile = await VaultFileService.createVaultFile(
-      password,
-      newVaultCreateData
-    );
+    const newVaultFile = await VaultFileService.createVaultFile(password, newVaultCreateData);
     setVaultFile(newVaultFile);
   };
 
@@ -50,12 +47,8 @@ export default function StartScreen() {
           </div>
 
           <div className="space-y-1.5">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Crownix Vault
-            </h1>
-            <p className="text-base text-muted-foreground/80 font-normal">
-              Your digital fortress.
-            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Crownix Vault</h1>
+            <p className="text-base text-muted-foreground/80 font-normal">Your digital fortress.</p>
           </div>
         </div>
 
@@ -68,9 +61,7 @@ export default function StartScreen() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground/60 font-medium tracking-wider">
-                Or
-              </span>
+              <span className="bg-background px-3 text-muted-foreground/60 font-medium tracking-wider">Or</span>
             </div>
           </div>
 
@@ -112,11 +103,6 @@ export default function StartScreen() {
           </div>
         </div>
       </main>
-
-      {/* Footer / Copyright */}
-      <footer className="absolute bottom-6 text-[10px] text-muted-foreground/40 font-medium tracking-wider uppercase pointer-events-none">
-        Crownix Security Systems © 2025
-      </footer>
     </div>
   );
 }

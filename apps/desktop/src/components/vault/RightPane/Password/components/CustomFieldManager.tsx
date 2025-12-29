@@ -30,11 +30,7 @@ interface CustomFieldManagerProps {
   onChange: (fields: IPasswordCustomField[]) => void;
 }
 
-export function CustomFieldManager({
-  fields = [],
-  isEditing,
-  onChange,
-}: CustomFieldManagerProps) {
+export function CustomFieldManager({ fields = [], isEditing, onChange }: CustomFieldManagerProps) {
   const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -85,9 +81,7 @@ export function CustomFieldManager({
     <div className="space-y-4">
       {isEditing && (
         <div className="flex items-center justify-between border-b pb-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Custom Fields
-          </span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Custom Fields</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
@@ -114,17 +108,13 @@ export function CustomFieldManager({
 
       <div className="grid gap-4">
         {fields.map((field) => (
-          <div
-            key={field.id}
-            className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200"
-          >
+          <div key={field.id} className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
               {isEditing ? (
                 <Input
+                  autoFocus
                   value={field.label}
-                  onChange={(e) =>
-                    updateField(field.id, { label: e.target.value })
-                  }
+                  onChange={(e) => updateField(field.id, { label: e.target.value })}
                   className="h-6 text-xs w-32 px-1 hover:border-input focus:border-ring transition-colors"
                 />
               ) : (
@@ -135,6 +125,7 @@ export function CustomFieldManager({
 
               {isEditing && (
                 <Button
+                  tabIndex={-1}
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 text-muted-foreground hover:text-destructive"
@@ -148,57 +139,41 @@ export function CustomFieldManager({
             <div className="flex gap-2 group relative">
               <div className="relative flex-1">
                 <Input
-                  type={
-                    field.type === "hidden" && !revealedIds[field.id]
-                      ? "password"
-                      : "text"
-                  }
+                  type={field.type === "hidden" && !revealedIds[field.id] ? "password" : "text"}
                   value={field.value}
                   readOnly={!isEditing}
-                  onChange={(e) =>
-                    updateField(field.id, { value: e.target.value })
-                  }
-                  className={cn(
-                    "font-mono text-sm",
-                    !isEditing && "bg-muted/30 border-transparent pl-3"
-                  )}
+                  onChange={(e) => updateField(field.id, { value: e.target.value })}
+                  className={cn("font-mono text-sm pr-10", !isEditing && "bg-muted/30 border-transparent pl-3")}
                 />
               </div>
 
               {/* Actions */}
-              {!isEditing && (
-                <>
-                  {field.type === "hidden" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-10 top-0 h-full w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => toggleReveal(field.id)}
-                    >
-                      {revealedIds[field.id] ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </Button>
+              {field.type === "hidden" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "absolute right-0 top-0 h-full w-8 text-muted-foreground hover:text-foreground",
+                    revealedIds[field.id] && "text-destructive",
+                    !isEditing && "right-11"
                   )}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                      "shrink-0 bg-background/50",
-                      copiedId === field.id &&
-                        "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
-                    )}
-                    onClick={() => copyToClipboard(field.value, field.id)}
-                  >
-                    {copiedId === field.id ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                </>
+                  onClick={() => toggleReveal(field.id)}
+                >
+                  {revealedIds[field.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              )}
+              {!isEditing && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "shrink-0 bg-background/50",
+                    copiedId === field.id && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                  )}
+                  onClick={() => copyToClipboard(field.value, field.id)}
+                >
+                  {copiedId === field.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
               )}
             </div>
           </div>

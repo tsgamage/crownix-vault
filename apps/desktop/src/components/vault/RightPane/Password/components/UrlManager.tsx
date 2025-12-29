@@ -36,7 +36,7 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Website URL</Label>
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-           <Globe className="w-4 h-4 opacity-50" /> No website linked
+          <Globe className="w-4 h-4 opacity-50" /> No website linked
         </div>
       </div>
     );
@@ -44,16 +44,14 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
 
   return (
     <div className="space-y-3">
-       <div className="flex items-center justify-between">
-        <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            Website URLs
-        </Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Website URLs</Label>
         {isEditing && (
-            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={addUrl}>
-                <Plus className="w-3 h-3 mr-1" /> Add URL
-            </Button>
+          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={addUrl}>
+            <Plus className="w-3 h-3 mr-1" /> Add URL
+          </Button>
         )}
-       </div>
+      </div>
 
       <div className="space-y-2">
         {urls.map((url, index) => (
@@ -67,6 +65,7 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
                   className="font-mono text-sm h-9"
                 />
                 <Button
+                  tabIndex={-1}
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -78,18 +77,18 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
             ) : (
               <>
                 <div className="flex-1 flex items-center gap-2 overflow-hidden">
-                    <div className="p-2 bg-blue-500/10 rounded-md text-blue-500">
-                        <Globe className="w-4 h-4" />
-                    </div>
-                    <a
+                  <div className="p-2 bg-blue-500/10 rounded-md text-blue-500">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <a
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-500 hover:underline truncate flex items-center gap-1"
-                    >
+                  >
                     {url}
                     <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
-                    </a>
+                  </a>
                 </div>
                 <Button
                   variant="ghost"

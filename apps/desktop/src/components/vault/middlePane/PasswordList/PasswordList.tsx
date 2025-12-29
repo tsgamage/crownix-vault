@@ -31,8 +31,8 @@ interface PasswordListProps {
 }
 
 export function PasswordList({ onAddNew }: PasswordListProps) {
-  const [sortOption, setSortOption] = useState<SortOption>("recent");
-  const [groupOption, setGroupOption] = useState<GroupOption>("none");
+  const [sortOption, setSortOption] = useState<SortOption>("name");
+  const [groupOption, setGroupOption] = useState<GroupOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
   const isLoadingPasswords = useUiStore((state) => state.isLoadingPasswords);
   const activeTabId = useUiStore((state) => state.activeTabId);
