@@ -8,8 +8,8 @@ import {
   Trash2,
   ExternalLink,
   StarOff,
-  RefreshCcw,
   RotateCcw,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/context-menu";
 import { toast } from "sonner"; // Assuming you use sonner or similar for toasts
 import { useUiStore } from "@/store/ui.store";
+import { useState } from "react";
 
 interface PasswordListItemProps {
   item: IPasswordItem;
@@ -43,6 +44,11 @@ export function PasswordListItem({
 }: PasswordListItemProps) {
   const activeTabId = useUiStore((state) => state.activeTabId);
 
+  const [quickCopy, setQuickCopy] = useState({
+    username: false,
+    password: false,
+  });
+
   const handleQuickCopy = (
     e: React.MouseEvent,
     type: "username" | "password"
@@ -51,7 +57,14 @@ export function PasswordListItem({
     const value = type === "username" ? item.username : item.password;
     if (value) {
       onCopy(value, type);
-      toast.success(`Copied ${type} to clipboard`);
+      setQuickCopy({
+        username: type === "username",
+        password: type === "password",
+      });
+      setTimeout(
+        () => setQuickCopy({ username: false, password: false }),
+        1000
+      );
     } else {
       toast.error(`No ${type} available`);
     }
@@ -137,24 +150,30 @@ export function PasswordListItem({
           {/* Quick Copy */}
           {activeTabId !== "trash" && (
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => handleQuickCopy(e, "username")}
-                title="Copy Username"
-              >
-                <User className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={(e) => handleQuickCopy(e, "password")}
-                title="Copy Password"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </Button>
+              {item.username && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => handleQuickCopy(e, "username")}
+                  title="Copy Username"
+                >
+                  {quickCopy.username && <Check className="w-3.5 h-3.5" />}
+                  {!quickCopy.username && <User className="w-3.5 h-3.5" />}
+                </Button>
+              )}
+              {item.password && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => handleQuickCopy(e, "password")}
+                  title="Copy Password"
+                >
+                  {quickCopy.password && <Check className="w-3.5 h-3.5" />}
+                  {!quickCopy.password && <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              )}
             </div>
           )}
           {activeTabId === "trash" && (

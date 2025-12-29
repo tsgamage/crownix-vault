@@ -24,7 +24,6 @@ import {
   Folder,
   Trash2,
   X,
-  KeyRoundIcon,
   RotateCcw,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
@@ -526,7 +525,7 @@ export function PasswordDetail({
             </div>
           </div>
 
-          {passwordStrength < 75 && !isEditMode && (
+          {passwordStrength < 75 && !isEditMode && formData.password && (
             <PasswordStrengthCard passwordStrength={passwordStrength} />
           )}
 

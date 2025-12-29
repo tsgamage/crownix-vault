@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, ListFilter, Plus } from "lucide-react";
+import { Search, ListFilter, X, LayoutGrid } from "lucide-react";
 import type {
   IPasswordItem,
   IPasswordCategory,
@@ -16,6 +17,7 @@ import { PasswordListItem } from "./PasswordListItem";
 import { PasswordListSkeleton } from "./PasswordListSkeleton";
 import { useMemo, useState } from "react";
 import { useUiStore } from "@/store/ui.store";
+import { getPasswordStrength } from "@/utils/pwd.utils";
 import AllTabEmptyState from "./EmptyStates/AllTabEmptyState";
 import FavoritesTabEmptyState from "./EmptyStates/FavoritesTabEmptyState";
 import TrashTabEmptyState from "../LeftPane/TrashTabEmptyState";
@@ -29,6 +31,7 @@ const CATEGORIES: IPasswordCategory[] = [
 ];
 
 type SortOption = "name" | "recent" | "oldest";
+type GroupOption = "none" | "category" | "strength" | "name";
 
 interface PasswordListProps {
   items: IPasswordItem[];
@@ -52,6 +55,7 @@ export function PasswordList({
   clearSelectedId,
 }: PasswordListProps) {
   const [sortOption, setSortOption] = useState<SortOption>("name");
+  const [groupOption, setGroupOption] = useState<GroupOption>("none");
   const isLoadingPasswords = useUiStore((state) => state.isLoadingPasswords);
   const activeTabId = useUiStore((state) => state.activeTabId);
 
@@ -61,15 +65,59 @@ export function PasswordList({
     const sorted = [...items];
     switch (sortOption) {
       case "name":
-        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
       case "recent":
-        return sorted.sort((a, b) => b.updatedAt - a.updatedAt);
+        sorted.sort((a, b) => b.updatedAt - a.updatedAt);
+        break;
       case "oldest":
-        return sorted.sort((a, b) => a.updatedAt - b.updatedAt);
-      default:
-        return sorted;
+        sorted.sort((a, b) => a.updatedAt - b.updatedAt);
+        break;
     }
+    return sorted;
   }, [items, sortOption]);
+
+  // Handle Grouping
+  const groupedItems = useMemo(() => {
+    if (groupOption === "none") return { All: sortedItems };
+
+    const groups: Record<string, IPasswordItem[]> = {};
+
+    sortedItems.forEach((item) => {
+      let groupName = "Other";
+
+      if (groupOption === "category") {
+        const category = CATEGORIES.find((c) => c.id === item.categoryId);
+        groupName = category ? category.name : "Uncategorized";
+      } else if (groupOption === "strength") {
+        const strength = getPasswordStrength(item.password);
+        groupName = strength.charAt(0).toUpperCase() + strength.slice(1);
+      } else if (groupOption === "name") {
+        const firstChar = item.title.charAt(0).toUpperCase();
+        groupName = /^[A-Z]$/.test(firstChar) ? firstChar : "#";
+      }
+
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push(item);
+    });
+
+    return groups;
+  }, [sortedItems, groupOption]);
+
+  // Sort groups alphabetically if grouping by name
+  const groupEntries = useMemo(() => {
+    const entries = Object.entries(groupedItems);
+    if (groupOption === "name") {
+      return entries.sort(([a], [b]) => {
+        if (a === "#") return 1;
+        if (b === "#") return -1;
+        return a.localeCompare(b);
+      });
+    }
+    return entries;
+  }, [groupedItems, groupOption]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -92,35 +140,78 @@ export function PasswordList({
             </span>
           </h2>
 
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                tabIndex={-1}
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-              >
-                <ListFilter className="w-4 h-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuRadioGroup
-                value={sortOption}
-                onValueChange={(v) => setSortOption(v as SortOption)}
-              >
-                <DropdownMenuRadioItem value="name">
-                  Name (A-Z)
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="recent">
-                  Recently Updated
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest">
-                  Oldest First
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            {/* Group By Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  tabIndex={-1}
+                  variant="ghost"
+                  size="icon"
+                  className={`h-7 w-7 ${
+                    groupOption !== "none"
+                      ? "bg-emerald-500/10 text-emerald-600"
+                      : ""
+                  }`}
+                  title="Group By"
+                >
+                  <LayoutGrid className="w-4 h-4 text-muted-foreground group-active:text-emerald-600" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>Group By</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={groupOption}
+                  onValueChange={(v) => setGroupOption(v as GroupOption)}
+                >
+                  <DropdownMenuRadioItem value="none">
+                    None
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name">
+                    Name
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="category">
+                    Category
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="strength">
+                    Strength
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Sort Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  tabIndex={-1}
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  title="Sort By"
+                >
+                  <ListFilter className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={sortOption}
+                  onValueChange={(v) => setSortOption(v as SortOption)}
+                >
+                  <DropdownMenuRadioItem value="name">
+                    Name (A-Z)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="recent">
+                    Recently Updated
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="oldest">
+                    Oldest First
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -129,10 +220,20 @@ export function PasswordList({
           <Input
             tabIndex={-1}
             placeholder="Search vault..."
-            className="pl-9 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
+            className="pl-9 pr-8 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              tabIndex={-1}
+              title="Clear search"
+              onClick={() => onSearchChange("")}
+              className="absolute right-2.5 top-1/2 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -146,23 +247,34 @@ export function PasswordList({
               <AllTabEmptyState onAddNew={onAddNew} searchQuery={searchQuery} />
             )}
             {sortedItems.length === 0 && activeTabId === "favorites" && (
-              <FavoritesTabEmptyState />
+              <FavoritesTabEmptyState searchQuery={searchQuery} />
             )}
             {sortedItems.length === 0 && activeTabId === "trash" && (
-              <TrashTabEmptyState />
+              <TrashTabEmptyState searchQuery={searchQuery} />
             )}
             {sortedItems.length > 0 &&
-              sortedItems.map((item) => (
-                <PasswordListItem
-                  key={item.id}
-                  item={item}
-                  isSelected={selectedId === item.id}
-                  onSelect={onSelect}
-                  onCopy={handleCopy}
-                  categoryColor={getCategoryColor(item.categoryId)}
-                  onUpdate={onUpdate}
-                  clearSelectedId={clearSelectedId}
-                />
+              groupEntries.map(([groupName, groupItems]) => (
+                <div key={groupName} className="flex flex-col gap-1">
+                  {groupOption !== "none" && (
+                    <div className="px-2 py-1 mt-2 first:mt-0">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        {groupName}
+                      </span>
+                    </div>
+                  )}
+                  {groupItems.map((item) => (
+                    <PasswordListItem
+                      key={item.id}
+                      item={item}
+                      isSelected={selectedId === item.id}
+                      onSelect={onSelect}
+                      onCopy={handleCopy}
+                      categoryColor={getCategoryColor(item.categoryId)}
+                      onUpdate={onUpdate}
+                      clearSelectedId={clearSelectedId}
+                    />
+                  ))}
+                </div>
               ))}
           </div>
         )}

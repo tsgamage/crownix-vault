@@ -11,6 +11,7 @@ import type { IPasswordItem } from "@/utils/types/global.types";
 import { CreatePassword } from "@/components/vault/RightPane/CreatePassword";
 import { useUiStore } from "@/store/ui.store";
 import { VaultFileService } from "@/services/vaultFile.service";
+import { Toaster } from "sonner";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -115,6 +116,7 @@ export default function VaultScreen() {
       draggable={false}
       className="h-screen w-full bg-background overflow-hidden"
     >
+      <Toaster theme="dark" richColors />
       <div className="flex h-full w-full">
         {/* Sidebar */}
         <div className="w-[18%] min-w-[200px] h-full">
