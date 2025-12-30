@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { IVault } from "@/utils/types/global.types";
-import { downloadVaultFile } from "@/utils/utils";
 
 import { VaultSidebar } from "@/components/vault/LeftPane/VaultSidebar";
 import { PasswordList } from "@/components/vault/middlePane/PasswordList/PasswordList";
@@ -14,28 +12,19 @@ import { Toaster } from "sonner";
 import { useUiStore } from "@/store/ui.store";
 import { useSessionStore } from "@/store/session.store";
 
-import CreateCategory from "@/components/vault/RightPane/Category/CreateCategory";
+import CreateAndEditCategory from "@/components/vault/RightPane/Category/CreateAndEditCategory";
 import CategoryDetails from "@/components/vault/RightPane/Category/CategoryDetails";
 import SecurityPage from "@/components/vault/security/SecurityPage";
-import { useFileStore } from "@/store/file.store";
 
-import { VaultFileService } from "@/services/vaultFile.service";
-import { SessionService } from "@/services/session.service";
-import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
-import { PasswordService } from "@/services/password/password.service";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
 
-  const vaultHeader = useFileStore((state) => state.vaultHeader);
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const activeTabId = useUiStore((state) => state.activeTabId);
-  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
-  const [isCreating, setIsCreating] = useState(false);
-  const [isEditingCategory, setIsEditingCategory] = useState(false);
   const syncDB = useUiStore((state) => state.syncDB);
 
   const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
@@ -44,10 +33,13 @@ export default function VaultScreen() {
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
 
   const isSettingsOpen = useUiStore((state) => state.isSettingsOpen);
-
-  useEffect(() => {
-    setIsCreating(false);
-  }, [selectedPasswordId]);
+  const isPasswordCreateShown = useUiStore((state) => state.isPasswordCreateShown);
+  const isPasswordCategoryCreateShown = useUiStore((state) => state.isPasswordCategoryCreateShown);
+  const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
+  const setIsPasswordCreateShown = useUiStore((state) => state.setIsPasswordCreateShown);
+  const setIsPasswordEditShown = useUiStore((state) => state.setIsPasswordEditShown);
+  const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
+  const setIsPasswordCategoryEditShown = useUiStore((state) => state.setIsPasswordCategoryEditShown);
 
   useEffect(() => {
     if (!isUnlocked) {
@@ -57,46 +49,36 @@ export default function VaultScreen() {
     syncDB();
   }, [isUnlocked]);
 
-  const handleLock = async () => {
-    if (!vaultHeader) return;
+  // Closing creating pane if user clicks on a password item
+  useEffect(() => {
+    setIsPasswordEditShown(false);
+    setIsPasswordCategoryCreateShown(false);
+  }, [selectedPasswordId]);
 
-    const passwordItems = PasswordService.exportPasswordItems();
-    const passwordCategories = PasswordCategoryService.exportPasswordCategories();
+  // Closing creating pane if user clicks on a category item
+  useEffect(() => {
+    setIsPasswordCreateShown(false);
+    setIsPasswordCategoryCreateShown(false);
+  }, [selectedCategoryId]);
 
-    const vault: IVault = {
-      passwordItems,
-      passwordCategories,
-      settings: {},
-    };
-
-    const key = SessionService.getKey();
-    const vaultFile = await VaultFileService.buildVaultFileWithKey(vault, key, vaultHeader);
-
-    downloadVaultFile(vaultFile);
-    SessionService.lock();
-    setIsUnlocked(false);
-  };
-
+  // Clearing all panes if user switches to another tab
   useEffect(() => {
     clearSelectedPasswordId();
     clearSelectedCategoryId();
-    setIsCreating(false);
+    setIsPasswordCreateShown(false);
+    setIsPasswordEditShown(false);
+    setIsPasswordCategoryCreateShown(false);
+    setIsPasswordCategoryEditShown(false);
+    setIsPasswordDetailsShown(false);
   }, [activeTabId]);
 
-  // Handle Category Selection
-  useEffect(() => {
-    if (selectedCategoryId) {
-      setIsCreating(false);
-    }
-  }, [selectedCategoryId]);
+  const isAllPasswordsTabActive = activeTabId === "all";
+  const isFavoritesPasswordsTabActive = activeTabId === "favorites";
+  const isTrashPasswordsTabActive = activeTabId === "trash";
 
-  const isAllTab = activeTabId === "all";
-  const isFavoritesTab = activeTabId === "favorites";
-  const isTrashTab = activeTabId === "trash";
-
-  const isPasswordTab = isAllTab || isFavoritesTab || isTrashTab;
-  const isOrganizeTab = activeTabId === "organize";
-  const isSecurityTab = activeTabId === "security";
+  const isAnyPasswordTabActive = isAllPasswordsTabActive || isFavoritesPasswordsTabActive || isTrashPasswordsTabActive;
+  const isOrganizeTabActive = activeTabId === "organize";
+  const isSecurityTabActive = activeTabId === "security";
 
   return (
     <div
@@ -106,54 +88,38 @@ export default function VaultScreen() {
     >
       <Toaster theme="dark" richColors />
       <div className="flex h-full w-full">
-        {/* Sidebar */}
+        {isSettingsOpen && <Settings />}
+
+        {/* Left Sidebar */}
         <div className="w-[18%] min-w-[200px] h-full">
-          <VaultSidebar
-            onLock={handleLock}
-            onNewClick={() => {
-              setIsCreating(true);
-            }}
-          />
+          <VaultSidebar />
         </div>
 
-        {isSecurityTab && <SecurityPage />}
+        {isSecurityTabActive && <SecurityPage />}
 
-        {!isSecurityTab && (
+        {!isSecurityTabActive && !isSettingsOpen && (
           <>
             {/* Middle Pane */}
             <div className="w-[30%] min-w-[300px] h-full">
-              {isPasswordTab && <PasswordList onAddNew={() => setIsCreating(true)} />}
-              {isOrganizeTab && <CategoryList />}
+              {isOrganizeTabActive && <CategoryList />}
+              {isAnyPasswordTabActive && <PasswordList />}
             </div>
 
             {/* Right Pane */}
             <div className="flex-1 h-full">
-              {isPasswordTab &&
-                (isCreating ? <CreatePassword onCancel={() => setIsCreating(false)} /> : <PasswordDetail />)}
-              {isOrganizeTab &&
-                (isCreating ? (
-                  <CreateCategory
-                    onCancel={() => {
-                      setIsCreating(false);
-                      setIsEditingCategory(false);
-                    }}
-                    isEditing={isEditingCategory}
-                  />
+              {isAnyPasswordTabActive && (isPasswordCreateShown ? <CreatePassword /> : <PasswordDetail />)}
+              {isOrganizeTabActive &&
+                (isPasswordCategoryCreateShown ? (
+                  <CreateAndEditCategory />
                 ) : (
                   <>
                     {selectedPasswordId && <PasswordDetail showBackButton />}
-                    <CategoryDetails
-                      onEditing={() => {
-                        setIsCreating(true);
-                        setIsEditingCategory(true);
-                      }}
-                    />
+                    <CategoryDetails />
                   </>
                 ))}
             </div>
           </>
         )}
-        {isSettingsOpen && <Settings />}
       </div>
     </div>
   );

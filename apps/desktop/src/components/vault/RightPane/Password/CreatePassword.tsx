@@ -16,14 +16,16 @@ import { CustomFieldManager } from "./components/CustomFieldManager";
 import { generateVeryStrongPassword } from "@/utils/pwd.utils";
 import { MOCK_PASSWORD_CATEGORIES } from "@/data/seed";
 import { usePasswordStore } from "@/store/vault/password.store";
+import { useUiStore } from "@/store/ui.store";
 
-interface CreatePasswordProps {
-  onCancel: () => void;
-}
-
-export function CreatePassword({ onCancel }: CreatePasswordProps) {
+export function CreatePassword() {
   const createPassword = usePasswordStore((state) => state.createPasswordItem);
   const setSelectedPasswordId = usePasswordStore((state) => state.setSelectedPasswordId);
+  const setIsPasswordCreateShown = useUiStore((state) => state.setIsPasswordCreateShown);
+
+  const handleCancelClick = () => {
+    setIsPasswordCreateShown(false);
+  };
 
   const { openDialog, closeDialog } = useDialog();
   const [formData, setFormData] = useState<Partial<IPasswordItem>>({
@@ -77,14 +79,14 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
 
     createPassword(newItem);
     setSelectedPasswordId(newItemId);
-    onCancel();
+    handleCancelClick();
   };
 
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (isFormEmpty(formData)) {
-          onCancel();
+          handleCancelClick();
         } else {
           openDialog({
             title: "Discard Changes?",
@@ -97,7 +99,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
                 variant: "destructive",
                 onClick: () => {
                   closeDialog();
-                  onCancel();
+                  handleCancelClick();
                 },
               },
             ],
@@ -105,7 +107,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
         }
       }
     },
-    [onCancel, formData, openDialog, closeDialog]
+    [handleCancelClick, formData, openDialog, closeDialog]
   );
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
             className="h-6 px-2 -ml-2 gap-1 text-xs"
             onClick={() => {
               if (isFormEmpty(formData)) {
-                onCancel();
+                handleCancelClick();
               } else {
                 openDialog({
                   title: "Discard Changes?",
@@ -143,7 +145,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
                       variant: "destructive",
                       onClick: () => {
                         closeDialog();
-                        onCancel();
+                        handleCancelClick();
                       },
                     },
                   ],
@@ -213,7 +215,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
       </div>
 
       {/* --- SCROLLABLE CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar" tabIndex={-1} >
+      <div className="flex-1 overflow-y-auto custom-scrollbar" tabIndex={-1}>
         <div className="p-6 space-y-8 max-w-3xl mx-auto">
           {/* Main Credentials */}
           <div className="space-y-5 p-5 rounded-xl border border-border/40 bg-card/50 shadow-xs">
@@ -235,7 +237,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
               <div className="flex justify-between items-center">
                 <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Password</Label>
                 <Button
-                  tabIndex={-1} 
+                  tabIndex={-1}
                   variant="link"
                   size="sm"
                   className="h-auto p-0 text-xs text-emerald-600"
@@ -259,7 +261,7 @@ export function CreatePassword({ onCancel }: CreatePasswordProps) {
                     className="font-mono text-sm pr-10"
                   />
                   <Button
-                  tabIndex={-1} 
+                    tabIndex={-1}
                     type="button"
                     variant="ghost"
                     size="icon"

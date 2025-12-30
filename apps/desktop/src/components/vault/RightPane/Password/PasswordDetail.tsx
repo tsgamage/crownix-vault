@@ -43,10 +43,15 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { useDialog } from "@/context/DialogContext";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import { useUiStore } from "@/store/ui.store";
 
 export function PasswordDetail({ showBackButton }: { showBackButton?: boolean }) {
   const { openDialog, closeDialog } = useDialog();
-  const [isEditMode, setIsEditMode] = useState(false);
+
+  const isPasswordEditing = useUiStore((state) => state.isPasswordEditShown);
+  const setIsPasswordEditing = useUiStore((state) => state.setIsPasswordEditShown);
+  const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
+
   const [formData, setFormData] = useState<IPasswordItem | null>(null);
 
   // UI States
@@ -62,7 +67,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
 
   useEffect(() => {
     setFormData(selectedPassword);
-    setIsEditMode(false);
+    setIsPasswordEditing(false);
     setShowPassword(false);
   }, [selectedPassword]);
 
@@ -74,7 +79,12 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        selectedPassword && clearSelectedId();
+        selectedPassword &&
+          (() => {
+            clearSelectedId();
+            setIsPasswordEditing(false);
+            setIsPasswordDetailsShown(false);
+          })();
       }
     },
     [selectedPassword, clearSelectedId]
@@ -95,13 +105,13 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const handleSave = () => {
     if (formData) {
       updatePasswordItem({ ...formData, updatedAt: Date.now() });
-      setIsEditMode(false);
+      setIsPasswordEditing(false);
     }
   };
 
   const handleCancel = () => {
     setFormData(selectedPassword);
-    setIsEditMode(false);
+    setIsPasswordEditing(false);
   };
 
   const handleDelete = () => {
@@ -111,7 +121,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
         isDeleted: true,
         updatedAt: Date.now(),
       });
-      setIsEditMode(false);
+      setIsPasswordEditing(false);
       clearSelectedId();
     }
   };
@@ -123,7 +133,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
         isFavorite: !formData.isFavorite,
         updatedAt: Date.now(),
       });
-      setIsEditMode(false);
+      setIsPasswordEditing(false);
     }
   };
 
@@ -134,7 +144,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
         isDeleted: false,
         updatedAt: Date.now(),
       });
-      setIsEditMode(false);
+      setIsPasswordEditing(false);
       clearSelectedId();
     }
   };
@@ -230,7 +240,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               <ContextMenuTrigger>
                 <PasswordIconPicker
                   icon={formData.icon}
-                  isEditing={isEditMode}
+                  isEditing={isPasswordEditing}
                   onChange={(icon) => setFormData({ ...formData, icon })}
                 />
               </ContextMenuTrigger>
@@ -243,7 +253,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
             </ContextMenu>
 
             <div className="flex-1 min-w-0 space-y-1 ">
-              {isEditMode ? (
+              {isPasswordEditing ? (
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -257,7 +267,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               )}
 
               {/* Category Display / Selector */}
-              {isEditMode ? (
+              {isPasswordEditing ? (
                 <Select
                   value={formData.categoryId}
                   onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
@@ -301,7 +311,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
 
           {/* Header Actions */}
           <div className="flex gap-1">
-            {isEditMode ? (
+            {isPasswordEditing ? (
               <>
                 <Button
                   variant="ghost"
@@ -338,7 +348,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9"
-                  onClick={() => setIsEditMode(true)}
+                  onClick={() => setIsPasswordEditing(true)}
                   title="Edit"
                 >
                   <Pencil className="w-4 h-4" />
@@ -378,12 +388,12 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                 <div className="relative flex-1">
                   <Input
                     value={formData.username || ""}
-                    readOnly={!isEditMode}
+                    readOnly={!isPasswordEditing}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className={cn("font-mono text-sm", !isEditMode && "bg-muted/30 border-transparent")}
+                    className={cn("font-mono text-sm", !isPasswordEditing && "bg-muted/30 border-transparent")}
                   />
                 </div>
-                {!isEditMode && (
+                {!isPasswordEditing && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -405,15 +415,15 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               <div className="flex gap-2 group">
                 <div className="relative flex-1">
                   <Input
-                    type={isEditMode ? "text" : showPassword ? "text" : "password"}
+                    type={isPasswordEditing ? "text" : showPassword ? "text" : "password"}
                     value={formData.password || ""}
-                    readOnly={!isEditMode}
+                    readOnly={!isPasswordEditing}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={cn("font-mono text-sm pr-10", !isEditMode && "bg-muted/30 border-transparent")}
+                    className={cn("font-mono text-sm pr-10", !isPasswordEditing && "bg-muted/30 border-transparent")}
                     maxLength={100}
                   />
                   {/* Eye Toggle (Only in View Mode) */}
-                  {!isEditMode && (
+                  {!isPasswordEditing && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -426,7 +436,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   )}
                 </div>
 
-                {isEditMode && (
+                {isPasswordEditing && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -442,7 +452,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   </Button>
                 )}
 
-                {!isEditMode && (
+                {!isPasswordEditing && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -458,7 +468,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               </div>
 
               {/* Strength Meter (Visual only) */}
-              {isEditMode && (
+              {isPasswordEditing && (
                 <div className="pt-2 flex items-center justify-between text-[10px] space-x-2">
                   <div className="h-1 flex-1 bg-muted rounded-full overflow-hidden">
                     <div
@@ -479,7 +489,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
             </div>
           </div>
 
-          {passwordStrength < 75 && !isEditMode && formData.password && (
+          {passwordStrength < 75 && !isPasswordEditing && formData.password && (
             <PasswordStrengthCard passwordStrength={passwordStrength} />
           )}
 
@@ -488,7 +498,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
           {/* Custom Fields */}
           <CustomFieldManager
             fields={formData.fields || []}
-            isEditing={isEditMode}
+            isEditing={isPasswordEditing}
             onChange={(fields) => setFormData({ ...formData, fields })}
           />
 
@@ -497,7 +507,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
           {/* URLs */}
           <UrlManager
             urls={formData.urls || []}
-            isEditing={isEditMode}
+            isEditing={isPasswordEditing}
             onChange={(urls) => setFormData({ ...formData, urls })}
           />
 
@@ -507,7 +517,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
           <div className="grid gap-6">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Notes</Label>
-              {isEditMode ? (
+              {isPasswordEditing ? (
                 <Textarea
                   placeholder="Add secure notes here..."
                   className="min-h-[120px] resize-none text-sm bg-background"
@@ -523,7 +533,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
 
             <TagManager
               tags={formData.tags || []}
-              isEditing={isEditMode}
+              isEditing={isPasswordEditing}
               onSave={(tags) => setFormData({ ...formData, tags })}
             />
           </div>

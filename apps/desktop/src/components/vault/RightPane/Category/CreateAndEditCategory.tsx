@@ -9,6 +9,7 @@ import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { usePasswordStore } from "@/store/vault/password.store";
+import { useUiStore } from "@/store/ui.store";
 
 const COLORS = [
   { name: "Green", class: "bg-green-900" },
@@ -23,16 +24,16 @@ const COLORS = [
 
 const ICONS = ["Folder", "Globe", "Briefcase", "DollarSign", "Gamepad2", "Lock", "Key", "Shield", "Star", "Heart"];
 
-interface CreateCategoryProps {
-  onCancel: () => void;
-  isEditing: boolean;
-}
-
-export default function CreateCategory({ onCancel, isEditing }: CreateCategoryProps) {
+export default function CreateAndEditCategory() {
   const editingData = usePasswordCategoryStore((state) => state.selectedCategory);
   const createPasswordCategory = usePasswordCategoryStore((state) => state.createPasswordCategory);
   const updatePasswordCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedPasswordId = usePasswordStore((state) => state.clearSelectedPasswordId);
+
+  const isPasswordCategoryEditShown = useUiStore((state) => state.isPasswordCategoryEditShown);
+  const isEditing = isPasswordCategoryEditShown;
+  const setIsPasswordCategoryEditShown = useUiStore((state) => state.setIsPasswordCategoryEditShown);
+  const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
 
   // const { openDialog } = useDialog();
   const [formData, setFormData] = useState<Pick<IPasswordCategory, "name" | "description" | "color" | "icon">>({
@@ -42,6 +43,12 @@ export default function CreateCategory({ onCancel, isEditing }: CreateCategoryPr
     icon: "Folder",
   });
   const IconComponent = (LucideIcons as any)[formData.icon || "Folder"];
+
+  const hanleCancelCreateOrEditCategory = () => {
+    setIsPasswordCategoryEditShown(false);
+    setIsPasswordCategoryCreateShown(false);
+    clearSelectedPasswordId();
+  };
 
   useEffect(() => {
     if (isEditing && editingData) {
@@ -63,11 +70,11 @@ export default function CreateCategory({ onCancel, isEditing }: CreateCategoryPr
         createdAt: editingData.createdAt,
         updatedAt: Date.now(),
       });
-      onCancel();
+      hanleCancelCreateOrEditCategory();
     } else {
       const id = crypto.randomUUID();
       createPasswordCategory({ ...formData, id, createdAt: Date.now(), updatedAt: Date.now(), isDeleted: false });
-      onCancel();
+      hanleCancelCreateOrEditCategory();
     }
   };
 
@@ -80,11 +87,7 @@ export default function CreateCategory({ onCancel, isEditing }: CreateCategoryPr
             variant="ghost"
             size="sm"
             className="h-6 px-2 -ml-2 gap-1 text-xs"
-            onClick={() => {
-              // Removing the selected id if any because use can go staight to category pane
-              clearSelectedPasswordId();
-              onCancel();
-            }}
+            onClick={hanleCancelCreateOrEditCategory}
           >
             <ChevronLeft className="w-3 h-3" /> Back
           </Button>

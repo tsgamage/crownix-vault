@@ -29,6 +29,7 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
   const isSelected = selectedPasswordId === item.id;
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
   const setSelectedPasswordId = usePasswordStore((state) => state.setSelectedPasswordId);
+  const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
   const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
   const updatePasswordItem = usePasswordStore((state) => state.updatePasswordItem);
 
@@ -87,7 +88,10 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
               ? "bg-emerald-500/10 border-emerald-500/20 shadow-xs"
               : "hover:bg-muted/60 hover:border-border/40"
           )}
-          onClick={() => setSelectedPasswordId(item.id)}
+          onClick={() => {
+            setSelectedPasswordId(item.id);
+            setIsPasswordDetailsShown(true);
+          }}
         >
           {/* Icon Section */}
           <div className="relative">

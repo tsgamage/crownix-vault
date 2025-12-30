@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Folder, Pencil, Plus } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "../../common/SearchInput";
 import { format } from "date-fns";
 import { PasswordListItem } from "@/components/vault/middlePane/PasswordList/PasswordListItem";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCallback, useEffect, useState } from "react";
 import { AddPasswordsSheet } from "./AddPasswordsSheet";
+import { useUiStore } from "@/store/ui.store";
 
 // Helper to get icon
 const getIcon = (iconName: string) => {
@@ -22,33 +24,46 @@ const getIcon = (iconName: string) => {
   return Icon || Folder;
 };
 
-interface CategoryDetailsProps {
-  onEditing: () => void;
-}
-
-export default function CategoryDetails({ onEditing }: CategoryDetailsProps) {
+export default function CategoryDetails() {
   const passwords = usePasswordStore((state) => state.passwordItems);
   const category = usePasswordCategoryStore((state) => state.selectedCategory);
   const updatePasswordCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
-
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const isPasswordDetailsShown = useUiStore((state) => state.isPasswordDetailsShown);
+  const setIsPasswordCategoryEditShown = useUiStore((state) => state.setIsPasswordCategoryEditShown);
+  const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
 
   // Handle escape key press
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        category && clearSelectedCategoryId();
+        // Doing this because if user is in password details mode, we don't want to clear the category.
+        // So only the password details pane is closing
+        category && !isPasswordDetailsShown && clearSelectedCategoryId();
       }
     },
-    [category, clearSelectedCategoryId]
+    [category, clearSelectedCategoryId, isPasswordDetailsShown]
   );
+
+  useEffect(() => {
+    setSearchQuery("");
+  }, [category?.id]);
+
   useEffect(() => {
     window.addEventListener("keydown", handleEscapePress);
     return () => {
       window.removeEventListener("keydown", handleEscapePress);
     };
   }, [handleEscapePress]);
+
+  const handleEditClick = () => {
+    // setting both to true will show the category create pane and activate its edit mode
+    setIsPasswordCategoryEditShown(true);
+    setIsPasswordCategoryCreateShown(true);
+  };
 
   if (!category) {
     return (
@@ -64,6 +79,17 @@ export default function CategoryDetails({ onEditing }: CategoryDetailsProps) {
   }
 
   const categoryItems = passwords.filter((password) => password.categoryId === category.id);
+
+  const filteredItems = categoryItems.filter((item) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(searchLower) ||
+      (item.username?.toLowerCase() || "").includes(searchLower) ||
+      (item.notes?.toLowerCase() || "").includes(searchLower) ||
+      (item.urls || []).some((u) => u.toLowerCase().includes(searchLower))
+    );
+  });
+
   const Icon = getIcon(category.icon);
 
   const handleCopy = (text: string) => {
@@ -102,7 +128,7 @@ export default function CategoryDetails({ onEditing }: CategoryDetailsProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onEditing} title="Edit">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleEditClick} title="Edit">
               <Pencil className="w-4 h-4" />
             </Button>
 
@@ -126,12 +152,14 @@ export default function CategoryDetails({ onEditing }: CategoryDetailsProps) {
 
       {/* --- ITEMS --- */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="p-4 px-6 flex items-center justify-between border-b border-border/20 bg-muted/5">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Items in Category</h3>
+        <div className="p-4 px-6 flex items-center justify-between gap-4 border-b border-border/20 bg-muted/5">
+          <div className="flex-1">
+            <SearchInput placeholder="Search items in category..." value={searchQuery} onChange={setSearchQuery} />
+          </div>
           <Button
             size="sm"
             variant="default"
-            className="h-7 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700"
+            className="h-9 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 shadow-sm"
             onClick={() => setIsAddSheetOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Add Password
@@ -140,13 +168,20 @@ export default function CategoryDetails({ onEditing }: CategoryDetailsProps) {
 
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-1">
-            {categoryItems.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-border rounded-xl bg-muted/20 m-2">
-                <p className="text-muted-foreground text-sm">No passwords in this category yet.</p>
+                <p className="text-muted-foreground text-sm">
+                  {searchQuery ? "No items match your search." : "No passwords in this category yet."}
+                </p>
               </div>
             ) : (
-              categoryItems.map((item) => (
-                <PasswordListItem item={item} onCopy={(text) => handleCopy(text)} categoryColor={category.color} />
+              filteredItems.map((item) => (
+                <PasswordListItem
+                  key={item.id}
+                  item={item}
+                  onCopy={(text) => handleCopy(text)}
+                  categoryColor={category.color}
+                />
               ))
             )}
           </div>

@@ -1,4 +1,3 @@
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,7 +7,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, ListFilter, X, LayoutGrid, RefreshCcw } from "lucide-react";
+import { SearchInput } from "../../common/SearchInput";
+import { ListFilter, LayoutGrid, RefreshCcw } from "lucide-react";
 import type { IPasswordItem } from "@/utils/types/global.types";
 import { PasswordListItem } from "./PasswordListItem";
 import { PasswordListSkeleton } from "./PasswordListSkeleton";
@@ -26,11 +26,7 @@ import { toast } from "sonner";
 type SortOption = "name" | "recent" | "oldest";
 type GroupOption = "none" | "category" | "strength" | "name";
 
-interface PasswordListProps {
-  onAddNew: () => void;
-}
-
-export function PasswordList({ onAddNew }: PasswordListProps) {
+export function PasswordList() {
   const [sortOption, setSortOption] = useState<SortOption>("name");
   const [groupOption, setGroupOption] = useState<GroupOption>("name");
   const [searchQuery, setSearchQuery] = useState("");
@@ -202,26 +198,8 @@ export function PasswordList({ onAddNew }: PasswordListProps) {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative group">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
-          <Input
-            tabIndex={-1}
-            placeholder="Search vault..."
-            className="pl-9 pr-8 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              tabIndex={-1}
-              title="Clear search"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
+        <div className="flex-1">
+          <SearchInput placeholder="Search vault..." value={searchQuery} onChange={setSearchQuery} />
         </div>
       </div>
 
@@ -231,9 +209,7 @@ export function PasswordList({ onAddNew }: PasswordListProps) {
           <PasswordListSkeleton />
         ) : (
           <div className="flex flex-col gap-1 p-2 pb-10">
-            {sortedPasswords.length === 0 && activeTabId === "all" && (
-              <AllTabEmptyState onAddNew={onAddNew} searchQuery={searchQuery} />
-            )}
+            {sortedPasswords.length === 0 && activeTabId === "all" && <AllTabEmptyState searchQuery={searchQuery} />}
             {sortedPasswords.length === 0 && activeTabId === "favorites" && (
               <FavoritesTabEmptyState searchQuery={searchQuery} />
             )}

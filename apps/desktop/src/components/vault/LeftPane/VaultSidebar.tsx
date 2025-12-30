@@ -12,25 +12,33 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarNavItem } from "./components/SidebarNavItem";
-import { type IPasswordCategory } from "@/utils/types/global.types";
+import { type IPasswordCategory, type IVault } from "@/utils/types/global.types";
 import { useUiStore, type IUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import { useFileStore } from "@/store/file.store";
+import { useSessionStore } from "@/store/session.store";
+import { PasswordService } from "@/services/password/password.service";
+import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
+import { SessionService } from "@/services/session.service";
+import { VaultFileService } from "@/services/vaultFile.service";
+import { downloadVaultFile } from "@/utils/utils";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
 }
 
 interface VaultSidebarProps {
-  onLock: () => void;
-  onNewClick: () => void;
   pinnedCategories?: PinnedCategory[];
 }
 
-export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: VaultSidebarProps) {
+export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const activeTabId = useUiStore((state) => state.activeTabId);
   const setActiveTabId = useUiStore((state) => state.setActiveTabId);
   const setIsSettingsOpen = useUiStore((state) => state.setIsSettingsOpen);
+
+  const setIsPasswordCreateShown = useUiStore((state) => state.setIsPasswordCreateShown);
+  const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
 
   const passwords = usePasswordStore((state) => state.passwordItems);
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
@@ -38,6 +46,9 @@ export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: Vaul
   const totalPasswords = passwords.filter((p) => !p.isDeleted).length;
   const totalFavorites = passwords.filter((p) => p.isFavorite && !p.isDeleted).length;
   const totalPasswordCategories = passwordCategories.filter((p) => !p.isDeleted).length;
+
+  const vaultHeader = useFileStore((state) => state.vaultHeader);
+  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const mainNav = [
     { id: "all", label: "All Items", icon: LayoutGrid, count: totalPasswords },
@@ -49,6 +60,34 @@ export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: Vaul
       count: totalPasswordCategories,
     },
   ];
+
+  const handleLock = async () => {
+    if (!vaultHeader) return;
+
+    const passwordItems = PasswordService.exportPasswordItems();
+    const passwordCategories = PasswordCategoryService.exportPasswordCategories();
+
+    const vault: IVault = {
+      passwordItems,
+      passwordCategories,
+      settings: {},
+    };
+
+    const key = SessionService.getKey();
+    const vaultFile = await VaultFileService.buildVaultFileWithKey(vault, key, vaultHeader);
+
+    downloadVaultFile(vaultFile);
+    SessionService.lock();
+    setIsUnlocked(false);
+  };
+
+  const handleNewClick = () => {
+    if (activeTabId === "organize") {
+      setIsPasswordCategoryCreateShown(true);
+    } else {
+      setIsPasswordCreateShown(true);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-muted/10 border-r border-border/50">
@@ -71,7 +110,7 @@ export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: Vaul
       {/* --- ACTION BUTTON --- */}
       <div className="px-4 mb-6">
         <Button
-          onClick={onNewClick}
+          onClick={handleNewClick}
           className="w-full justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 h-10"
         >
           <Plus className="w-4 h-4" />
@@ -120,7 +159,13 @@ export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: Vaul
 
       {/* --- BOTTOM SECTION --- */}
       <div className="p-4 border-t border-border/40 bg-muted/10 space-y-1">
-        <SidebarNavItem label="Lock Vault" icon={LockIcon} isActive={false} onClick={onLock} variant="destructive" />
+        <SidebarNavItem
+          label="Lock Vault"
+          icon={LockIcon}
+          isActive={false}
+          onClick={handleLock}
+          variant="destructive"
+        />
         <SidebarNavItem
           label="Security"
           icon={ShieldCheck}

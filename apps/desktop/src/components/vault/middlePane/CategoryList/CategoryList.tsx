@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Search, Folder, XIcon, RefreshCcw } from "lucide-react";
+import { Folder, RefreshCcw } from "lucide-react";
 import CategoryListItem from "./CategoryListItem";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/store/ui.store";
 import { toast } from "sonner";
 import { usePasswordStore } from "@/store/vault/password.store";
+import { SearchInput } from "../../common/SearchInput";
 
 export default function CategoryList() {
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
@@ -48,26 +48,8 @@ export default function CategoryList() {
           </Button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative group">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-600 transition-colors" />
-          <Input
-            tabIndex={-1}
-            placeholder="Search categories..."
-            className="pl-9 pr-8 h-9 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-emerald-500/30 transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              tabIndex={-1}
-              title="Clear search"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <XIcon className="h-3 w-3" />
-            </button>
-          )}
+        <div className="flex-1">
+          <SearchInput placeholder="Search categories..." value={searchQuery} onChange={setSearchQuery} />
         </div>
       </div>
 
