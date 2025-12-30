@@ -2,11 +2,11 @@ import { PasswordCategoryService } from "@/services/password/passwordCategory.se
 import type { IPasswordCategory } from "@/utils/types/global.types";
 import { create } from "zustand";
 import { useUiStore } from "../ui.store";
+import { usePasswordStore } from "./password.store";
 
 interface IPasswordCategoryStore {
   passwordCategories: IPasswordCategory[];
   selectedCategoryId: string | null;
-  selectedCategory: IPasswordCategory | null;
 
   refresh: () => void;
   setSelectedCategoryId: (id: string | null) => void;
@@ -19,29 +19,18 @@ interface IPasswordCategoryStore {
 export const usePasswordCategoryStore = create<IPasswordCategoryStore>((set, get) => ({
   passwordCategories: [],
   selectedCategoryId: null,
-  selectedCategory: null,
 
   refresh: () => {
-    console.log("Refreshing password categories");
     const categories = PasswordCategoryService.getAllPasswordCategories();
-    set({
-      passwordCategories: categories,
-      selectedCategory: categories.find((c) => c.id === get().selectedCategoryId) || null,
-    });
+    set({ passwordCategories: categories });
   },
 
   setSelectedCategoryId: (id: string | null) => {
-    set((state) => ({
-      selectedCategoryId: id,
-      selectedCategory: state.passwordCategories.find((cat) => cat.id === id) || null,
-    }));
+    set({ selectedCategoryId: id });
   },
 
   clearSelectedCategoryId: () => {
-    set({
-      selectedCategoryId: null,
-      selectedCategory: null,
-    });
+    set({ selectedCategoryId: null });
   },
 
   createPasswordCategory: (category: IPasswordCategory) => {
@@ -56,6 +45,14 @@ export const usePasswordCategoryStore = create<IPasswordCategoryStore>((set, get
 
   deletePasswordCategory: (id: string) => {
     PasswordCategoryService.deletePasswordCategory(id);
+    const allPasswords = usePasswordStore.getState().passwordItems;
+
+    allPasswords.forEach((password) => {
+      if (password.categoryId === id) {
+        usePasswordStore.getState().updatePasswordItem({ ...password, categoryId: undefined });
+      }
+    });
+
     useUiStore.getState().syncDB();
   },
 }));

@@ -25,8 +25,11 @@ const getIcon = (iconName: string) => {
 };
 
 export default function CategoryDetails() {
-  const passwords = usePasswordStore((state) => state.passwordItems);
-  const category = usePasswordCategoryStore((state) => state.selectedCategory);
+  const passwordItems = usePasswordStore((state) => state.passwordItems);
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+  const selectedCategoryId = usePasswordCategoryStore((state) => state.selectedCategoryId);
+  const category = passwordCategories.find((c) => c.id === selectedCategoryId);
+
   const updatePasswordCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
@@ -78,7 +81,7 @@ export default function CategoryDetails() {
     );
   }
 
-  const categoryItems = passwords.filter((password) => password.categoryId === category.id);
+  const categoryItems = passwordItems.filter((password) => password.categoryId === category.id && !password.isDeleted);
 
   const filteredItems = categoryItems.filter((item) => {
     const searchLower = searchQuery.toLowerCase();

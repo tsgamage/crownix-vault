@@ -21,12 +21,12 @@ export default function CategoryListItem({
   const passwords = usePasswordStore((state) => state.passwordItems);
 
   const Icon = getIcon(category.icon);
-  const categoryItemsCount = passwords.filter((password) => password.categoryId === category.id).length;
+  const categoryItemsCount = passwords.filter((password) => password.categoryId === category.id && !password.isDeleted).length;
   const updateCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
 
   const handleDeleteCategory = () => {
-    updateCategory({ ...category, name: category.name + " (Deleted)", isDeleted: true });
+    updateCategory({ ...category, isDeleted: true });
     isSelected && clearSelectedCategoryId();
   };
 

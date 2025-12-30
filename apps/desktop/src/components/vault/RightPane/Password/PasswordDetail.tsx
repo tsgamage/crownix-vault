@@ -16,10 +16,10 @@ import {
   Save,
   RefreshCw,
   Folder,
-  Trash2,
   X,
   RotateCcw,
   ChevronLeft,
+  KeyRoundIcon,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -40,14 +40,12 @@ import {
 import { PasswordStrengthCard } from "./components/PasswordStrengthCard";
 import { calculatePasswordEntropy, generateVeryStrongPassword, getPasswordStrength } from "@/utils/pwd.utils";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { useDialog } from "@/context/DialogContext";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { useUiStore } from "@/store/ui.store";
+import { Badge } from "@/components/ui/badge";
 
 export function PasswordDetail({ showBackButton }: { showBackButton?: boolean }) {
-  const { openDialog, closeDialog } = useDialog();
-
   const isPasswordEditing = useUiStore((state) => state.isPasswordEditShown);
   const setIsPasswordEditing = useUiStore((state) => state.setIsPasswordEditShown);
   const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
@@ -59,11 +57,12 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
+  const passwordItems = usePasswordStore((state) => state.passwordItems);
+  const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
-  const selectedPassword = usePasswordStore((state) => state.selectedPassword);
   const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
   const updatePasswordItem = usePasswordStore((state) => state.updatePasswordItem);
-  const deletePasswordItem = usePasswordStore((state) => state.deletePasswordItem);
+  const selectedPassword = passwordItems.find((p) => p.id === selectedPasswordId) || null;
 
   useEffect(() => {
     setFormData(selectedPassword);
@@ -137,83 +136,16 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
     }
   };
 
-  const handleRestore = () => {
-    if (formData) {
-      updatePasswordItem({
-        ...formData,
-        isDeleted: false,
-        updatedAt: Date.now(),
-      });
-      setIsPasswordEditing(false);
-      clearSelectedId();
-    }
-  };
-
   if (!formData) {
     return (
       <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
-            <MoreHorizontal className="w-8 h-8 opacity-20" />
+            <KeyRoundIcon className="w-8 h-8 opacity-20" />
           </div>
           <p className="text-sm font-medium text-muted-foreground">Select an item to view details</p>
         </div>
       </div>
-    );
-  }
-
-  if (formData.isDeleted) {
-    return (
-      <>
-        <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
-              <Trash2 className="w-8 h-8 opacity-20" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">This item has been deleted</p>
-            {formData.notes && (
-              <div className="text-sm text-muted-foreground/80 py-3 px-4 rounded-md bg-muted/30 border border-border/30 max-w-sm mx-auto whitespace-pre-wrap leading-relaxed text-left">
-                <span className="text-xs font-semibold uppercase tracking-wider block mb-1 opacity-70">Note:</span>
-                {formData.notes}
-              </div>
-            )}
-            <div className="flex flex-col items-center gap-2">
-              <Button variant="outline" onClick={handleRestore}>
-                Restore
-              </Button>
-              <Button
-                variant="outline"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-                onClick={() =>
-                  openDialog({
-                    title: "Delete Permanently?",
-                    description: "Are you sure you want to delete this item permanently? This action cannot be undone.",
-                    variant: "danger",
-                    icon: Trash2,
-                    buttons: [
-                      {
-                        label: "Cancel",
-                        variant: "ghost",
-                        onClick: closeDialog,
-                      },
-                      {
-                        label: "Delete",
-                        variant: "destructive",
-                        onClick: () => {
-                          deletePasswordItem(formData.id);
-                          closeDialog();
-                        },
-                      },
-                    ],
-                  })
-                }
-              >
-                Delete Permanently
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
     );
   }
 
@@ -283,10 +215,15 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                       </div>
                     </SelectItem>
                     {passwordCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
+                      <SelectItem key={cat.id} value={cat.id} disabled={cat.isDeleted}>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${cat.color}`} />
                           {cat.name}
+                          {cat.isDeleted && (
+                            <Badge className="h-5" variant="destructive">
+                              Deleted
+                            </Badge>
+                          )}
                         </div>
                       </SelectItem>
                     ))}
@@ -298,6 +235,11 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     <span className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-muted border border-border/50 text-xs font-medium">
                       <span className={`w-2 h-2 rounded-full ${currentCategory.color || "bg-gray-400"}`} />
                       {currentCategory.name}
+                      {currentCategory.isDeleted && (
+                        <Badge className="h-5" variant="destructive">
+                          Deleted
+                        </Badge>
+                      )}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs opacity-60">

@@ -76,7 +76,8 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
     isSelected && clearSelectedId();
   };
 
-  const itemCategory = passwordCategories.find((category) => category.id === item.categoryId)?.name;
+  const itemCategory = passwordCategories.find((category) => category.id === item.categoryId);
+  const itemCategoryName = itemCategory?.isDeleted ? itemCategory?.name + " (Deleted)" : itemCategory?.name;
 
   return (
     <ContextMenu>
@@ -119,12 +120,12 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
             <p className="text-xs text-muted-foreground truncate flex items-center opacity-80">
               {item.username || "No username"}
             </p>
-            {itemCategory && (
+            {itemCategoryName && (
               <Badge
                 variant="secondary"
                 className={cn("h-4 opacity-80 text-xs truncate flex items-center", categoryColor)}
               >
-                {itemCategory}
+                {itemCategoryName}
               </Badge>
             )}
           </div>

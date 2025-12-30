@@ -22,10 +22,28 @@ const COLORS = [
   { name: "Cyan", class: "bg-cyan-900" },
 ];
 
-const ICONS = ["Folder", "Globe", "Briefcase", "DollarSign", "Gamepad2", "Lock", "Key", "Shield", "Star", "Heart"];
+const ICONS = [
+  "Folder",
+  "Globe",
+  "Briefcase",
+  "DollarSign",
+  "Gamepad2",
+  "Lock",
+  "Key",
+  "Shield",
+  "Star",
+  "Heart",
+  "Mail",
+  "User",
+  "Smartphone",
+  "Monitor",
+];
 
 export default function CreateAndEditCategory() {
-  const editingData = usePasswordCategoryStore((state) => state.selectedCategory);
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+  const selectedCategoryId = usePasswordCategoryStore((state) => state.selectedCategoryId);
+  const editingData = passwordCategories.find((c) => c.id === selectedCategoryId);
+
   const createPasswordCategory = usePasswordCategoryStore((state) => state.createPasswordCategory);
   const updatePasswordCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedPasswordId = usePasswordStore((state) => state.clearSelectedPasswordId);

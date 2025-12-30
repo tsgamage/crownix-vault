@@ -42,6 +42,18 @@ export interface IUiStore {
   isPasswordCategoryDetailsShown: boolean;
   setIsPasswordCategoryDetailsShown: (isPasswordCategoryDetailsShown: boolean) => void;
 
+  selectedTrashId: string | null;
+  setSelectedTrashId: (id: string | null) => void;
+  
+  selectedTrashType: "password" | "category" | null;
+  setSelectedTrashType: (type: "password" | "category" | null) => void;
+
+  isTrashListShown: boolean;
+  setIsTrashListShown: (isTrashListShown: boolean) => void;
+
+  isTrashDetailsShown: boolean;
+  setIsTrashDetailsShown: (isTrashDetailsShown: boolean) => void;
+
   isSettingsOpen: boolean;
   setIsSettingsOpen: (isSettingsOpen: boolean) => void;
 
@@ -88,6 +100,17 @@ export const useUiStore = create<IUiStore>((set) => ({
   isPasswordCategoryDetailsShown: false,
   setIsPasswordCategoryDetailsShown: (isPasswordCategoryDetailsShown: boolean) =>
     set({ isPasswordCategoryDetailsShown }),
+
+  selectedTrashId: null,
+  setSelectedTrashId: (selectedTrashId: string | null) => set({ selectedTrashId }),
+  selectedTrashType: null,
+  setSelectedTrashType: (selectedTrashType: "password" | "category" | null) => set({ selectedTrashType }),
+
+  isTrashListShown: false,
+  setIsTrashListShown: (isTrashListShown: boolean) => set({ isTrashListShown }),
+
+  isTrashDetailsShown: false,
+  setIsTrashDetailsShown: (isTrashDetailsShown: boolean) => set({ isTrashDetailsShown }),
 
   activeTabId: "all",
   setActiveTabId: (activeTabId: TabId) => set({ activeTabId }),

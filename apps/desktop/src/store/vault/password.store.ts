@@ -6,7 +6,6 @@ import { useUiStore } from "../ui.store";
 interface IPasswordStore {
   passwordItems: IPasswordItem[];
   selectedPasswordId: string | null;
-  selectedPassword: IPasswordItem | null;
 
   refresh: () => void;
   setSelectedPasswordId: (id: string | null) => void;
@@ -17,34 +16,21 @@ interface IPasswordStore {
   deletePasswordItem: (id: string) => void;
 }
 
-export const usePasswordStore = create<IPasswordStore>((set, get) => ({
+export const usePasswordStore = create<IPasswordStore>((set) => ({
   passwordItems: [],
   selectedPasswordId: null,
-  selectedPassword: null,
 
   refresh: () => {
-    console.log("Refreshing password items");
     const passwords = PasswordService.getAllPasswordItems();
-    set({
-      passwordItems: passwords,
-      selectedPassword:
-        passwords.find((i) => i.id === get().selectedPasswordId) || null,
-    });
+    set({ passwordItems: passwords });
   },
 
   setSelectedPasswordId: (id: string | null) => {
-    set((state) => ({
-      selectedPasswordId: id,
-      selectedPassword:
-        state.passwordItems.find((item) => item.id === id) || null,
-    }));
+    set({ selectedPasswordId: id });
   },
 
   clearSelectedPasswordId: () => {
-    set({
-      selectedPasswordId: null,
-      selectedPassword: null,
-    });
+    set({ selectedPasswordId: null });
   },
 
   createPasswordItem: (passwordItem: IPasswordItem) => {

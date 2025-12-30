@@ -6,8 +6,9 @@ import { Search, Folder, Check, KeyRoundIcon } from "lucide-react";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import type { IPasswordCategory } from "@/utils/types/global.types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "../../common/SearchInput";
 
 interface AddPasswordsSheetProps {
   isOpen: boolean;
@@ -23,9 +24,13 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Filter passwords
-  // 1. Exclude deleted
-  // 2. Match search query
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedIds(new Set());
+      setSearchQuery("");
+    }
+  }, [isOpen]);
+
   const filteredPasswords = useMemo(() => {
     return passwords
       .filter((p) => !p.isDeleted)
@@ -97,15 +102,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
             <SheetDescription>Select passwords to move to this category.</SheetDescription>
           </SheetHeader>
 
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search passwords..."
-              className="pl-9 bg-muted/50 border-transparent focus:bg-background transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <SearchInput placeholder="Search passwords..." value={searchQuery} onChange={(e) => setSearchQuery(e)} />
         </div>
 
         {/* LIST */}

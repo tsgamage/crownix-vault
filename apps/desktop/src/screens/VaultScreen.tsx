@@ -18,6 +18,8 @@ import SecurityPage from "@/components/vault/security/SecurityPage";
 
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import TrashList from "@/components/vault/middlePane/TrashList/TrashList";
+import TrashDetails from "@/components/vault/RightPane/Trash/TrashDetails";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -76,7 +78,7 @@ export default function VaultScreen() {
   const isFavoritesPasswordsTabActive = activeTabId === "favorites";
   const isTrashPasswordsTabActive = activeTabId === "trash";
 
-  const isAnyPasswordTabActive = isAllPasswordsTabActive || isFavoritesPasswordsTabActive || isTrashPasswordsTabActive;
+  const isAnyPasswordTabActive = isAllPasswordsTabActive || isFavoritesPasswordsTabActive;
   const isOrganizeTabActive = activeTabId === "organize";
   const isSecurityTabActive = activeTabId === "security";
 
@@ -103,6 +105,7 @@ export default function VaultScreen() {
             <div className="w-[30%] min-w-[300px] h-full">
               {isOrganizeTabActive && <CategoryList />}
               {isAnyPasswordTabActive && <PasswordList />}
+              {isTrashPasswordsTabActive && <TrashList />}
             </div>
 
             {/* Right Pane */}
@@ -117,6 +120,7 @@ export default function VaultScreen() {
                     <CategoryDetails />
                   </>
                 ))}
+              {isTrashPasswordsTabActive && <TrashDetails />}
             </div>
           </>
         )}
