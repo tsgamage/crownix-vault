@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
   children: JSX.Element;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!SessionService.isUnlocked()) {
     return <Navigate to="/unlock" replace />;
   }

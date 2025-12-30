@@ -1,11 +1,11 @@
+import Providers from "@/components/providers/Providers";
 import { AppRouter } from "./AppRouter";
-import { DialogProvider } from "@/context/DialogContext";
 
 function App() {
   return (
-    <DialogProvider>
+    <Providers>
       <AppRouter />
-    </DialogProvider>
+    </Providers>
   );
 }
 
