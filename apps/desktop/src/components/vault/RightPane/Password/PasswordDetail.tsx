@@ -38,7 +38,7 @@ import {
 } from "../../../ui/dropdown-menu";
 
 import { PasswordStrengthCard } from "./components/PasswordStrengthCard";
-import { calculatePasswordEntropy, generateVeryStrongPassword, getPasswordStrength } from "@/utils/pwd.utils";
+import { calculatePasswordScore, generatePassword, getPasswordStrength } from "@/utils/Password/pwd.utils";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
@@ -71,7 +71,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   }, [selectedPassword]);
 
   useEffect(() => {
-    setPasswordStrength(Math.floor(calculatePasswordEntropy(formData?.password || "")));
+    setPasswordStrength(Math.floor(calculatePasswordScore(formData?.password || "")));
   }, [formData?.password]);
 
   // Handle escape key press
@@ -394,7 +394,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     onClick={() =>
                       setFormData({
                         ...formData,
-                        password: generateVeryStrongPassword(),
+                        password: generatePassword("excellent"),
                       })
                     }
                   >

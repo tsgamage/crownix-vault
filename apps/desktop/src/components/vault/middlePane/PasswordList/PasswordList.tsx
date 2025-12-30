@@ -14,7 +14,7 @@ import { PasswordListItem } from "./PasswordListItem";
 import { PasswordListSkeleton } from "./PasswordListSkeleton";
 import { useMemo, useState } from "react";
 import { useUiStore } from "@/store/ui.store";
-import { getPasswordStrength } from "@/utils/pwd.utils";
+import { getPasswordStrength } from "@/utils/Password/pwd.utils";
 import AllTabEmptyState from "./EmptyStates/AllTabEmptyState";
 import FavoritesTabEmptyState from "./EmptyStates/FavoritesTabEmptyState";
 import TrashTabEmptyState from "./EmptyStates/TrashTabEmptyState";

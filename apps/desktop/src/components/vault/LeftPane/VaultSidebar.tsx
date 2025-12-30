@@ -9,6 +9,7 @@ import {
   HardDrive,
   LockIcon,
   FolderIcon,
+  WrenchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarNavItem } from "./components/SidebarNavItem";
@@ -178,6 +179,12 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
           onClick={() => setActiveTabId("security")}
         />
         <SidebarNavItem
+          label="Tools"
+          icon={WrenchIcon}
+          isActive={activeTabId === "tools"}
+          onClick={() => setActiveTabId("tools")}
+        />
+        <SidebarNavItem
           label="Trash"
           icon={Trash2}
           isActive={activeTabId === "trash"}
@@ -186,12 +193,12 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
 
         <SidebarNavItem label="Settings" icon={Settings} isActive={false} onClick={() => setIsSettingsOpen(true)} />
 
-        <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
+        {/* <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
           <span className="flex items-center gap-1">
             <HardDrive className="w-3 h-3" /> 1.2 MB
           </span>
           <span>v1.0.0</span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

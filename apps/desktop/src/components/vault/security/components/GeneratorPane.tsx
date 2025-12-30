@@ -1,9 +1,36 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, RefreshCw, X, KeyRound, Type, Hash } from "lucide-react";
+import {
+  Copy,
+  RefreshCw,
+  X,
+  KeyRound,
+  Type,
+  Hash,
+  ShieldCheck,
+  Scan,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { generatePassword, generatePassphrase, generateOTP } from "@/utils/pwd.utils";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  generatePassword,
+  generatePassphrase,
+  generateOTP,
+  generateRecoveryCode,
+  calculatePasswordScore,
+  getPasswordStrength,
+  analyzePassword,
+  analyzePasswordPatterns,
+  type PasswordAnalysis,
+} from "@/utils/Password/pwd.utils";
 import type { GeneratorType } from "../security.config";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -20,14 +47,22 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   const [passphraseWords, setPassphraseWords] = useState(4);
   const [otpLength, setOtpLength] = useState(6);
 
+  // Analyzer States
+  const [analyzerValue, setAnalyzerValue] = useState("");
+  const [analysisResults, setAnalysisResults] = useState<PasswordAnalysis | null>(null);
+  const [patternResults, setPatternResults] = useState<ReturnType<typeof analyzePasswordPatterns> | null>(null);
+  const [isAnalyzerVisible, setIsAnalyzerVisible] = useState(false);
+
   // Handlers
   const handleGenerate = () => {
     if (type === "password") {
-      setValue(generatePassword({ length, strength: "strong" }));
+      setValue(generatePassword({ length, strength: "excellent" }));
     } else if (type === "passphrase") {
       setValue(generatePassphrase(passphraseWords));
     } else if (type === "otp") {
       setValue(generateOTP(otpLength));
+    } else if (type === "recovery-code") {
+      setValue(generateRecoveryCode());
     }
   };
 
@@ -38,8 +73,24 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   };
 
   useEffect(() => {
-    handleGenerate();
+    if (type !== "analyzer") {
+      handleGenerate();
+    }
   }, [type, length, passphraseWords, otpLength]);
+
+  const handleAnalyze = () => {
+    if (!analyzerValue) return;
+    const results = analyzePassword(analyzerValue);
+    const patterns = analyzePasswordPatterns(analyzerValue);
+    setAnalysisResults(results);
+    setPatternResults(patterns);
+  };
+
+  const getStrengthColor = (score: number) => {
+    if (score < 40) return "bg-red-500";
+    if (score < 70) return "bg-orange-500";
+    return "bg-emerald-500";
+  };
 
   const configSection = (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -51,7 +102,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
             </Label>
             <span className="text-lg font-bold text-primary">{length}</span>
           </div>
-          <Slider value={[length]} onValueChange={(v) => setLength(v[0])} min={8} max={64} step={1} className="py-2" />
+          <Slider value={[length]} onValueChange={(v) => setLength(v[0])} min={8} max={128} step={1} className="py-2" />
         </div>
       )}
 
@@ -93,80 +144,260 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
 
   const Content = (
     <>
-      <div className="p-6 border-b border-border/40 flex items-center justify-between bg-background/95 backdrop-blur-sm sticky top-0 z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+      <div className="px-6 py-5 flex items-center justify-between bg-background shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
             {type === "password" && <KeyRound className="w-5 h-5" />}
             {type === "passphrase" && <Type className="w-5 h-5" />}
             {type === "otp" && <Hash className="w-5 h-5" />}
+            {type === "recovery-code" && <ShieldCheck className="w-5 h-5" />}
+            {type === "analyzer" && <Scan className="w-5 h-5" />}
           </div>
           <div>
-            <h3 className="font-bold text-lg leading-none">
+            <h3 className="font-bold text-lg leading-tight tracking-tight">
               {type === "password" && "Password Generator"}
               {type === "passphrase" && "Passphrase Generator"}
               {type === "otp" && "OTP Generator"}
+              {type === "recovery-code" && "Recovery Codes"}
+              {type === "analyzer" && "Password Analyzer"}
             </h3>
-            <p className="text-xs text-muted-foreground mt-1">Create cryptographically secure secrets</p>
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+              Secure secret generation
+            </p>
           </div>
         </div>
         {!isSheet && (
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted" onClick={onClose}>
-            <X className="w-4 h-4 text-muted-foreground" />
+          <Button variant="ghost" size="icon" className="size-8 rounded-full" onClick={onClose}>
+            <X className="w-4 h-4" />
           </Button>
         )}
       </div>
+      <Separator className="opacity-50" />
 
-      <div className="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar">
-        {/* Output Display Area */}
-        <div className="space-y-4">
-          <div
-            className={cn(
-              "relative min-h-[160px] p-6 rounded-2xl bg-card border border-border/60 shadow-inner flex items-center justify-center text-center transition-all duration-300 group",
-              "hover:border-primary/30"
+      <div className="flex-1 overflow-hidden relative">
+        <ScrollArea className="h-full">
+          <div className="p-6 space-y-8">
+            {type !== "analyzer" ? (
+              <div className="space-y-4">
+                <div
+                  className={cn(
+                    "relative min-h-[160px] p-6 rounded-2xl bg-card border border-border/60 shadow-inner flex items-center justify-center text-center transition-all duration-300 group",
+                    "hover:border-primary/30"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "font-mono font-bold break-all leading-tight tracking-wide",
+                      type === "otp" ? "text-5xl" : value.length > 24 ? "text-xl" : "text-3xl",
+                      !value && "text-muted-foreground/30 italic text-xl"
+                    )}
+                  >
+                    {value || "Generating..."}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="secondary" className="flex-1 h-12 gap-2 shadow-lg" onClick={handleCopy}>
+                    <Copy className="w-4 h-4" /> Copy Securely
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-12 w-12 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
+                    onClick={handleGenerate}
+                    title="Regenerate"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {type === "password" && value && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex justify-between items-end px-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        Security Strength
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs font-bold uppercase tracking-tight",
+                          calculatePasswordScore(value) < 40
+                            ? "text-red-500"
+                            : calculatePasswordScore(value) < 70
+                            ? "text-orange-500"
+                            : "text-emerald-500"
+                        )}
+                      >
+                        {getPasswordStrength(value).replace("-", " ")} ({Math.round(calculatePasswordScore(value))}%)
+                      </span>
+                    </div>
+                    <Progress
+                      value={calculatePasswordScore(value)}
+                      className="h-1.5"
+                      indicatorClassName={getStrengthColor(calculatePasswordScore(value))}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Password to Analyze
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={isAnalyzerVisible ? "text" : "password"}
+                        placeholder="Enter password..."
+                        value={analyzerValue}
+                        onChange={(e) => setAnalyzerValue(e.target.value)}
+                        className="pr-10 h-11 bg-card border-border/60"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-foreground"
+                        onClick={() => setIsAnalyzerVisible(!isAnalyzerVisible)}
+                      >
+                        {isAnalyzerVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full h-11 gap-2" onClick={handleAnalyze}>
+                    <Scan className="w-4 h-4" /> Run Analysis
+                  </Button>
+                </div>
+
+                {analysisResults && (
+                  <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="p-5 rounded-2xl bg-card border border-border/60 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-sm tracking-tight">Analysis Result</h4>
+                        <span
+                          className={cn(
+                            "text-xs font-black uppercase px-2 py-0.5 rounded-full",
+                            analysisResults.score < 40
+                              ? "bg-red-500/10 text-red-500"
+                              : analysisResults.score < 70
+                              ? "bg-orange-500/10 text-orange-500"
+                              : "bg-emerald-500/10 text-emerald-500"
+                          )}
+                        >
+                          {analysisResults.strength.replace("-", " ")}
+                        </span>
+                      </div>
+                      <Progress
+                        value={analysisResults.score}
+                        className="h-2"
+                        indicatorClassName={getStrengthColor(analysisResults.score)}
+                      />
+                      <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase px-0.5">
+                        <span>Weak</span>
+                        <span>Score: {Math.round(analysisResults.score)}/100</span>
+                        <span>Excellent</span>
+                      </div>
+                    </div>
+
+                    {analysisResults.weaknesses.length > 0 && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">
+                          Detected Weaknesses
+                        </Label>
+                        <div className="grid gap-2">
+                          {analysisResults.weaknesses.map((w, i) =>
+                            w === "No major weaknesses detected" ? (
+                              <div
+                                key={i}
+                                className="flex gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 items-start"
+                              >
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                <span className="text-xs text-emerald-700/80 font-medium leading-relaxed">{w}</span>
+                              </div>
+                            ) : (
+                              <div
+                                key={i}
+                                className="flex gap-3 p-3 rounded-xl bg-red-500/5 border border-red-500/10 items-start"
+                              >
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <span className="text-xs text-red-700/80 font-medium leading-relaxed">{w}</span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {analysisResults.suggestions.length > 0 && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">
+                          Actionable Improvements
+                        </Label>
+                        <div className="grid gap-2">
+                          {analysisResults.suggestions.map((s, i) => (
+                            <div
+                              key={i}
+                              className="flex gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 items-start"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <span className="text-xs text-emerald-700/80 font-medium leading-relaxed">{s}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {patternResults && patternResults.patterns.length > 0 && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1">
+                          Security Patterns
+                        </Label>
+                        <div className="grid gap-2">
+                          {patternResults.patterns.map((p, i) => (
+                            <div
+                              key={i}
+                              className={cn(
+                                "flex gap-3 p-3 rounded-xl items-start",
+                                p.includes("No common")
+                                  ? "bg-primary/5 border border-primary/10"
+                                  : "bg-orange-500/5 border border-orange-500/10"
+                              )}
+                            >
+                              {p.includes("No common") ? (
+                                <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                              )}
+                              <span
+                                className={cn(
+                                  "text-xs font-medium leading-relaxed",
+                                  p.includes("No common") ? "text-primary/80" : "text-orange-700/80"
+                                )}
+                              >
+                                {p}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
-          >
-            <div
-              className={cn(
-                "font-mono font-bold break-all leading-tight tracking-wide",
-                type === "otp" ? "text-5xl" : value.length > 24 ? "text-xl" : "text-3xl",
-                !value && "text-muted-foreground/30 italic text-xl"
-              )}
-            >
-              {value || "Generating..."}
-            </div>
-          </div>
 
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1 h-12 gap-2 shadow-lg" onClick={handleCopy}>
-              <Copy className="w-4 h-4" /> Copy Securely
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-12 w-12 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
-              onClick={handleGenerate}
-              title="Regenerate"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </Button>
+            {type !== "recovery-code" && type !== "analyzer" && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 shrink-0">
+                    Configuration
+                  </span>
+                  <Separator className="flex-1 opacity-20" />
+                </div>
+                {configSection}
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Configuration */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 px-1">
-            <span>Configuration</span>
-            <div className="h-px flex-1 bg-border/40" />
-          </div>
-          {configSection}
-        </div>
-      </div>
-
-      <div className="p-6 border-t border-border/40 bg-muted/10">
-        <div className="flex gap-3 items-center text-xs text-muted-foreground/60 leading-normal">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <p>Generated locally using cryptographically secure random numbers.</p>
-        </div>
+        </ScrollArea>
       </div>
     </>
   );

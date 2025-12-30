@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, X, AlertCircle, ArrowRight } from "lucide-react";
+import { CheckCircle2, X, AlertCircle, ArrowRight, ShieldAlert } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import type { IPasswordItem } from "@/utils/types/global.types";
-import { Card, CardTitle, CardDescription, CardFooter, CardContent } from "@/components/ui/card";
 import { SECURITY_CARDS, type SecurityIssueType } from "../security.config";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui.store";
@@ -34,30 +34,25 @@ export function SecurityDetailsPane({ type, title, items, onClose, isSheet = fal
 
   const Content = (
     <div className="flex flex-col h-full bg-background overflow-hidden font-sans">
-      {/* Header */}
-      <div className="p-6 border-b border-border/40 flex items-center justify-between bg-background shrink-0">
-        <div className="flex items-center gap-3">
-          <div className={cn("p-2.5 rounded-lg", cardConfig?.bgClass, cardConfig?.colorClass)}>
+      <div className="px-6 py-5 flex items-center justify-between bg-background shrink-0">
+        <div className="flex items-center gap-4">
+          <div className={cn("p-2 rounded-xl", cardConfig?.bgClass, cardConfig?.colorClass)}>
             <HeaderIcon className="size-5" />
           </div>
           <div>
-            <h3 className="font-bold text-lg leading-none capitalize tracking-tight">{title}</h3>
-            <p className="text-xs text-muted-foreground mt-1.5 font-medium flex items-center gap-1.5">
-              {items.length} {items.length === 1 ? "item needs" : "items need"} attention
+            <h3 className="font-bold text-lg leading-tight tracking-tight">{title}</h3>
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+              {items.length} {items.length === 1 ? "issue" : "issues"} detected
             </p>
           </div>
         </div>
         {!isSheet && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-9 rounded-full hover:bg-muted transition-colors"
-            onClick={onClose}
-          >
-            <X className="size-4 text-muted-foreground" />
+          <Button variant="ghost" size="icon" className="size-8 rounded-full" onClick={onClose}>
+            <X className="size-4" />
           </Button>
         )}
       </div>
+      <Separator className="opacity-50" />
 
       {/* Main Content Area - Scrollable */}
       <div className="flex-1 overflow-hidden relative">
@@ -76,27 +71,31 @@ export function SecurityDetailsPane({ type, title, items, onClose, isSheet = fal
             ) : (
               <div className="grid gap-4">
                 {items.map((item) => (
-                  <Card key={item.id} className="p-4 gap-0 shadow-none hover:bg-muted/30 transition-colors">
-                    <CardContent className="px-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm font-bold truncate">{item.title}</CardTitle>
-                          <CardDescription className="truncate mt-1">{item.username || "No username"}</CardDescription>
-                        </div>
+                  <div
+                    key={item.id}
+                    className="group relative flex items-center justify-between p-4 rounded-2xl bg-card border border-border/40 hover:border-primary/20 hover:shadow-sm transition-all duration-300"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                        <ShieldAlert className="size-5" />
                       </div>
-                    </CardContent>
-                    <CardFooter className="px-0 justify-end">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 text-xs font-bold gap-1.5 text-primary hover:text-primary hover:bg-primary/10"
-                        onClick={() => handleResolveClick(item)}
-                      >
-                        Resolve
-                        <ArrowRight className="size-3.5" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold truncate tracking-tight">{item.title}</h4>
+                        <p className="text-[11px] text-muted-foreground truncate font-medium">
+                          {item.username || "No username"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
+                      onClick={() => handleResolveClick(item)}
+                    >
+                      <ArrowRight className="size-5" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             )}

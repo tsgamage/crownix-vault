@@ -13,7 +13,7 @@ import { PasswordIconPicker } from "./components/PasswordIconPicker";
 import { UrlManager } from "./components/UrlManager";
 import { TagManager } from "./components/TagManager";
 import { CustomFieldManager } from "./components/CustomFieldManager";
-import { generateVeryStrongPassword } from "@/utils/pwd.utils";
+import { generateVeryStrongPassword } from "@/utils/Password/pwd.utils";
 import { MOCK_PASSWORD_CATEGORIES } from "@/data/initial-vault";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";

@@ -1,7 +1,17 @@
-import { ShieldAlert, RotateCw, AlertTriangle, Users, KeyRound, FileSignature, Smartphone } from "lucide-react";
+import {
+  ShieldAlert,
+  RotateCw,
+  AlertTriangle,
+  Users,
+  KeyRound,
+  ShieldCheck,
+  Scan,
+  HashIcon,
+  TypeIcon,
+} from "lucide-react";
 
-export type SecurityIssueType = "compromised" | "reused" | "weak" | "common";
-export type GeneratorType = "password" | "otp" | "passphrase";
+export type SecurityIssueType = "compromised" | "reused" | "weak" | "common" | "pattern";
+export type GeneratorType = "password" | "otp" | "passphrase" | "recovery-code" | "analyzer";
 
 export interface SecurityCardConfig {
   id: SecurityIssueType;
@@ -20,6 +30,7 @@ export interface GeneratorCardConfig {
   icon: any;
   colorClass: string;
   bgClass: string;
+  borderColorClass: string;
 }
 
 export const SECURITY_CARDS: SecurityCardConfig[] = [
@@ -59,6 +70,15 @@ export const SECURITY_CARDS: SecurityCardConfig[] = [
     bgClass: "bg-blue-500/10",
     borderColorClass: "border-blue-500",
   },
+  {
+    id: "pattern",
+    title: "Pattern Passwords",
+    description: "Contains common sequential or keyboard patterns",
+    icon: Scan,
+    colorClass: "text-indigo-500",
+    bgClass: "bg-indigo-500/10",
+    borderColorClass: "border-indigo-500",
+  },
 ];
 
 export const GENERATOR_CARDS: GeneratorCardConfig[] = [
@@ -69,21 +89,42 @@ export const GENERATOR_CARDS: GeneratorCardConfig[] = [
     icon: KeyRound,
     colorClass: "text-emerald-500",
     bgClass: "bg-emerald-500/10",
+    borderColorClass: "border-emerald-500",
   },
   {
     id: "otp",
     title: "OTP Setup",
     description: "Generate 2FA codes",
-    icon: Smartphone,
+    icon: HashIcon,
     colorClass: "text-purple-500",
     bgClass: "bg-purple-500/10",
+    borderColorClass: "border-purple-500",
   },
   {
     id: "passphrase",
     title: "Passphrase Generator",
     description: "Memorable random words",
-    icon: FileSignature,
+    icon: TypeIcon,
     colorClass: "text-pink-500",
     bgClass: "bg-pink-500/10",
+    borderColorClass: "border-pink-500",
+  },
+  {
+    id: "recovery-code",
+    title: "Recovery Codes",
+    description: "Secure account recovery keys",
+    icon: ShieldCheck,
+    colorClass: "text-blue-500",
+    bgClass: "bg-blue-500/10",
+    borderColorClass: "border-blue-500",
+  },
+  {
+    id: "analyzer",
+    title: "Password Analyzer",
+    description: "In-depth security analysis",
+    icon: Scan,
+    colorClass: "text-orange-500",
+    bgClass: "bg-orange-500/10",
+    borderColorClass: "border-orange-500",
   },
 ];

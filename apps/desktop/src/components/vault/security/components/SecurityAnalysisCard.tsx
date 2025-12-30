@@ -16,13 +16,9 @@ export function SecurityAnalysisCard({ config, count, selected, onClick, isGener
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col p-5 rounded-xl border transition-all text-left group h-full",
+        "flex w-full flex-col p-5 rounded-xl border transition-all text-left group h-full",
         selected
-          ? cn(
-              config.bgClass,
-              (config as any).borderColorClass || "ring-emerald-500", // Fallback or strict type check
-              (config as any).borderColorClass || "border-emerald-500"
-            )
+          ? cn(config.bgClass, (config as any).borderColorClass || "border-emerald-900")
           : "bg-card hover:shadow-md border-border/50 hover:border-border/80"
       )}
     >

@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
 import {
-  calculateVaultHealthScore,
   findReusedPasswords,
   findWeakPasswords,
   findCommonPasswords,
-  getActiveItems,
-} from "@/utils/pwd.utils";
-import type { SecurityIssueType, GeneratorType } from "./security.config";
+  findPatternPasswords,
+  analyzeVaultHealth,
+} from "@/utils/Password/pwd.utils";
 import { SecurityDashboard } from "./components/SecurityDashboard";
 import { SecurityDetailsPane } from "./components/SecurityDetailsPane";
-import { GeneratorPane } from "./components/GeneratorPane";
 import { PasswordDetail } from "../RightPane/Password/PasswordDetail";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import type { SecurityIssueType } from "./security.config";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { usePasswordStore } from "@/store/vault/password.store";
@@ -18,7 +19,6 @@ import { useUiStore } from "@/store/ui.store";
 
 export default function SecurityPage() {
   const [selectedIssue, setSelectedIssue] = useState<SecurityIssueType | null>(null);
-  const [selectedGenerator, setSelectedGenerator] = useState<GeneratorType | null>(null);
 
   const allItems = usePasswordStore((state) => state.passwordItems).filter((i) => !i.isDeleted);
   const isPasswordDetailsShown = useUiStore((state) => state.isPasswordDetailsShown);
@@ -26,13 +26,17 @@ export default function SecurityPage() {
   const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
 
   const analysis = useMemo(() => {
-    const active = getActiveItems(allItems);
+    const active = allItems.filter((i) => !i.isDeleted);
+    const vaultHealth = analyzeVaultHealth(active);
+
     return {
-      healthScore: calculateVaultHealthScore(active),
+      healthScore: vaultHealth.score,
       reused: findReusedPasswords(active),
       weak: findWeakPasswords(active),
       common: findCommonPasswords(active),
+      pattern: findPatternPasswords(active),
       compromised: [],
+      vaultHealth, // Include the full analysis
     };
   }, [allItems]);
 
@@ -41,6 +45,7 @@ export default function SecurityPage() {
     reused: analysis.reused.length,
     weak: analysis.weak.length,
     common: analysis.common.length,
+    pattern: analysis.pattern.length,
   };
 
   const getItemsForIssue = (issue: SecurityIssueType) => {
@@ -53,6 +58,8 @@ export default function SecurityPage() {
         return analysis.weak;
       case "common":
         return analysis.common;
+      case "pattern":
+        return analysis.pattern;
       default:
         return [];
     }
@@ -64,26 +71,14 @@ export default function SecurityPage() {
       setSelectedIssue(null);
     } else {
       setSelectedIssue(issue);
-      setSelectedGenerator(null); // Deselect generator
-    }
-  };
-
-  const handleSelectGenerator = (gen: GeneratorType) => {
-    // Toggle
-    if (selectedGenerator === gen) {
-      setSelectedGenerator(null);
-    } else {
-      setSelectedGenerator(gen);
-      setSelectedIssue(null); // Deselect issue
     }
   };
 
   const handleCloseRightPane = () => {
     setSelectedIssue(null);
-    setSelectedGenerator(null);
   };
 
-  const isSheetOpen = !!selectedIssue || !!selectedGenerator;
+  const isSheetOpen = !!selectedIssue;
 
   const handleClosePasswordDetailsSheet = () => {
     clearSelectedId();
@@ -93,25 +88,27 @@ export default function SecurityPage() {
   return (
     <div className="h-full flex-1 flex flex-col bg-background animate-in fade-in duration-300">
       {/* --- HEADER --- */}
-      <div className="p-8 border-b border-border/40 shrink-0">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Security Dashboard</h1>
-        <p className="text-muted-foreground">
+      <div className="px-8 py-6 shrink-0">
+        <h1 className="text-3xl font-bold tracking-tight mb-1">Security Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
           {allItems.length === 0
             ? "No vault items found."
             : "Overview of your vault's security health and vulnerabilities."}
         </p>
       </div>
+      <Separator className="opacity-50" />
 
-      <div className="flex-1 overflow-hidden flex min-h-0">
-        <SecurityDashboard
-          healthScore={analysis.healthScore}
-          issueCounts={issueCounts}
-          selectedIssue={selectedIssue}
-          selectedGenerator={selectedGenerator}
-          onSelectIssue={handleSelectIssue}
-          onSelectGenerator={handleSelectGenerator}
-          passwordsCount={allItems.length}
-        />
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
+          <SecurityDashboard
+            healthScore={analysis.healthScore}
+            issueCounts={issueCounts}
+            selectedIssue={selectedIssue}
+            onSelectIssue={handleSelectIssue}
+            passwordsCount={allItems.length}
+            vaultAnalysis={analysis.vaultHealth}
+          />
+        </ScrollArea>
       </div>
 
       <Sheet open={isPasswordDetailsShown} onOpenChange={(open) => !open && handleClosePasswordDetailsSheet()}>
@@ -131,8 +128,6 @@ export default function SecurityPage() {
               isSheet
             />
           )}
-
-          {selectedGenerator && <GeneratorPane type={selectedGenerator} onClose={handleCloseRightPane} isSheet />}
         </SheetContent>
       </Sheet>
     </div>

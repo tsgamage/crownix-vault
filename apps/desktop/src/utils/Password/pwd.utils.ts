@@ -109,32 +109,34 @@ const STRENGTH_PRESETS: Record<PasswordStrength, Required<PasswordOptions>> = {
 
 // Security scoring constants
 const SECURITY_SCORES = {
-  MAX_ENTROPY: 256, // Maximum theoretical entropy for our scoring
-  MIN_ENTROPY_WEAK: 40,
-  MIN_ENTROPY_MEDIUM: 60,
-  MIN_ENTROPY_STRONG: 80,
-  MIN_ENTROPY_VERY_STRONG: 100,
-  MIN_ENTROPY_EXCELLENT: 120,
+  // Entropy thresholds for scoring
+  MAX_ENTROPY: 256,
+  MIN_ENTROPY_WEAK: 28,
+  MIN_ENTROPY_MEDIUM: 48,
+  MIN_ENTROPY_STRONG: 64,
+  MIN_ENTROPY_VERY_STRONG: 80,
+  MIN_ENTROPY_EXCELLENT: 100,
 
-  // Pattern penalty weights (0-100)
-  PATTERN_PENALTIES: {
-    COMMON_PASSWORD: 100, // Immediate failure
-    SEQUENTIAL_CHARS: 50,
-    KEYBOARD_WALK: 60,
-    REPEATED_CHARS: 40,
-    DATE_PATTERN: 35,
-    L33T_PATTERN: 25,
-    DICTIONARY_WORD: 30,
-    PERSONAL_INFO: 70,
-    SHORT_LENGTH: (length: number) => Math.max(0, 8 - length) * 10,
+  // Realistic scoring weights
+  PASSWORD_SCORE_WEIGHTS: {
+    ENTROPY: 0.5, // 50% - Most important
+    LENGTH: 0.2, // 20%
+    VARIETY: 0.2, // 20%
+    PATTERN: 0.1, // 10% (negative)
   },
 
-  // Vault scoring weights
+  // Vault scoring weights - SUMS TO 100% POSITIVE
   VAULT_WEIGHTS: {
-    AVERAGE_ENTROPY: 0.4, // 40% of score
-    WEAK_PASSWORDS: 0.25, // 25% of score
-    REUSED_PASSWORDS: 0.2, // 20% of score
-    PATTERN_PASSWORDS: 0.15, // 15% of score
+    AVERAGE_SCORE: 0.6, // 60% - Average password quality
+    UNIQUE_PASSWORDS: 0.25, // 25% - Bonus for no reuse
+    NO_COMMON_PASSWORDS: 0.15, // 15% - Bonus for no common passwords
+  },
+
+  // Penalties (subtracted from base)
+  VAULT_PENALTIES: {
+    PER_WEAK_PASSWORD: 5, // 5 points per weak password
+    PER_REUSED_INSTANCE: 3, // 3 points per reuse instance
+    PER_PATTERN_PASSWORD: 2, // 2 points per pattern password
   },
 } as const;
 
@@ -433,29 +435,49 @@ export const calculatePasswordEntropy = (password: string): number => {
 export const calculatePasswordScore = (password: string): number => {
   if (!password || password.length === 0) return 0;
 
-  // Base score from entropy (40%)
-  const entropy = calculatePasswordEntropy(password);
-  const maxReasonableEntropy = 128; // Reasonable maximum for scoring
-  const entropyScore = Math.min(100, (entropy / maxReasonableEntropy) * 100) * 0.4;
+  // Check for common passwords (instant failure)
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
+    return 0;
+  }
 
-  // Length score (20%)
-  const lengthScore = Math.min(100, (password.length / 24) * 100) * 0.2;
+  // Base score from entropy (50%)
+  const entropy = calculatePasswordEntropy(password);
+  const entropyScore = Math.min(100, (entropy / 100) * 100) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.ENTROPY;
+
+  // Length score (20%) - More realistic curve
+  const lengthScore = calculateLengthScore(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.LENGTH;
 
   // Character variety score (20%)
-  const varietyScore = calculateCharacterVarietyScore(password) * 0.2;
+  const varietyScore = calculateCharacterVarietyScore(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.VARIETY;
 
-  // Pattern penalty (20% negative)
-  const patternPenalty = calculatePatternPenalty(password) * 0.2;
+  // Pattern penalty (10% negative)
+  const patternPenalty = calculatePatternPenalty(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.PATTERN;
 
   // Combine scores
   let totalScore = entropyScore + lengthScore + varietyScore - patternPenalty;
 
-  // Apply absolute minimums and maximums
-  if (password.length < 6) totalScore *= 0.3; // Severe penalty for very short passwords
-  if (COMMON_PASSWORDS.has(password.toLowerCase())) totalScore = 0; // Zero score for common passwords
+  // Apply length minimums
+  if (password.length < 8) totalScore *= 0.5;
+  if (password.length < 6) totalScore *= 0.3;
 
   // Ensure score is between 0 and 100
   return Math.max(0, Math.min(100, Math.round(totalScore * 100) / 100));
+};
+
+/**
+ * Calculate length score with realistic curve
+ */
+const calculateLengthScore = (password: string): number => {
+  const length = password.length;
+
+  // Realistic scoring for typical password lengths
+  if (length >= 24) return 100; // Excellent
+  if (length >= 20) return 95; // Very Strong
+  if (length >= 16) return 85; // Strong
+  if (length >= 12) return 70; // Medium
+  if (length >= 8) return 50; // Weak but acceptable
+  if (length >= 6) return 25; // Very weak
+  return 0;
 };
 
 /**
@@ -473,13 +495,13 @@ const calculateCharacterVarietyScore = (password: string): number => {
   // Count character types
   const typeCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
 
-  // Score based on number of character types
+  // Base score for character types
   switch (typeCount) {
     case 4:
       score = 100;
       break;
     case 3:
-      score = 75;
+      score = 70;
       break;
     case 2:
       score = 40;
@@ -491,27 +513,20 @@ const calculateCharacterVarietyScore = (password: string): number => {
       score = 0;
   }
 
-  // Bonus for balanced distribution
-  if (typeCount >= 2) {
+  // Bonus for balanced distribution (less important)
+  if (typeCount >= 2 && password.length >= 8) {
     const totalChars = password.length;
     const lowerCount = (password.match(/[a-z]/g) || []).length;
     const upperCount = (password.match(/[A-Z]/g) || []).length;
     const numberCount = (password.match(/[0-9]/g) || []).length;
     const specialCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
 
-    const distribution = [lowerCount, upperCount, numberCount, specialCount]
-      .filter((count) => count > 0)
-      .map((count) => count / totalChars);
+    const distribution = [lowerCount, upperCount, numberCount, specialCount].filter((count) => count > 0);
 
-    // Calculate standard deviation of distribution
-    if (distribution.length > 1) {
-      const mean = distribution.reduce((a, b) => a + b) / distribution.length;
-      const variance = distribution.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / distribution.length;
-      const stdDev = Math.sqrt(variance);
-
-      // Lower stdDev means more balanced distribution
-      const balanceBonus = Math.max(0, 20 - stdDev * 100);
-      score += balanceBonus;
+    // Bonus if at least 2 character types have reasonable representation
+    const wellRepresented = distribution.filter((count) => count >= 2).length;
+    if (wellRepresented >= 2) {
+      score += 10;
     }
   }
 
@@ -524,50 +539,53 @@ const calculateCharacterVarietyScore = (password: string): number => {
 const calculatePatternPenalty = (password: string): number => {
   let penalty = 0;
 
-  // Check for common passwords (immediate failure)
-  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
-    penalty += 100;
+  // Check for common passwords (already handled in calculatePasswordScore)
+
+  // Check for sequential characters (3+)
+  if (hasSequentialChars(password, 4)) {
+    penalty += 30;
+  } else if (hasSequentialChars(password, 3)) {
+    penalty += 15;
   }
 
-  // Check for sequential characters
-  if (hasSequentialChars(password, 3)) {
+  // Check for keyboard walks (severe penalty)
+  if (hasKeyboardWalk(password)) {
     penalty += 50;
   }
 
-  // Check for keyboard walks
-  if (hasKeyboardWalk(password)) {
-    penalty += 60;
-  }
-
-  // Check for repeated characters
-  if (hasRepeatedChars(password, 3)) {
+  // Check for repeated characters (4+)
+  if (hasRepeatedChars(password, 4)) {
     penalty += 40;
+  } else if (hasRepeatedChars(password, 3)) {
+    penalty += 20;
   }
 
   // Check for date patterns
   if (hasDatePattern(password)) {
-    penalty += 35;
-  }
-
-  // Check for l33t patterns
-  if (hasLeetPattern(password)) {
     penalty += 25;
   }
 
-  // Check for dictionary words
+  // Check for l33t patterns (mild penalty)
+  if (hasLeetPattern(password)) {
+    penalty += 10;
+  }
+
+  // Check for dictionary words (only if word is significant portion)
   if (hasDictionaryWord(password)) {
-    penalty += 30;
+    const words = password
+      .toLowerCase()
+      .split(/[^a-z]/)
+      .filter((w) => w.length > 3);
+    const hasLongWord = words.some((w) => w.length >= 6);
+    penalty += hasLongWord ? 30 : 15;
   }
 
-  // Check for personal info patterns
+  // Check for personal info patterns (severe)
   if (hasPersonalInfoPattern(password)) {
-    penalty += 70;
+    penalty += 60;
   }
 
-  // Length penalty
-  if (password.length < 8) {
-    penalty += (8 - password.length) * 10;
-  }
+  // Length penalty (already handled in length score)
 
   return Math.min(100, penalty);
 };
@@ -578,11 +596,11 @@ const calculatePatternPenalty = (password: string): number => {
 export const getPasswordStrength = (password: string): PasswordStrength => {
   const score = calculatePasswordScore(password);
 
-  if (score < 20) return "very-weak";
-  if (score < 40) return "weak";
-  if (score < 60) return "medium";
-  if (score < 80) return "strong";
-  if (score < 90) return "very-strong";
+  if (score < 30) return "very-weak";
+  if (score < 50) return "weak";
+  if (score < 70) return "medium";
+  if (score < 85) return "strong";
+  if (score < 95) return "very-strong";
   return "excellent";
 };
 
@@ -886,43 +904,46 @@ export const analyzePasswordPatterns = (
  * Calculate exact vault health score (0-100)
  */
 export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
-  const activeItems = items.filter((item) => item.password);
+  const activeItems = items.filter((item) => !item.isDeleted && item.password);
 
   if (activeItems.length === 0) return 100;
 
-  // Calculate average entropy score
-  const entropyScores = activeItems.map((item) => Math.min(100, (calculatePasswordEntropy(item.password) / 80) * 100));
-  const averageEntropy = entropyScores.reduce((a, b) => a + b, 0) / activeItems.length;
+  // 1. Calculate average password score (60%)
+  const passwordScores = activeItems.map((item) => calculatePasswordScore(item.password));
+  const averageScore = passwordScores.reduce((a, b) => a + b, 0) / activeItems.length;
+  const weightedAverageScore = averageScore * SECURITY_SCORES.VAULT_WEIGHTS.AVERAGE_SCORE;
 
-  // Calculate weak password penalty
-  const weakItems = findWeakPasswords(items);
-  const weakPenalty = (weakItems.length / activeItems.length) * 100;
+  // 2. Bonus for unique passwords (25%)
+  const passwordMap = new Map<string, number>();
+  activeItems.forEach((item) => {
+    const count = passwordMap.get(item.password) || 0;
+    passwordMap.set(item.password, count + 1);
+  });
 
-  // Calculate reuse penalty
-  const reusedItems = findReusedPasswords(items);
-  const reusePenalty = Math.min(50, (reusedItems.length / activeItems.length) * 100);
+  const uniquePasswords = Array.from(passwordMap.keys()).length;
+  const uniquePercentage = (uniquePasswords / activeItems.length) * 100;
+  const uniquenessBonus = uniquePercentage * 0.25; // 25% of the percentage
 
-  // Calculate pattern penalty
-  const patternItems = findPatternPasswords(items);
-  const patternPenalty = Math.min(30, (patternItems.length / activeItems.length) * 100);
-
-  // Calculate common password penalty (severe)
+  // 3. Bonus for no common passwords (15%)
   const commonItems = findCommonPasswords(items);
-  const commonPenalty = Math.min(100, (commonItems.length / activeItems.length) * 200);
+  const commonPercentage = Math.max(0, 100 - (commonItems.length / activeItems.length) * 100);
+  const commonBonus = commonPercentage * 0.15; // 15% of the percentage
 
-  // Apply weights
-  const weightedScore =
-    averageEntropy * SECURITY_SCORES.VAULT_WEIGHTS.AVERAGE_ENTROPY -
-    weakPenalty * SECURITY_SCORES.VAULT_WEIGHTS.WEAK_PASSWORDS -
-    reusePenalty * SECURITY_SCORES.VAULT_WEIGHTS.REUSED_PASSWORDS -
-    patternPenalty * SECURITY_SCORES.VAULT_WEIGHTS.PATTERN_PASSWORDS -
-    commonPenalty * 0.1; // Additional penalty for common passwords
+  // 4. Calculate penalties
+  const weakItems = findWeakPasswords(items);
+  const reusedItems = findReusedPasswords(items);
+  const patternItems = findPatternPasswords(items);
+
+  const weakPenalty = weakItems.length * SECURITY_SCORES.VAULT_PENALTIES.PER_WEAK_PASSWORD;
+  const reusePenalty =
+    Math.max(0, reusedItems.length - uniquePasswords) * SECURITY_SCORES.VAULT_PENALTIES.PER_REUSED_INSTANCE;
+  const patternPenalty = patternItems.length * SECURITY_SCORES.VAULT_PENALTIES.PER_PATTERN_PASSWORD;
+
+  // 5. Combine everything
+  let finalScore = weightedAverageScore + uniquenessBonus + commonBonus - weakPenalty - reusePenalty - patternPenalty;
 
   // Ensure score is between 0 and 100
-  let finalScore = Math.max(0, Math.min(100, weightedScore));
-
-  // Apply exact scoring adjustments
-  finalScore = Math.round(finalScore * 100) / 100;
+  finalScore = Math.max(0, Math.min(100, Math.round(finalScore * 100) / 100));
 
   return finalScore;
 };
@@ -934,7 +955,7 @@ export const findWeakPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((item) => {
     if (item.isDeleted || !item.password) return false;
     const score = calculatePasswordScore(item.password);
-    return score < 60; // Below "medium" threshold
+    return score < 50; // Below "medium" threshold (was 60)
   });
 };
 
@@ -1043,12 +1064,16 @@ export const analyzeVaultHealth = (
 ): {
   score: number;
   totalItems: number;
+  activeItems: number;
   weakCount: number;
   reusedCount: number;
   patternCount: number;
   commonCount: number;
+  averagePasswordScore: number;
+  uniquenessPercentage: number;
   suggestions: string[];
 } => {
+  const activeItems = items.filter((item) => !item.isDeleted && item.password);
   const weakItems = findWeakPasswords(items);
   const reusedItems = findReusedPasswords(items);
   const patternItems = findPatternPasswords(items);
@@ -1056,38 +1081,68 @@ export const analyzeVaultHealth = (
 
   const score = calculateVaultHealthScore(items);
 
+  // Calculate average password score
+  const passwordScores = activeItems.map((item) => calculatePasswordScore(item.password));
+  const averagePasswordScore =
+    activeItems.length > 0
+      ? Math.round((passwordScores.reduce((a, b) => a + b, 0) / activeItems.length) * 100) / 100
+      : 100;
+
+  // Calculate uniqueness percentage
+  const passwordMap = new Map<string, number>();
+  activeItems.forEach((item) => {
+    const count = passwordMap.get(item.password) || 0;
+    passwordMap.set(item.password, count + 1);
+  });
+  const uniquePasswords = Array.from(passwordMap.keys()).length;
+  const uniquenessPercentage =
+    activeItems.length > 0 ? Math.round((uniquePasswords / activeItems.length) * 10000) / 100 : 100;
+
   const suggestions: string[] = [];
 
   if (commonItems.length > 0) {
-    suggestions.push(`Change ${commonItems.length} common password${commonItems.length > 1 ? "s" : ""}`);
+    suggestions.push(`Change ${commonItems.length} common password${commonItems.length > 1 ? "s" : ""} immediately`);
   }
 
   if (reusedItems.length > 0) {
     const uniqueReused = new Set(reusedItems.map((item) => item.password));
     suggestions.push(
-      `Stop reusing ${uniqueReused.size} password${uniqueReused.size > 1 ? "s" : ""} across multiple sites`
+      `Stop reusing ${uniqueReused.size} password${uniqueReused.size > 1 ? "s" : ""} across ${
+        reusedItems.length
+      } accounts`
     );
   }
 
   if (weakItems.length > 0) {
-    suggestions.push(`Strengthen ${weakItems.length} weak password${weakItems.length > 1 ? "s" : ""}`);
+    suggestions.push(`Strengthen ${weakItems.length} weak password${weakItems.length > 1 ? "s" : ""} (score < 50)`);
   }
 
   if (patternItems.length > 0) {
-    suggestions.push(`Fix ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with common patterns`);
+    suggestions.push(
+      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with common patterns`
+    );
   }
 
   if (suggestions.length === 0) {
-    suggestions.push("Your vault is in excellent condition!");
+    if (score >= 90) {
+      suggestions.push("Excellent! Your vault is in top condition");
+    } else if (score >= 75) {
+      suggestions.push("Good! Your vault is secure");
+    } else {
+      suggestions.push("Your vault is in acceptable condition");
+    }
   }
 
   return {
     score,
     totalItems: items.length,
+    activeItems: activeItems.length,
     weakCount: weakItems.length,
     reusedCount: new Set(reusedItems.map((item) => item.password)).size,
     patternCount: patternItems.length,
     commonCount: commonItems.length,
+    averagePasswordScore,
+    uniquenessPercentage,
     suggestions,
   };
 };
