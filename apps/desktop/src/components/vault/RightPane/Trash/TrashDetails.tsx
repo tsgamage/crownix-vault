@@ -88,13 +88,15 @@ export default function TrashDetails() {
   const IconComponent = selectedType === "password" ? KeyRoundIcon : getIcon((item as any).icon);
 
   return (
-    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm">
+    <div className="h-full flex flex-col bg-background backdrop-blur-sm">
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="w-24 h-24 rounded-3xl bg-muted/50 flex items-center justify-center mb-6 border-2 border-border/50 shadow-sm">
           <IconComponent className="w-10 h-10 text-muted-foreground/60" />
         </div>
 
-        <h2 className="text-2xl font-bold tracking-tight mb-2">{title}</h2>
+        <h2 className="text-2xl font-bold tracking-tight mb-2 truncate w-full max-w-md px-6" title={title}>
+          {title}
+        </h2>
         <p className="text-sm text-muted-foreground mb-8">This item is in the trash.</p>
 
         {description && (
@@ -107,10 +109,7 @@ export default function TrashDetails() {
         )}
 
         <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Button
-            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-all"
-            onClick={handleRestore}
-          >
+          <Button variant="outline" className="w-full h-11 shadow-sm transition-all" onClick={handleRestore}>
             <RotateCcw className="w-4 h-4 mr-2" /> Restore Item
           </Button>
           <Button

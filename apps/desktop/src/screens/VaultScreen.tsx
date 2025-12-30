@@ -55,6 +55,7 @@ export default function VaultScreen() {
   useEffect(() => {
     setIsPasswordEditShown(false);
     setIsPasswordCategoryCreateShown(false);
+    setIsPasswordCreateShown(false);
   }, [selectedPasswordId]);
 
   // Closing creating pane if user clicks on a category item

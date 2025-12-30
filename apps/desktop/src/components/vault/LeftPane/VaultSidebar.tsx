@@ -84,13 +84,18 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const handleNewClick = () => {
     if (activeTabId === "organize") {
       setIsPasswordCategoryCreateShown(true);
+    } else if (activeTabId === "security" || activeTabId === "trash") {
+      setActiveTabId("all");
+      setTimeout(() => {
+        setIsPasswordCreateShown(true);
+      }, 100);
     } else {
       setIsPasswordCreateShown(true);
     }
   };
 
   return (
-    <div className="h-full flex flex-col bg-muted/10 border-r border-border/50">
+    <div className="h-full flex flex-col bg-background border-r border-border/50">
       {/* --- BRANDING / PROFILE --- */}
       <div className="p-4 mb-2">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-background border border-border/40 shadow-xs">
@@ -114,7 +119,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
           className="w-full justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 h-10"
         >
           <Plus className="w-4 h-4" />
-          <span className="font-semibold">{activeTabId === "organize" ? "New Category" : "New Entry"}</span>
+          <span className="font-semibold">{activeTabId === "organize" ? "New Category" : "New Item"}</span>
         </Button>
       </div>
 

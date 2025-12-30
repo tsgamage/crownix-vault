@@ -1,10 +1,9 @@
+import { WORD_LIST } from "@/data/word-list";
+import type { IPasswordItem } from "./types/global.types";
+import { COMMON_PASSWORDS } from "@/data/common-passwords";
+
 // Types for password options
-export type PasswordStrength =
-  | "weak"
-  | "medium"
-  | "strong"
-  | "very-strong"
-  | "paranoid";
+export type PasswordStrength = "weak" | "medium" | "strong" | "very-strong" | "paranoid";
 export interface PasswordOptions {
   length?: number;
   strength?: PasswordStrength;
@@ -74,9 +73,7 @@ const STRENGTH_PRESETS: Record<PasswordStrength, PasswordOptions> = {
  * @param options Password generation options
  * @returns Generated password
  */
-export const generatePassword = (
-  options?: PasswordOptions | PasswordStrength
-): string => {
+export const generatePassword = (options?: PasswordOptions | PasswordStrength): string => {
   // Parse options - allow string shorthand for strength
   const opts = parseOptions(options);
 
@@ -85,21 +82,13 @@ export const generatePassword = (
   const charSetsUsed: string[] = [];
 
   if (opts.includeUppercase) {
-    charSet += opts.excludeSimilar
-      ? CHAR_SETS.uppercase
-      : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    charSetsUsed.push(
-      opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    );
+    charSet += opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    charSetsUsed.push(opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
   }
 
   if (opts.includeLowercase) {
-    charSet += opts.excludeSimilar
-      ? CHAR_SETS.lowercase
-      : "abcdefghijklmnopqrstuvwxyz";
-    charSetsUsed.push(
-      opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijklmnopqrstuvwxyz"
-    );
+    charSet += opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijklmnopqrstuvwxyz";
+    charSetsUsed.push(opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijklmnopqrstuvwxyz");
   }
 
   if (opts.includeNumbers) {
@@ -108,12 +97,8 @@ export const generatePassword = (
   }
 
   if (opts.includeSpecial) {
-    charSet += opts.excludeAmbiguous
-      ? CHAR_SETS.special
-      : CHAR_SETS.extendedSpecial;
-    charSetsUsed.push(
-      opts.excludeAmbiguous ? CHAR_SETS.special : CHAR_SETS.extendedSpecial
-    );
+    charSet += opts.excludeAmbiguous ? CHAR_SETS.special : CHAR_SETS.extendedSpecial;
+    charSetsUsed.push(opts.excludeAmbiguous ? CHAR_SETS.special : CHAR_SETS.extendedSpecial);
   }
 
   // Validate character set
@@ -122,9 +107,7 @@ export const generatePassword = (
   }
 
   if (opts.length < charSetsUsed.length) {
-    throw new Error(
-      `Password length must be at least ${charSetsUsed.length} to include all character types`
-    );
+    throw new Error(`Password length must be at least ${charSetsUsed.length} to include all character types`);
   }
 
   // Generate secure random bytes
@@ -150,9 +133,7 @@ export const generatePassword = (
 /**
  * Parse and normalize options
  */
-const parseOptions = (
-  options?: PasswordOptions | PasswordStrength
-): Required<PasswordOptions> => {
+const parseOptions = (options?: PasswordOptions | PasswordStrength): Required<PasswordOptions> => {
   // If options is a string, use the corresponding preset
   if (typeof options === "string") {
     const preset = STRENGTH_PRESETS[options];
@@ -170,9 +151,7 @@ const parseOptions = (
 
   // Use provided options or defaults
   const strength = options?.strength || "strong";
-  const baseOptions = options
-    ? { ...STRENGTH_PRESETS[strength], ...options }
-    : STRENGTH_PRESETS[strength];
+  const baseOptions = options ? { ...STRENGTH_PRESETS[strength], ...options } : STRENGTH_PRESETS[strength];
 
   return {
     length: baseOptions.length ?? 16,
@@ -200,9 +179,7 @@ const getSecureRandomBytes = (length: number): Uint8Array => {
     return crypto.randomBytes(length);
   } else {
     // Fallback (less secure, for environments without crypto)
-    console.warn(
-      "Using Math.random() fallback - not cryptographically secure!"
-    );
+    console.warn("Using Math.random() fallback - not cryptographically secure!");
     const array = new Uint8Array(length);
     for (let i = 0; i < length; i++) {
       array[i] = Math.floor(Math.random() * 256);
@@ -253,52 +230,31 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
 
 // Convenience functions
 export const generateStrongPassword = (): string => generatePassword("strong");
-export const generateVeryStrongPassword = (): string =>
-  generatePassword("very-strong");
-export const generatePassphrase = (wordCount: number = 4): string => {
-  // Simple wordlist (in practice, use a larger, cryptographically secure wordlist)
-  const wordlist = [
-    "apple",
-    "brave",
-    "cloud",
-    "dragon",
-    "eagle",
-    "flame",
-    "globe",
-    "haven",
-    "ice",
-    "jazz",
-    "king",
-    "light",
-    "moon",
-    "nova",
-    "ocean",
-    "prism",
-    "quest",
-    "river",
-    "star",
-    "tiger",
-    "unity",
-    "vivid",
-    "whale",
-    "xenon",
-    "yearn",
-    "zenith",
-  ];
+export const generateVeryStrongPassword = (): string => generatePassword("very-strong");
 
+export const generatePassphrase = (wordCount: number = 4): string => {
   const randomBytes = getSecureRandomBytes(wordCount * 2);
   const words: string[] = [];
 
   for (let i = 0; i < wordCount; i++) {
-    const index =
-      (randomBytes[i * 2] * 256 + randomBytes[i * 2 + 1]) % wordlist.length;
-    words.push(wordlist[index]);
+    const index = (randomBytes[i * 2] * 256 + randomBytes[i * 2 + 1]) % WORD_LIST.length;
+    words.push(WORD_LIST[index]);
   }
 
   return words.join("-") + Math.floor(Math.random() * 100);
 };
 
-import type { IPasswordItem } from "./types/global.types";
+/**
+ * Generate a numeric OTP of specified length
+ */
+export const generateOTP = (length: number = 6): string => {
+  const randomBytes = getSecureRandomBytes(length);
+  let otp = "";
+  for (let i = 0; i < length; i++) {
+    otp += (randomBytes[i] % 10).toString();
+  }
+  return otp;
+};
 
 /**
  * Calculate the overall health score of the vault (0-100)
@@ -334,9 +290,7 @@ export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
  * Find items with reused passwords
  * Returns list of items that share passwords with others
  */
-export const findReusedPasswords = (
-  items: IPasswordItem[]
-): IPasswordItem[] => {
+export const findReusedPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   const activeItems = items.filter((i) => !i.isDeleted && i.password);
   const passwordMap = new Map<string, IPasswordItem[]>();
 
@@ -377,42 +331,10 @@ export const getActiveItems = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((i) => !i.isDeleted);
 };
 
-// Top 20 most common passwords (in reality this should be a larger list or loaded from a file)
-const COMMON_PASSWORDS = new Set([
-  "123456",
-  "password",
-  "123456789",
-  "12345678",
-  "12345",
-  "111111",
-  "1234567",
-  "sunshine",
-  "qwerty",
-  "iloveyou",
-  "princess",
-  "admin",
-  "welcome",
-  "clover",
-  "secret",
-  "profile",
-  "cookie",
-  "monkey",
-  "dragon",
-  "123123",
-  "987654321",
-  "football",
-  "baseball",
-  "superman",
-  "charlie",
-  "angel",
-]);
-
 /**
  * Find items with common passwords
  */
-export const findCommonPasswords = (
-  items: IPasswordItem[]
-): IPasswordItem[] => {
+export const findCommonPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((item) => {
     if (item.isDeleted || !item.password) return false;
     return COMMON_PASSWORDS.has(item.password.toLowerCase());

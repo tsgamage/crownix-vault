@@ -1,8 +1,5 @@
 import { cn } from "@/lib/utils";
-import type {
-  SecurityCardConfig,
-  GeneratorCardConfig,
-} from "../security.config";
+import type { SecurityCardConfig, GeneratorCardConfig } from "../security.config";
 
 interface SecurityAnalysisCardProps {
   config: SecurityCardConfig | GeneratorCardConfig;
@@ -12,13 +9,7 @@ interface SecurityAnalysisCardProps {
   isGenerator?: boolean; // To distinct style if needed
 }
 
-export function SecurityAnalysisCard({
-  config,
-  count,
-  selected,
-  onClick,
-  isGenerator,
-}: SecurityAnalysisCardProps) {
+export function SecurityAnalysisCard({ config, count, selected, onClick, isGenerator }: SecurityAnalysisCardProps) {
   const Icon = config.icon;
 
   return (
@@ -29,7 +20,6 @@ export function SecurityAnalysisCard({
         selected
           ? cn(
               config.bgClass,
-              "ring-1",
               (config as any).borderColorClass || "ring-emerald-500", // Fallback or strict type check
               (config as any).borderColorClass || "border-emerald-500"
             )
@@ -37,26 +27,17 @@ export function SecurityAnalysisCard({
       )}
     >
       <div className="flex items-center justify-between w-full mb-4">
-        <div
-          className={cn("p-2.5 rounded-lg", config.bgClass, config.colorClass)}
-        >
+        <div className={cn("p-2.5 rounded-lg", config.bgClass, config.colorClass)}>
           <Icon className="w-6 h-6" />
         </div>
         {!isGenerator && typeof count === "number" && (
-          <span
-            className={cn(
-              "text-2xl font-bold",
-              count > 0 ? config.colorClass : "text-muted-foreground"
-            )}
-          >
+          <span className={cn("text-2xl font-bold", count > 0 ? config.colorClass : "text-muted-foreground")}>
             {count}
           </span>
         )}
       </div>
       <h4 className="font-semibold text-foreground">{config.title}</h4>
-      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-        {config.description}
-      </p>
+      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{config.description}</p>
     </button>
   );
 }

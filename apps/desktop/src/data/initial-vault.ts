@@ -1,8 +1,4 @@
-import type {
-  IPasswordCategory,
-  IPasswordItem,
-  IVault,
-} from "@/utils/types/global.types";
+import type { IPasswordCategory, IPasswordItem, IVault } from "@/utils/types/global.types";
 
 export const MOCK_PASSWORD_ITEMS: IPasswordItem[] = [
   {
@@ -52,8 +48,7 @@ export const MOCK_PASSWORD_ITEMS: IPasswordItem[] = [
     username: "alex.social99",
     password: "password123", // Weak password to trigger warning
     urls: ["https://facebook.com"],
-    notes:
-      "Old account from college, rarely used now. Password needs updating.",
+    notes: "Old account from college, rarely used now. Password needs updating.",
     isFavorite: false,
     fields: [],
     categoryId: "1",
@@ -68,8 +63,7 @@ export const MOCK_PASSWORD_ITEMS: IPasswordItem[] = [
     username: "root-admin",
     password: "Correct-Horse-Battery-Staple-99!",
     urls: ["https://console.aws.amazon.com"],
-    notes:
-      "CRITICAL: Root access for production environment. excessive caution required.",
+    notes: "CRITICAL: Root access for production environment. excessive caution required.",
     isFavorite: true,
     icon: "☁️",
     fields: [
@@ -110,8 +104,7 @@ export const MOCK_PASSWORD_ITEMS: IPasswordItem[] = [
     username: "alex.movies@example.com",
     password: "netflixandchill",
     urls: ["https://netflix.com"],
-    notes:
-      "Cancelled subscription in 2024. Keeping for watch history reference.",
+    notes: "Cancelled subscription in 2024. Keeping for watch history reference.",
     isFavorite: false,
     icon: "📺",
     createdAt: Date.now() - 20000000,
@@ -129,6 +122,7 @@ export const MOCK_PASSWORD_CATEGORIES: IPasswordCategory[] = [
     description: "Social media accounts and networks",
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    isDeleted: false,
   },
   {
     id: "2",
@@ -138,6 +132,7 @@ export const MOCK_PASSWORD_CATEGORIES: IPasswordCategory[] = [
     description: "Work-related accounts and tools",
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    isDeleted: false,
   },
   {
     id: "3",
@@ -147,6 +142,7 @@ export const MOCK_PASSWORD_CATEGORIES: IPasswordCategory[] = [
     description: "Banking, credit cards, and finance",
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    isDeleted: false,
   },
   {
     id: "4",
@@ -156,6 +152,7 @@ export const MOCK_PASSWORD_CATEGORIES: IPasswordCategory[] = [
     description: "Streaming services and gaming",
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    isDeleted: false,
   },
 ];
 

@@ -157,7 +157,15 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
       {showBackButton && (
         <div className="px-6 py-6">
           <div className="flex items-center text-muted-foreground">
-            <Button variant="ghost" size="sm" className="h-6 px-2 -ml-2 gap-1 text-xs" onClick={clearSelectedId}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 -ml-2 gap-1 text-xs"
+              onClick={() => {
+                clearSelectedId();
+                setIsPasswordDetailsShown(false);
+              }}
+            >
               <ChevronLeft className="w-3 h-3" /> Back
             </Button>
             <span className="mx-2 opacity-20">/</span>

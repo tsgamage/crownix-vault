@@ -1,11 +1,4 @@
-import {
-  ShieldAlert,
-  RotateCw,
-  AlertTriangle,
-  Users,
-  KeyRound,
-  FileSignature,
-} from "lucide-react";
+import { ShieldAlert, RotateCw, AlertTriangle, Users, KeyRound, FileSignature, Smartphone } from "lucide-react";
 
 export type SecurityIssueType = "compromised" | "reused" | "weak" | "common";
 export type GeneratorType = "password" | "otp" | "passphrase";
@@ -77,14 +70,14 @@ export const GENERATOR_CARDS: GeneratorCardConfig[] = [
     colorClass: "text-emerald-500",
     bgClass: "bg-emerald-500/10",
   },
-  // {
-  //   id: "otp",
-  //   title: "OTP Setup",
-  //   description: "Generate 2FA codes",
-  //   icon: Smartphone,
-  //   colorClass: "text-purple-500",
-  //   bgClass: "bg-purple-500/10",
-  // },
+  {
+    id: "otp",
+    title: "OTP Setup",
+    description: "Generate 2FA codes",
+    icon: Smartphone,
+    colorClass: "text-purple-500",
+    bgClass: "bg-purple-500/10",
+  },
   {
     id: "passphrase",
     title: "Passphrase Generator",

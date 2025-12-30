@@ -21,9 +21,9 @@ export default function CategoryList() {
 
   const syncDB = useUiStore((state) => state.syncDB);
   return (
-    <div className="h-full flex flex-col bg-background/50 border-r border-border/50">
+    <div className="h-full flex flex-col bg-background border-r border-border/50">
       {/* Search Header */}
-      <div className="p-4 border-b border-border/50 bg-background/95 sticky top-0 z-10 space-y-3">
+      <div className="p-4 border-b border-border/50 bg-background sticky top-0 z-10 space-y-3">
         {/* Title Row */}
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold tracking-wide text-foreground/80">
