@@ -263,9 +263,6 @@ export function PasswordList({ onAddNew }: PasswordListProps) {
           </div>
         )}
       </div>
-
-      {/* Optional: Bottom Gradient Fade for scrolling indication */}
-      <div className="h-6 bg-linear-to-t from-background to-transparent pointer-events-none sticky bottom-0" />
     </div>
   );
 }

@@ -24,13 +24,14 @@ interface PinnedCategory extends IPasswordCategory {
 interface VaultSidebarProps {
   onLock: () => void;
   onNewClick: () => void;
-  onSettingsClick: () => void;
-  pinnedCategories?: PinnedCategory[]; // Configurable categories
+  pinnedCategories?: PinnedCategory[];
 }
 
-export function VaultSidebar({ onLock, onNewClick, onSettingsClick, pinnedCategories = [] }: VaultSidebarProps) {
+export function VaultSidebar({ onLock, onNewClick, pinnedCategories = [] }: VaultSidebarProps) {
   const activeTabId = useUiStore((state) => state.activeTabId);
   const setActiveTabId = useUiStore((state) => state.setActiveTabId);
+  const setIsSettingsOpen = useUiStore((state) => state.setIsSettingsOpen);
+
   const passwords = usePasswordStore((state) => state.passwordItems);
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
 
@@ -132,7 +133,8 @@ export function VaultSidebar({ onLock, onNewClick, onSettingsClick, pinnedCatego
           isActive={activeTabId === "trash"}
           onClick={() => setActiveTabId("trash")}
         />
-        <SidebarNavItem label="Settings" icon={Settings} isActive={false} onClick={onSettingsClick} />
+
+        <SidebarNavItem label="Settings" icon={Settings} isActive={false} onClick={() => setIsSettingsOpen(true)} />
 
         <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
           <span className="flex items-center gap-1">

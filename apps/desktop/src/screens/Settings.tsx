@@ -1,12 +1,8 @@
 import { SettingsModal } from "@/modals/settings/Settings";
+
 import type { SettingsConfig } from "@/utils/types/global.types";
 
-interface SettingsProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function Settings({ isOpen, onClose }: SettingsProps) {
+export default function Settings() {
   const INITIAL_SETTINGS_CONFIG: SettingsConfig = {
     sections: [
       {
@@ -83,12 +79,5 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
     ],
   };
 
-  return (
-    <SettingsModal
-      isOpen={isOpen}
-      onClose={onClose}
-      config={INITIAL_SETTINGS_CONFIG}
-      onSettingChange={(id, value) => console.log(id, value)}
-    />
-  );
+  return <SettingsModal config={INITIAL_SETTINGS_CONFIG} onSettingChange={(id, value) => console.log(id, value)} />;
 }

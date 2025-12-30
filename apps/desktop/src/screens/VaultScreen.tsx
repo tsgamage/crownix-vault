@@ -36,13 +36,14 @@ export default function VaultScreen() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const syncDB = useUiStore((state) => state.syncDB);
 
   const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
   const selectedCategoryId = usePasswordCategoryStore((state) => state.selectedCategoryId);
   const clearSelectedPasswordId = usePasswordStore((state) => state.clearSelectedPasswordId);
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
+
+  const isSettingsOpen = useUiStore((state) => state.isSettingsOpen);
 
   useEffect(() => {
     setIsCreating(false);
@@ -112,7 +113,6 @@ export default function VaultScreen() {
             onNewClick={() => {
               setIsCreating(true);
             }}
-            onSettingsClick={() => setIsSettingsOpen(true)}
           />
         </div>
 
@@ -153,7 +153,7 @@ export default function VaultScreen() {
             </div>
           </>
         )}
-        {isSettingsOpen && <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
+        {isSettingsOpen && <Settings />}
       </div>
     </div>
   );

@@ -1,32 +1,21 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SettingsSection } from "./components/SettingsSection";
 import { type SettingsConfig } from "@/utils/types/global.types";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useUiStore } from "@/store/ui.store";
 
 interface SettingsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
   config: SettingsConfig;
   onSettingChange: (id: string, value: any) => void;
 }
 
-export function SettingsModal({
-  isOpen,
-  onClose,
-  config,
-  onSettingChange,
-}: SettingsModalProps) {
-  const [activeSectionId, setActiveSectionId] = useState<string>(
-    config.sections[0]?.id || ""
-  );
+export function SettingsModal({ config, onSettingChange }: SettingsModalProps) {
+  const [activeSectionId, setActiveSectionId] = useState<string>(config.sections[0]?.id || "");
+
+  const isSettingsOpen = useUiStore((state) => state.isSettingsOpen);
+  const setIsSettingsOpen = useUiStore((state) => state.setIsSettingsOpen);
 
   // Update active section if config changes (e.g. initial load)
   useEffect(() => {
@@ -40,12 +29,10 @@ export function SettingsModal({
   const activeSection = config.sections.find((s) => s.id === activeSectionId);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isSettingsOpen} onOpenChange={() => setIsSettingsOpen(false)}>
       <DialogContent className="sm:max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden bg-background">
         <DialogHeader className="px-6 py-6 border-b border-border/50 bg-muted/20 shrink-0">
-          <DialogTitle className="text-2xl font-semibold tracking-tight">
-            Settings
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-semibold tracking-tight">Settings</DialogTitle>
           <DialogDescription className="text-muted-foreground">
             Manage your vault preferences and security options.
           </DialogDescription>
@@ -66,9 +53,7 @@ export function SettingsModal({
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  {activeSectionId === section.id && (
-                    <div className="w-1 h-4 bg-emerald-500 rounded-full mr-2" />
-                  )}
+                  {activeSectionId === section.id && <div className="w-1 h-4 bg-emerald-500 rounded-full mr-2" />}
                   {section.title}
                 </button>
               ))}
@@ -80,11 +65,7 @@ export function SettingsModal({
             <div className="px-8 py-8 space-y-8 max-w-3xl">
               {hasSidebar
                 ? activeSection && (
-                    <SettingsSection
-                      section={activeSection}
-                      onSettingChange={onSettingChange}
-                      isLast={true}
-                    />
+                    <SettingsSection section={activeSection} onSettingChange={onSettingChange} isLast={true} />
                   )
                 : config.sections.map((section, index) => (
                     <SettingsSection
