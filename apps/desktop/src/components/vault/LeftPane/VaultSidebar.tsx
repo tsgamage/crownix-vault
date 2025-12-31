@@ -6,7 +6,6 @@ import {
   Lock,
   ShieldCheck,
   Settings,
-  HardDrive,
   LockIcon,
   FolderIcon,
   WrenchIcon,
@@ -85,7 +84,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const handleNewClick = () => {
     if (activeTabId === "organize") {
       setIsPasswordCategoryCreateShown(true);
-    } else if (activeTabId === "security" || activeTabId === "trash") {
+    } else if (activeTabId === "security" || activeTabId === "trash" || activeTabId === "tools") {
       setActiveTabId("all");
       setTimeout(() => {
         setIsPasswordCreateShown(true);

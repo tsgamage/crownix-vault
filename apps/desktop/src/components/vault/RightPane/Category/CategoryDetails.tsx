@@ -70,7 +70,7 @@ export default function CategoryDetails() {
 
   if (!category) {
     return (
-      <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
+      <div className="h-full flex items-center justify-center bg-background text-muted-foreground">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
             <Folder className="w-8 h-8 opacity-20" />

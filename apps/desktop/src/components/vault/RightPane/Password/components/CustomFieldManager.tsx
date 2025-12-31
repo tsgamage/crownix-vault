@@ -108,11 +108,10 @@ export function CustomFieldManager({ fields = [], isEditing, onChange }: CustomF
 
       <div className="grid gap-4">
         {fields.map((field) => (
-          <div key={field.id} className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div key={field.id} className="space-y-1.5">
             <div className="flex items-center justify-between">
               {isEditing ? (
                 <Input
-                  autoFocus
                   value={field.label}
                   onChange={(e) => updateField(field.id, { label: e.target.value })}
                   className="h-6 text-xs w-32 px-1 hover:border-input focus:border-ring transition-colors"

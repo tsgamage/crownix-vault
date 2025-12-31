@@ -21,7 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  generatePassword,
+  generateExcellentPasswordWithCharCount,
   generatePassphrase,
   generateOTP,
   generateRecoveryCode,
@@ -52,17 +52,24 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   const [analysisResults, setAnalysisResults] = useState<PasswordAnalysis | null>(null);
   const [patternResults, setPatternResults] = useState<ReturnType<typeof analyzePasswordPatterns> | null>(null);
   const [isAnalyzerVisible, setIsAnalyzerVisible] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Handlers
-  const handleGenerate = () => {
-    if (type === "password") {
-      setValue(generatePassword({ length, strength: "excellent" }));
-    } else if (type === "passphrase") {
-      setValue(generatePassphrase(passphraseWords));
-    } else if (type === "otp") {
-      setValue(generateOTP(otpLength));
-    } else if (type === "recovery-code") {
-      setValue(generateRecoveryCode());
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      if (type === "password") {
+        const pwd = await generateExcellentPasswordWithCharCount(length);
+        setValue(pwd);
+      } else if (type === "passphrase") {
+        setValue(generatePassphrase(passphraseWords));
+      } else if (type === "otp") {
+        setValue(generateOTP(otpLength));
+      } else if (type === "recovery-code") {
+        setValue(generateRecoveryCode());
+      }
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -93,7 +100,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   };
 
   const configSection = (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       {type === "password" && (
         <div className="space-y-4 p-4 rounded-xl bg-muted/30 border border-border/50">
           <div className="flex justify-between items-center px-1">
@@ -205,14 +212,15 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                     size="icon"
                     className="h-12 w-12 border-border/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors"
                     onClick={handleGenerate}
+                    disabled={isGenerating}
                     title="Regenerate"
                   >
-                    <RefreshCw className="w-5 h-5" />
+                    <RefreshCw className={cn("w-5 h-5", isGenerating && "animate-spin")} />
                   </Button>
                 </div>
 
                 {type === "password" && value && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div className="space-y-2 ">
                     <div className="flex justify-between items-end px-1">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                         Security Strength
@@ -239,7 +247,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                 )}
               </div>
             ) : (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -269,7 +277,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                 </div>
 
                 {analysisResults && (
-                  <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="space-y-6">
                     <div className="p-5 rounded-2xl bg-card border border-border/60 space-y-4">
                       <div className="flex justify-between items-center">
                         <h4 className="font-bold text-sm tracking-tight">Analysis Result</h4>
@@ -407,7 +415,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   }
 
   return (
-    <div className="h-full flex flex-col bg-background border-l border-border/40 w-[400px] animate-in slide-in-from-right-10 duration-500 shadow-2xl">
+    <div className="h-full flex flex-col bg-background border-l border-border/40 w-[400px] shadow-2xl">
       {Content}
     </div>
   );

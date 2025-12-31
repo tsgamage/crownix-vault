@@ -49,7 +49,7 @@ export function SecurityDashboard({
           <Separator className="opacity-50" />
 
           {vaultAnalysis && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-4">
+            <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Health Insights</h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Stats Section */}

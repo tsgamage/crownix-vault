@@ -97,7 +97,7 @@ export default function CreateAndEditCategory() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in fade-in slide-in-from-right-4 duration-300">
+    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm">
       {/* Header */}
       <div className="p-6 pb-4 border-b border-border/40">
         <div className="flex items-center mb-4 text-muted-foreground">

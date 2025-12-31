@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   KeyRoundIcon,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { type IPasswordItem } from "@/utils/types/global.types";
@@ -38,7 +39,11 @@ import {
 } from "../../../ui/dropdown-menu";
 
 import { PasswordStrengthCard } from "./components/PasswordStrengthCard";
-import { calculatePasswordScore, generatePassword, getPasswordStrength } from "@/utils/Password/pwd.utils";
+import {
+  calculatePasswordScore,
+  generateExcellentPasswordWithCharCount,
+  getPasswordStrength,
+} from "@/utils/Password/pwd.utils";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
@@ -56,6 +61,8 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [length, setLength] = useState(16);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const passwordItems = usePasswordStore((state) => state.passwordItems);
   const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
@@ -136,9 +143,27 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
     }
   };
 
+  const handleGeneratePassword = async () => {
+    if (formData) {
+      setIsGenerating(true);
+      try {
+        const password = await generateExcellentPasswordWithCharCount(length);
+        setFormData({ ...formData, password });
+      } finally {
+        setIsGenerating(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isPasswordEditing && formData?.password) {
+      handleGeneratePassword();
+    }
+  }, [length]);
+
   if (!formData) {
     return (
-      <div className="h-full flex items-center justify-center bg-background text-muted-foreground animate-in fade-in duration-500">
+      <div className="h-full flex items-center justify-center bg-background text-muted-foreground">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4 border border-border/50">
             <KeyRoundIcon className="w-8 h-8 opacity-20" />
@@ -391,14 +416,10 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     variant="outline"
                     size="icon"
                     title="Generate Password"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        password: generatePassword("excellent"),
-                      })
-                    }
+                    disabled={isGenerating}
+                    onClick={handleGeneratePassword}
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className={cn("w-4 h-4", isGenerating && "animate-spin")} />
                   </Button>
                 )}
 
@@ -418,7 +439,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               </div>
 
               {/* Strength Meter (Visual only) */}
-              {isPasswordEditing && (
+              {
                 <div className="pt-2 flex items-center justify-between text-[10px] space-x-2">
                   <div className="h-1 flex-1 bg-muted rounded-full overflow-hidden">
                     <div
@@ -434,6 +455,26 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   </div>
                   <span className="font-medium">{passwordStrength}%</span>
                   <span>{getPasswordStrength(formData?.password || "").toUpperCase()}</span>
+                </div>
+              }
+
+              {/* Password Length Slider (Only in Edit Mode) */}
+              {isPasswordEditing && (
+                <div className="pt-4 space-y-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <div className="flex justify-between items-center px-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      Password Length
+                    </Label>
+                    <span className="text-sm font-bold text-emerald-600">{length}</span>
+                  </div>
+                  <Slider
+                    value={[length]}
+                    onValueChange={(v) => setLength(v[0])}
+                    min={8}
+                    max={128}
+                    step={1}
+                    className="py-2"
+                  />
                 </div>
               )}
             </div>

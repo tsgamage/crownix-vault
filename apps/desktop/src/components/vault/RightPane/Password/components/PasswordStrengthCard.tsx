@@ -9,7 +9,7 @@ export function PasswordStrengthCard({
   passwordStrength,
 }: PasswordStrengthCardProps) {
   return (
-    <div className="px-3 pt-4 animate-in fade-in slide-in-from-top-1 duration-300">
+    <div className="px-3 pt-4">
       <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 space-y-4 shadow-sm">
         {/* Header with icon and title */}
         <div className="flex items-start gap-3">

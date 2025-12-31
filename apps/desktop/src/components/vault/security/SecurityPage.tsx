@@ -86,7 +86,7 @@ export default function SecurityPage() {
   };
 
   return (
-    <div className="h-full flex-1 flex flex-col bg-background animate-in fade-in duration-300">
+    <div className="h-full flex-1 flex flex-col bg-background">
       {/* --- HEADER --- */}
       <div className="px-8 py-6 shrink-0">
         <h1 className="text-3xl font-bold tracking-tight mb-1">Security Dashboard</h1>

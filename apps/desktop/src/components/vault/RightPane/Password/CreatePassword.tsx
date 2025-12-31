@@ -5,7 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { useCallback, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useDialog } from "@/context/DialogContext";
 import { type IPasswordItem } from "@/utils/types/global.types";
 
@@ -13,7 +15,11 @@ import { PasswordIconPicker } from "./components/PasswordIconPicker";
 import { UrlManager } from "./components/UrlManager";
 import { TagManager } from "./components/TagManager";
 import { CustomFieldManager } from "./components/CustomFieldManager";
-import { generateVeryStrongPassword } from "@/utils/Password/pwd.utils";
+import {
+  calculatePasswordScore,
+  generateExcellentPasswordWithCharCount,
+  getPasswordStrength,
+} from "@/utils/Password/pwd.utils";
 import { MOCK_PASSWORD_CATEGORIES } from "@/data/initial-vault";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
@@ -40,6 +46,9 @@ export function CreatePassword() {
     isFavorite: false,
     categoryId: "",
   });
+  const [length, setLength] = useState(16);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isFormEmpty = (formData: Partial<IPasswordItem>) => {
     if (formData.title || formData.username || formData.password || formData.notes) {
@@ -82,6 +91,26 @@ export function CreatePassword() {
     handleCancelClick();
   };
 
+  const handleGeneratePassword = async () => {
+    setIsGenerating(true);
+    try {
+      const password = await generateExcellentPasswordWithCharCount(length);
+      setFormData((prev) => ({ ...prev, password }));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.password) {
+      handleGeneratePassword();
+    }
+  }, [length]);
+
+  useEffect(() => {
+    setPasswordStrength(Math.floor(calculatePasswordScore(formData?.password || "")));
+  }, [formData?.password]);
+
   const handleEscapePress = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -118,7 +147,7 @@ export function CreatePassword() {
   }, [handleEscapePress]);
 
   return (
-    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in fade-in slide-in-from-right-4 duration-300">
+    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in">
       {/* --- HEADER --- */}
       <div className="p-6 pb-4 border-b border-border/40">
         <div className="flex items-center mb-4 text-muted-foreground">
@@ -240,15 +269,11 @@ export function CreatePassword() {
                   tabIndex={-1}
                   variant="link"
                   size="sm"
-                  className="h-auto p-0 text-xs text-emerald-600"
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      password: generateVeryStrongPassword(),
-                    })
-                  }
+                  className="h-auto p-0 text-xs text-emerald-600 disabled:opacity-50"
+                  onClick={handleGeneratePassword}
+                  disabled={isGenerating}
                 >
-                  Generate Strong Password
+                  {isGenerating ? "Generating..." : "Generate Strong Password"}
                 </Button>
               </div>
               <div className="flex gap-2 group relative">
@@ -275,16 +300,48 @@ export function CreatePassword() {
                   variant="outline"
                   size="icon"
                   className="shrink-0"
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      password: generateVeryStrongPassword(),
-                    })
-                  }
+                  onClick={handleGeneratePassword}
+                  disabled={isGenerating}
                   title="Regenerate"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className={cn("w-4 h-4", isGenerating && "animate-spin")} />
                 </Button>
+              </div>
+
+              {/* Strength Meter (Visual only) */}
+              <div className="pt-2 flex items-center justify-between text-[10px] space-x-2">
+                <div className="h-1 flex-1 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-500 ease-out",
+                      passwordStrength <= 25 && "bg-destructive",
+                      passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
+                      passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
+                      passwordStrength > 75 && "bg-emerald-500"
+                    )}
+                    style={{ width: `${passwordStrength}%` }}
+                  />
+                </div>
+                <span className="font-medium">{passwordStrength}%</span>
+                <span>{getPasswordStrength(formData?.password || "").toUpperCase()}</span>
+              </div>
+
+              {/* Password Length Slider */}
+              <div className="pt-4 space-y-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex justify-between items-center px-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    Password Length
+                  </Label>
+                  <span className="text-sm font-bold text-emerald-600">{length}</span>
+                </div>
+                <Slider
+                  value={[length]}
+                  onValueChange={(v) => setLength(v[0])}
+                  min={8}
+                  max={128}
+                  step={1}
+                  className="py-2"
+                />
               </div>
             </div>
           </div>
