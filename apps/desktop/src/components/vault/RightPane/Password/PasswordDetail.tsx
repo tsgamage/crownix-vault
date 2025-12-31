@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useState, useEffect, useCallback } from "react";
+import { useDialog } from "@/context/DialogContext";
+import { RegeneratePasswordWarning } from "@/modals/RegeneratePasswordWarning";
 import { cn } from "@/lib/utils";
 import { type IPasswordItem } from "@/utils/types/global.types";
 
@@ -56,6 +58,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
 
   const [formData, setFormData] = useState<IPasswordItem | null>(null);
+  const { openDialog, closeDialog } = useDialog();
 
   // UI States
   const [showPassword, setShowPassword] = useState(false);
@@ -143,15 +146,34 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
     }
   };
 
-  const handleGeneratePassword = async () => {
+  const handleGeneratePassword = () => {
     if (formData) {
-      setIsGenerating(true);
-      try {
-        const password = await generateExcellentPasswordWithCharCount(length);
-        setFormData({ ...formData, password });
-      } finally {
-        setIsGenerating(false);
-      }
+      openDialog({
+        title: "Regenerate Password?",
+        variant: "warning",
+        content: <RegeneratePasswordWarning />,
+        buttons: [
+          {
+            label: "Cancel",
+            variant: "default",
+            onClick: closeDialog,
+          },
+          {
+            label: "Regenerate Anyway",
+            variant: "secondary",
+            onClick: async () => {
+              closeDialog();
+              setIsGenerating(true);
+              try {
+                const password = await generateExcellentPasswordWithCharCount(length);
+                setFormData({ ...formData, password });
+              } finally {
+                setIsGenerating(false);
+              }
+            },
+          },
+        ],
+      });
     }
   };
 

@@ -83,6 +83,7 @@ export interface DialogConfig {
   icon?: any; // Lucide icon or similar
   buttons: DialogButton[];
   variant?: "default" | "danger" | "success" | "warning"; // High-level variant for styling
+  content?: React.ReactNode;
 }
 
 export interface ISettings {}

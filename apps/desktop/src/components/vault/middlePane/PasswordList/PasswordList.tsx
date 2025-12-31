@@ -105,7 +105,11 @@ export function PasswordList() {
       }
     });
 
-    return { ...groups, UncategorizedPasswords };
+    if (UncategorizedPasswords.length > 0) {
+      return { ...groups, Uncategorized: UncategorizedPasswords };
+    }
+
+    return groups;
   }, [sortedPasswords, groupOption]);
 
   // Sort groups alphabetically if grouping by name
@@ -228,7 +232,9 @@ export function PasswordList() {
                     <div
                       className={cn(
                         "px-2 py-1 mt-2 first:mt-0",
-                        groupOption === "category" ? getCategoryColor(groupItems[0].categoryId) : "",
+                        groupOption === "category" && groupName !== "Uncategorized"
+                          ? getCategoryColor(groupItems[0].categoryId)
+                          : "",
                         groupOption === "category" ? "pt-0 rounded-t-2xl" : ""
                       )}
                     >
