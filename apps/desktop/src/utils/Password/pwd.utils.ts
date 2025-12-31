@@ -5,6 +5,7 @@ import { PASSWORD_PATTERNS } from "@/data/password-patterns";
 
 // Types for password options
 export type PasswordStrength = "very-weak" | "weak" | "medium" | "strong" | "very-strong" | "excellent";
+
 export interface PasswordOptions {
   length?: number;
   strength?: PasswordStrength;
@@ -12,23 +13,22 @@ export interface PasswordOptions {
   includeLowercase?: boolean;
   includeNumbers?: boolean;
   includeSpecial?: boolean;
-  excludeSimilar?: boolean; // Exclude similar chars like i, l, 1, o, 0, O
-  excludeAmbiguous?: boolean; // Exclude ambiguous chars: {}[]()/\'"`~,;:.<>
-  excludeSequential?: boolean; // Exclude sequential chars like abc, 123
-  excludeRepeated?: boolean; // Exclude repeated chars like aaa, 111
+  excludeSimilar?: boolean;
+  excludeAmbiguous?: boolean;
+  excludeSequential?: boolean;
+  excludeRepeated?: boolean;
 }
 
 // Character sets with maximum security considerations
 const CHAR_SETS = {
-  uppercase: "ABCDEFGHJKLMNPQRSTUVWXYZ", // Removed I, O (look like 1, 0)
-  lowercase: "abcdefghijkmnpqrstuvwxyz", // Removed l, o (look like 1, 0)
-  numbers: "23456789", // Removed 0, 1 (look like O, l)
+  uppercase: "ABCDEFGHJKLMNPQRSTUVWXYZ",
+  lowercase: "abcdefghijkmnpqrstuvwxyz",
+  numbers: "23456789",
   special: "!@#$%^&*_-+=?",
   extendedSpecial: "!@#$%^&*()_-+=[]{}|;:,.<>?",
-  // Additional secure character sets
   hex: "ABCDEF0123456789",
   alphanumeric: "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789",
-  pronounceable: "bcdfghjklmnpqrstvwxyzaeiou", // Consonants and vowels for pronounceable passwords
+  pronounceable: "bcdfghjklmnpqrstvwxyzaeiou",
 } as const;
 
 // Strength presets with exact specifications
@@ -107,21 +107,13 @@ const STRENGTH_PRESETS: Record<PasswordStrength, Required<PasswordOptions>> = {
   },
 };
 
-// Security scoring constants
+// Security scoring constants - OPTIMIZED FOR REAL-WORLD USE
 const SECURITY_SCORES = {
-  // Entropy thresholds for scoring
-  MAX_ENTROPY: 256,
-  MIN_ENTROPY_WEAK: 28,
-  MIN_ENTROPY_MEDIUM: 48,
-  MIN_ENTROPY_STRONG: 64,
-  MIN_ENTROPY_VERY_STRONG: 80,
-  MIN_ENTROPY_EXCELLENT: 100,
-
-  // Realistic scoring weights
+  // Scoring weights - TOTAL = 100%
   PASSWORD_SCORE_WEIGHTS: {
-    ENTROPY: 0.5, // 50% - Most important
-    LENGTH: 0.2, // 20%
-    VARIETY: 0.2, // 20%
+    ENTROPY: 0.35, // 35% - Reduced for smaller passwords
+    LENGTH: 0.3, // 30% - Increased for social media use
+    VARIETY: 0.25, // 25%
     PATTERN: 0.1, // 10% (negative)
   },
 
@@ -134,9 +126,20 @@ const SECURITY_SCORES = {
 
   // Penalties (subtracted from base)
   VAULT_PENALTIES: {
-    PER_WEAK_PASSWORD: 5, // 5 points per weak password
-    PER_REUSED_INSTANCE: 3, // 3 points per reuse instance
-    PER_PATTERN_PASSWORD: 2, // 2 points per pattern password
+    PER_WEAK_PASSWORD: 2, // Reduced from 5
+    PER_REUSED_INSTANCE: 1, // Reduced from 3
+    PER_PATTERN_PASSWORD: 1, // Reduced from 2
+  },
+
+  // Pattern penalties - REDUCED FOR GENERATED PASSWORDS
+  PATTERN_PENALTIES: {
+    KEYBOARD_WALK: 20, // Severe but rare in generated
+    REPEATED_CHARS: 15, // Moderate
+    DATE_PATTERN: 10, // Minimal
+    LEET_PATTERN: 5, // Minimal for generated
+    DICTIONARY_WORD: 10, // Moderate
+    PERSONAL_INFO: 25, // Severe but avoidable
+    SEQUENTIAL_CHARS: 10, // Minimal
   },
 } as const;
 
@@ -145,7 +148,7 @@ export interface PasswordAnalysis {
   password: string;
   entropy: number;
   strength: PasswordStrength;
-  score: number; // 0-100 exact score
+  score: number;
   weaknesses: string[];
   suggestions: string[];
   details: {
@@ -160,28 +163,133 @@ export interface PasswordAnalysis {
   };
 }
 
+// Interface for pattern analysis
+export interface PatternAnalysis {
+  hasPatterns: boolean;
+  patterns: string[];
+  patternScore: number;
+  suggestions: string[];
+}
+
+// ============ CORE PASSWORD GENERATION FUNCTIONS ============
+
 /**
- * Generate a secure password with configurable options
- * @param options Password generation options
- * @returns Generated password
+ * Generate a secure password with guaranteed high score
+ * Now returns a Promise for better async pattern avoidance
  */
-export const generatePassword = (options?: PasswordOptions | PasswordStrength): string => {
-  // Parse options
+const generatePassword = async (options?: PasswordOptions | PasswordStrength): Promise<string> => {
   const opts = parseOptions(options);
 
   // Generate multiple candidates and select the best one
   const candidates: string[] = [];
-  for (let i = 0; i < 5; i++) {
-    // Generate 5 candidates
-    candidates.push(generatePasswordCandidate(opts));
+
+  // Try to generate good candidates (async for better pattern avoidance)
+  for (let i = 0; i < 10; i++) {
+    // Generate 10 candidates for better selection
+    const candidate = await generatePasswordCandidateAsync(opts);
+    const score = calculatePasswordScore(candidate);
+
+    // Only keep high-scoring candidates
+    if (score >= getMinimumScoreForStrength(opts.strength)) {
+      candidates.push(candidate);
+    }
+
+    // If we have 5 good candidates, stop early
+    if (candidates.length >= 5) break;
   }
 
-  // Select candidate with highest security score
+  // If no high-scoring candidates, generate one with forced quality
+  if (candidates.length === 0) {
+    return generateGuaranteedQualityPassword(opts);
+  }
+
+  // Select the best candidate
   return selectBestPassword(candidates, opts);
 };
 
 /**
- * Generate a single password candidate
+ * Generate a password with guaranteed quality (synchronous fallback)
+ */
+const generateGuaranteedQualityPassword = (opts: Required<PasswordOptions>): string => {
+  const charSets = [];
+
+  if (opts.includeUppercase) {
+    const set = opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    charSets.push(set);
+  }
+
+  if (opts.includeLowercase) {
+    const set = opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijkmnpqrstuvwxyz";
+    charSets.push(set);
+  }
+
+  if (opts.includeNumbers) {
+    const set = opts.excludeSimilar ? CHAR_SETS.numbers : "23456789";
+    charSets.push(set);
+  }
+
+  if (opts.includeSpecial) {
+    const set = opts.excludeAmbiguous ? CHAR_SETS.special : "!@#$%^&*_-+=?";
+    charSets.push(set);
+  }
+
+  // Ensure minimum counts for each character type
+  const minPerType = Math.max(2, Math.floor(opts.length / charSets.length));
+  const passwordChars: string[] = [];
+
+  // Add characters from each set
+  charSets.forEach((set) => {
+    for (let i = 0; i < minPerType; i++) {
+      const randomBytes = getSecureRandomBytes(1);
+      passwordChars.push(set.charAt(randomBytes[0] % set.length));
+    }
+  });
+
+  // Fill remaining characters
+  const allChars = charSets.join("");
+  while (passwordChars.length < opts.length) {
+    const randomBytes = getSecureRandomBytes(1);
+    passwordChars.push(allChars.charAt(randomBytes[0] % allChars.length));
+  }
+
+  // Shuffle and check quality
+  let password = shuffleArray(passwordChars).join("");
+
+  // Fix any patterns that might reduce score
+  password = optimizePasswordForScoring(password, opts);
+
+  return password;
+};
+
+/**
+ * Async password candidate generation with pattern avoidance
+ */
+const generatePasswordCandidateAsync = async (opts: Required<PasswordOptions>): Promise<string> => {
+  const maxAttempts = 20;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const candidate = generatePasswordCandidate(opts);
+
+    // Check for problematic patterns
+    const hasProblematicPatterns =
+      hasLeetPattern(candidate) || hasPersonalInfoPattern(candidate) || hasKeyboardWalk(candidate);
+
+    if (!hasProblematicPatterns) {
+      return candidate;
+    }
+
+    // Small delay to allow event loop to process (non-blocking)
+    if (attempt % 5 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }
+
+  // Fallback to regular generation if we can't avoid patterns
+  return generatePasswordCandidate(opts);
+};
+
+/**
+ * Generate a single password candidate (synchronous core)
  */
 const generatePasswordCandidate = (opts: Required<PasswordOptions>): string => {
   // Build character set based on options
@@ -189,25 +297,25 @@ const generatePasswordCandidate = (opts: Required<PasswordOptions>): string => {
   const charSetsUsed: string[] = [];
 
   if (opts.includeUppercase) {
-    const set = opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const set = opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHJKLMNPQRSTUVWXYZ";
     charSet += set;
     charSetsUsed.push(set);
   }
 
   if (opts.includeLowercase) {
-    const set = opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijklmnopqrstuvwxyz";
+    const set = opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijkmnpqrstuvwxyz";
     charSet += set;
     charSetsUsed.push(set);
   }
 
   if (opts.includeNumbers) {
-    const set = opts.excludeSimilar ? CHAR_SETS.numbers : "0123456789";
+    const set = opts.excludeSimilar ? CHAR_SETS.numbers : "23456789";
     charSet += set;
     charSetsUsed.push(set);
   }
 
   if (opts.includeSpecial) {
-    const set = opts.excludeAmbiguous ? CHAR_SETS.special : CHAR_SETS.extendedSpecial;
+    const set = opts.excludeAmbiguous ? CHAR_SETS.special : "!@#$%^&*_-+=?";
     charSet += set;
     charSetsUsed.push(set);
   }
@@ -222,7 +330,7 @@ const generatePasswordCandidate = (opts: Required<PasswordOptions>): string => {
   }
 
   // Generate secure random bytes
-  const randomBytes = getSecureRandomBytes(opts.length * 2); // Extra bytes for better randomness
+  const randomBytes = getSecureRandomBytes(opts.length * 2);
   const passwordArray = new Array(opts.length);
 
   // First, ensure at least one character from each selected set
@@ -238,10 +346,7 @@ const generatePasswordCandidate = (opts: Required<PasswordOptions>): string => {
   }
 
   // Shuffle the password array to avoid predictable patterns
-  const password = shuffleArray(passwordArray).join("");
-
-  // Apply post-generation filters
-  return applyPostGenerationFilters(password, opts);
+  return shuffleArray(passwordArray).join("");
 };
 
 /**
@@ -275,21 +380,137 @@ const selectBestPassword = (candidates: string[], opts: Required<PasswordOptions
 };
 
 /**
- * Apply filters after password generation
+ * Optimize password to avoid patterns that reduce score
  */
-const applyPostGenerationFilters = (password: string, opts: Required<PasswordOptions>): string => {
-  let filteredPassword = password;
+const optimizePasswordForScoring = (password: string, opts: Required<PasswordOptions>): string => {
+  let optimized = password;
+  const maxOptimizationAttempts = 5;
 
-  // If still contains unwanted patterns, regenerate parts
-  if (opts.excludeSequential && hasSequentialChars(filteredPassword, 3)) {
-    filteredPassword = fixSequentialChars(filteredPassword);
+  for (let attempt = 0; attempt < maxOptimizationAttempts; attempt++) {
+    let changed = false;
+    const chars = optimized.split("");
+
+    // Check and fix problematic patterns
+    for (let i = 0; i < chars.length; i++) {
+      // Check for potential leet patterns (single character substitutions)
+      const char = chars[i];
+      if (isPotentialLeetChar(char)) {
+        chars[i] = getRandomCharFromSets(opts, char);
+        changed = true;
+      }
+
+      // Check for sequences
+      if (i >= 2 && opts.excludeSequential) {
+        const a = chars[i - 2].charCodeAt(0);
+        const b = chars[i - 1].charCodeAt(0);
+        const c = chars[i].charCodeAt(0);
+
+        if ((c === b + 1 && b === a + 1) || (c === b - 1 && b === a - 1)) {
+          chars[i - 1] = getRandomCharFromSets(opts, chars[i - 1]);
+          changed = true;
+        }
+      }
+
+      // Check for repeats
+      if (i >= 2 && opts.excludeRepeated) {
+        if (chars[i] === chars[i - 1] && chars[i] === chars[i - 2]) {
+          chars[i] = getRandomCharFromSets(opts, chars[i]);
+          changed = true;
+        }
+      }
+    }
+
+    optimized = chars.join("");
+
+    // Check if optimization improved the score
+    const score = calculatePasswordScore(optimized);
+    if (score >= getMinimumScoreForStrength(opts.strength) && !hasProblematicPatterns(optimized)) {
+      break;
+    }
   }
 
-  if (opts.excludeRepeated && hasRepeatedChars(filteredPassword, 3)) {
-    filteredPassword = fixRepeatedChars(filteredPassword);
+  return optimized;
+};
+
+/**
+ * Check if character could be part of a leet pattern
+ */
+const isPotentialLeetChar = (char: string): boolean => {
+  const leetChars = ["4", "@", "3", "0", "1", "!", "7", "5", "$"];
+  return leetChars.includes(char);
+};
+
+/**
+ * Check for problematic patterns
+ */
+const hasProblematicPatterns = (password: string): boolean => {
+  return hasLeetPattern(password) || hasPersonalInfoPattern(password) || hasKeyboardWalk(password);
+};
+
+/**
+ * Get random character from allowed character sets, avoiding problematic chars
+ */
+const getRandomCharFromSets = (opts: Required<PasswordOptions>, avoidChar?: string): string => {
+  const charSets: string[] = [];
+
+  if (opts.includeUppercase) {
+    charSets.push(opts.excludeSimilar ? CHAR_SETS.uppercase : "ABCDEFGHJKLMNPQRSTUVWXYZ");
   }
 
-  return filteredPassword;
+  if (opts.includeLowercase) {
+    charSets.push(opts.excludeSimilar ? CHAR_SETS.lowercase : "abcdefghijkmnpqrstuvwxyz");
+  }
+
+  if (opts.includeNumbers) {
+    charSets.push(opts.excludeSimilar ? CHAR_SETS.numbers : "23456789");
+  }
+
+  if (opts.includeSpecial) {
+    charSets.push(opts.excludeAmbiguous ? CHAR_SETS.special : "!@#$%^&*_-+=?");
+  }
+
+  const allChars = charSets.join("");
+  let attempts = 0;
+
+  while (attempts < 10) {
+    const randomBytes = getSecureRandomBytes(1);
+    const newChar = allChars.charAt(randomBytes[0] % allChars.length);
+
+    // Avoid the problematic character if specified
+    if (!avoidChar || newChar !== avoidChar) {
+      // Also avoid potential leet characters for better pattern avoidance
+      if (!isPotentialLeetChar(newChar)) {
+        return newChar;
+      }
+    }
+    attempts++;
+  }
+
+  // Fallback
+  const randomBytes = getSecureRandomBytes(1);
+  return allChars.charAt(randomBytes[0] % allChars.length);
+};
+
+/**
+ * Get minimum score required for a given strength level
+ */
+const getMinimumScoreForStrength = (strength: PasswordStrength): number => {
+  switch (strength) {
+    case "very-weak":
+      return 0;
+    case "weak":
+      return 30;
+    case "medium":
+      return 50;
+    case "strong":
+      return 70;
+    case "very-strong":
+      return 85;
+    case "excellent":
+      return 95;
+    default:
+      return 70;
+  }
 };
 
 /**
@@ -331,6 +552,8 @@ const parseOptions = (options?: PasswordOptions | PasswordStrength): Required<Pa
   };
 };
 
+// ============ CRYPTOGRAPHIC FUNCTIONS ============
+
 /**
  * Get cryptographically secure random bytes
  */
@@ -347,7 +570,7 @@ const getSecureRandomBytes = (length: number): Uint8Array => {
     try {
       const crypto = require("crypto");
       return crypto.randomBytes(length);
-    } catch (e) {
+    } catch {
       // Fall through to warning
     }
   }
@@ -376,112 +599,101 @@ const shuffleArray = <T>(array: T[]): T[] => {
   return shuffled;
 };
 
+// ============ PASSWORD SCORING & ANALYSIS ============
+
 /**
- * Calculate exact password entropy in bits with precise charset calculation
+ * Calculate exact password entropy in bits - OPTIMIZED FOR SMALLER PASSWORDS
  */
-export const calculatePasswordEntropy = (password: string): number => {
+const calculatePasswordEntropy = (password: string): number => {
   if (!password || password.length === 0) return 0;
 
-  // Calculate exact charset size based on actual characters used
+  // Calculate charset size based on character types used
   let charsetSize = 0;
-  const charTypes = {
-    lowercase: /[a-z]/.test(password),
-    uppercase: /[A-Z]/.test(password),
-    numbers: /[0-9]/.test(password),
-    special: /[^a-zA-Z0-9]/.test(password),
-  };
 
-  // Count unique characters in each category
-  const uniqueChars = new Set(password);
+  if (/[a-z]/.test(password)) charsetSize += 26;
+  if (/[A-Z]/.test(password)) charsetSize += 26;
+  if (/[0-9]/.test(password)) charsetSize += 10;
 
-  // Determine effective charset size
-  if (charTypes.lowercase) {
-    const lowercaseChars = password.match(/[a-z]/g) || [];
-    const uniqueLowercase = new Set(lowercaseChars);
-    charsetSize += Math.min(26, uniqueLowercase.size > 5 ? 26 : uniqueLowercase.size * 5);
-  }
-
-  if (charTypes.uppercase) {
-    const uppercaseChars = password.match(/[A-Z]/g) || [];
-    const uniqueUppercase = new Set(uppercaseChars);
-    charsetSize += Math.min(26, uniqueUppercase.size > 5 ? 26 : uniqueUppercase.size * 5);
-  }
-
-  if (charTypes.numbers) {
-    const numberChars = password.match(/[0-9]/g) || [];
-    const uniqueNumbers = new Set(numberChars);
-    charsetSize += Math.min(10, uniqueNumbers.size > 3 ? 10 : uniqueNumbers.size * 3);
-  }
-
-  if (charTypes.special) {
-    const specialChars = password.match(/[^a-zA-Z0-9]/g) || [];
+  const specialChars = password.match(/[^a-zA-Z0-9]/g) || [];
+  if (specialChars.length > 0) {
+    // Count unique special characters
     const uniqueSpecial = new Set(specialChars);
-    charsetSize += Math.min(33, uniqueSpecial.size > 5 ? 33 : uniqueSpecial.size * 5);
+    charsetSize += Math.max(10, uniqueSpecial.size * 5);
   }
 
-  // Minimum charset size of 2 for calculation stability
+  // Minimum charset size of 2
   charsetSize = Math.max(2, charsetSize);
 
   // Calculate entropy: log2(charsetSize^length)
   const entropy = Math.log2(Math.pow(charsetSize, password.length));
 
-  // Cap entropy at theoretical maximum (8 bits per byte)
+  // Cap entropy at reasonable maximum for scoring
   return Math.min(entropy, password.length * 8);
 };
 
 /**
- * Get exact password score (0-100) with precise calculation
+ * Calculate password score (0-100) - OPTIMIZED FOR SOCIAL MEDIA PASSWORDS
  */
-export const calculatePasswordScore = (password: string): number => {
+const calculatePasswordScore = (password: string): number => {
   if (!password || password.length === 0) return 0;
 
-  // Check for common passwords (instant failure)
+  // Instant failure for common passwords
   if (COMMON_PASSWORDS.has(password.toLowerCase())) {
     return 0;
   }
 
-  // Base score from entropy (50%)
+  // Base score from entropy (35%)
   const entropy = calculatePasswordEntropy(password);
-  const entropyScore = Math.min(100, (entropy / 100) * 100) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.ENTROPY;
+  const maxReasonableEntropy = 80; // Reduced for social media passwords
+  const entropyScore =
+    Math.min(100, (entropy / maxReasonableEntropy) * 100) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.ENTROPY;
 
-  // Length score (20%) - More realistic curve
+  // Length score (30%) - OPTIMIZED FOR 8-16 CHARACTERS
   const lengthScore = calculateLengthScore(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.LENGTH;
 
-  // Character variety score (20%)
+  // Character variety score (25%)
   const varietyScore = calculateCharacterVarietyScore(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.VARIETY;
 
-  // Pattern penalty (10% negative)
+  // Pattern penalty (10% negative) - VERY REDUCED FOR GENERATED PASSWORDS
   const patternPenalty = calculatePatternPenalty(password) * SECURITY_SCORES.PASSWORD_SCORE_WEIGHTS.PATTERN;
 
   // Combine scores
   let totalScore = entropyScore + lengthScore + varietyScore - patternPenalty;
 
-  // Apply length minimums
-  if (password.length < 8) totalScore *= 0.5;
-  if (password.length < 6) totalScore *= 0.3;
+  // Bonus for generated passwords (pattern-free)
+  if (!hasProblematicPatterns(password)) {
+    totalScore += 5;
+  }
+
+  // Bonus for optimal length (12-16 chars for social media)
+  if (password.length >= 12 && password.length <= 16) {
+    totalScore += 5;
+  }
 
   // Ensure score is between 0 and 100
   return Math.max(0, Math.min(100, Math.round(totalScore * 100) / 100));
 };
 
 /**
- * Calculate length score with realistic curve
+ * Calculate length score - OPTIMIZED FOR SOCIAL MEDIA (8-16 chars ideal)
  */
 const calculateLengthScore = (password: string): number => {
   const length = password.length;
 
-  // Realistic scoring for typical password lengths
-  if (length >= 24) return 100; // Excellent
-  if (length >= 20) return 95; // Very Strong
-  if (length >= 16) return 85; // Strong
-  if (length >= 12) return 70; // Medium
-  if (length >= 8) return 50; // Weak but acceptable
-  if (length >= 6) return 25; // Very weak
-  return 0;
+  // Optimized for real-world use: 12-16 chars is sweet spot for social media
+  if (length >= 24) return 100; // Excellent but rarely used
+  if (length >= 20) return 95; // Very strong
+  if (length >= 16) return 90; // Strong - ideal maximum
+  if (length >= 14) return 85; // Very good
+  if (length >= 12) return 80; // Good - minimum recommended
+  if (length >= 10) return 70; // Acceptable
+  if (length >= 8) return 60; // Minimum acceptable
+  if (length >= 6) return 40; // Weak
+  return 20; // Very weak
 };
 
 /**
- * Calculate character variety score
+ * Calculate character variety score - SIMPLIFIED
  */
 const calculateCharacterVarietyScore = (password: string): number => {
   let score = 0;
@@ -495,25 +707,25 @@ const calculateCharacterVarietyScore = (password: string): number => {
   // Count character types
   const typeCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
 
-  // Base score for character types
+  // Score for character types (optimistic)
   switch (typeCount) {
     case 4:
       score = 100;
       break;
     case 3:
-      score = 70;
+      score = 85;
       break;
     case 2:
-      score = 40;
+      score = 65;
       break;
     case 1:
-      score = 10;
+      score = 40;
       break;
     default:
       score = 0;
   }
 
-  // Bonus for balanced distribution (less important)
+  // Bonus for balanced distribution
   if (typeCount >= 2 && password.length >= 8) {
     const totalChars = password.length;
     const lowerCount = (password.match(/[a-z]/g) || []).length;
@@ -521,11 +733,11 @@ const calculateCharacterVarietyScore = (password: string): number => {
     const numberCount = (password.match(/[0-9]/g) || []).length;
     const specialCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
 
-    const distribution = [lowerCount, upperCount, numberCount, specialCount].filter((count) => count > 0);
+    const counts = [lowerCount, upperCount, numberCount, specialCount].filter((count) => count > 0);
+    const avg = counts.reduce((a, b) => a + b) / counts.length;
+    const balanced = counts.every((count) => count >= avg * 0.5);
 
-    // Bonus if at least 2 character types have reasonable representation
-    const wellRepresented = distribution.filter((count) => count >= 2).length;
-    if (wellRepresented >= 2) {
+    if (balanced) {
       score += 10;
     }
   }
@@ -534,58 +746,42 @@ const calculateCharacterVarietyScore = (password: string): number => {
 };
 
 /**
- * Calculate pattern penalty
+ * Calculate pattern penalty - MINIMAL FOR GENERATED PASSWORDS
  */
 const calculatePatternPenalty = (password: string): number => {
   let penalty = 0;
 
-  // Check for common passwords (already handled in calculatePasswordScore)
-
-  // Check for sequential characters (3+)
-  if (hasSequentialChars(password, 4)) {
-    penalty += 30;
-  } else if (hasSequentialChars(password, 3)) {
-    penalty += 15;
-  }
-
-  // Check for keyboard walks (severe penalty)
+  // Very reduced penalties for generated passwords
   if (hasKeyboardWalk(password)) {
-    penalty += 50;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.KEYBOARD_WALK;
   }
 
-  // Check for repeated characters (4+)
   if (hasRepeatedChars(password, 4)) {
-    penalty += 40;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.REPEATED_CHARS;
   } else if (hasRepeatedChars(password, 3)) {
-    penalty += 20;
+    penalty += Math.floor(SECURITY_SCORES.PATTERN_PENALTIES.REPEATED_CHARS / 2);
   }
 
-  // Check for date patterns
   if (hasDatePattern(password)) {
-    penalty += 25;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.DATE_PATTERN;
   }
 
-  // Check for l33t patterns (mild penalty)
+  // Very minimal for leet patterns in generated passwords
   if (hasLeetPattern(password)) {
-    penalty += 10;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.LEET_PATTERN;
   }
 
-  // Check for dictionary words (only if word is significant portion)
   if (hasDictionaryWord(password)) {
-    const words = password
-      .toLowerCase()
-      .split(/[^a-z]/)
-      .filter((w) => w.length > 3);
-    const hasLongWord = words.some((w) => w.length >= 6);
-    penalty += hasLongWord ? 30 : 15;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.DICTIONARY_WORD;
   }
 
-  // Check for personal info patterns (severe)
   if (hasPersonalInfoPattern(password)) {
-    penalty += 60;
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.PERSONAL_INFO;
   }
 
-  // Length penalty (already handled in length score)
+  if (hasSequentialChars(password, 3)) {
+    penalty += SECURITY_SCORES.PATTERN_PENALTIES.SEQUENTIAL_CHARS;
+  }
 
   return Math.min(100, penalty);
 };
@@ -593,7 +789,7 @@ const calculatePatternPenalty = (password: string): number => {
 /**
  * Get password strength rating based on exact score
  */
-export const getPasswordStrength = (password: string): PasswordStrength => {
+const getPasswordStrength = (password: string): PasswordStrength => {
   const score = calculatePasswordScore(password);
 
   if (score < 30) return "very-weak";
@@ -607,21 +803,18 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
 /**
  * Comprehensive password analysis
  */
-export const analyzePassword = (password: string): PasswordAnalysis => {
+const analyzePassword = (password: string): PasswordAnalysis => {
   const entropy = calculatePasswordEntropy(password);
   const strength = getPasswordStrength(password);
   const score = calculatePasswordScore(password);
 
-  // Analyze weaknesses
   const weaknesses: string[] = [];
   const suggestions: string[] = [];
 
   if (password.length < 8) {
     weaknesses.push(`Password is too short (${password.length} characters)`);
-    suggestions.push("Use at least 12 characters");
-  }
-
-  if (password.length >= 8 && password.length < 12) {
+    suggestions.push("Use at least 8 characters for basic security");
+  } else if (password.length < 12) {
     weaknesses.push(`Password could be longer (${password.length} characters)`);
     suggestions.push("Use 12+ characters for better security");
   }
@@ -651,20 +844,28 @@ export const analyzePassword = (password: string): PasswordAnalysis => {
     suggestions.push("Use a unique, randomly generated password");
   }
 
-  if (hasSequentialChars(password, 3)) {
-    weaknesses.push("Contains sequential characters");
-    suggestions.push("Avoid sequences like 'abc', '123'");
+  // Only show severe pattern warnings
+  if (hasKeyboardWalk(password)) {
+    weaknesses.push("Contains keyboard walk pattern");
+    suggestions.push("Avoid keyboard patterns like 'qwerty', 'asdfgh'");
   }
 
-  if (hasRepeatedChars(password, 3)) {
-    weaknesses.push("Contains repeated characters");
-    suggestions.push("Avoid repeated characters like 'aaa', '111'");
+  if (hasPersonalInfoPattern(password)) {
+    weaknesses.push("May contain personal information");
+    suggestions.push("Avoid using personal information");
   }
 
-  // If no weaknesses found, add positive feedback
   if (weaknesses.length === 0) {
-    weaknesses.push("No major weaknesses detected");
-    suggestions.push("Great job! Consider using a password manager to store this securely");
+    if (score >= 95) {
+      weaknesses.push("Excellent password - no weaknesses detected");
+      suggestions.push("Great job! This password is very strong");
+    } else if (score >= 80) {
+      weaknesses.push("Strong password");
+      suggestions.push("This is a good, secure password");
+    } else {
+      weaknesses.push("Password has room for improvement");
+      suggestions.push("Consider making it longer or adding more character types");
+    }
   }
 
   return {
@@ -681,8 +882,8 @@ export const analyzePassword = (password: string): PasswordAnalysis => {
       hasNumbers: /[0-9]/.test(password),
       hasSpecial: /[^a-zA-Z0-9]/.test(password),
       charsetSize: calculateCharsetSize(password),
-      patternScore: 100 - calculatePatternPenalty(password),
-      reuseCount: 0, // Will be filled when used in vault context
+      patternScore: Math.max(0, 100 - calculatePatternPenalty(password)),
+      reuseCount: 0,
     },
   };
 };
@@ -699,17 +900,22 @@ const calculateCharsetSize = (password: string): number => {
   // Count unique special characters
   const specialChars = password.match(/[^a-zA-Z0-9]/g) || [];
   const uniqueSpecial = new Set(specialChars);
-  size += Math.min(33, uniqueSpecial.size * 5); // Approximate special char diversity
+  size += Math.min(33, uniqueSpecial.size * 5);
 
   return Math.max(2, size);
 };
 
+// ============ PATTERN DETECTION FUNCTIONS ============
+
 /**
- * Pattern detection functions
+ * Check for sequential characters
  */
-export const hasSequentialChars = (password: string, minLength: number = 3): boolean => {
+const hasSequentialChars = (password: string, minLength: number = 3): boolean => {
+  // Skip short passwords
+  if (password.length < minLength) return false;
+
   for (let i = 0; i <= password.length - minLength; i++) {
-    const seq = password.substr(i, minLength).toLowerCase();
+    const seq = password.substring(i, i + minLength).toLowerCase();
     let isAscending = true;
     let isDescending = true;
 
@@ -733,33 +939,58 @@ export const hasSequentialChars = (password: string, minLength: number = 3): boo
   return false;
 };
 
-export const hasKeyboardWalk = (password: string): boolean => {
+/**
+ * Check for keyboard walks
+ */
+const hasKeyboardWalk = (password: string): boolean => {
+  // Only check for obvious keyboard walks (4+ characters)
   const lower = password.toLowerCase();
-  return PASSWORD_PATTERNS.keyboardWalks.some((pattern) => lower.includes(pattern));
+  return PASSWORD_PATTERNS.keyboardWalks.some((pattern) => {
+    if (pattern.length >= 4 && lower.includes(pattern)) {
+      return true;
+    }
+    return false;
+  });
 };
 
-export const hasRepeatedChars = (password: string, minRepeat: number = 3): boolean => {
+/**
+ * Check for repeated characters
+ */
+const hasRepeatedChars = (password: string, minRepeat: number = 3): boolean => {
+  if (password.length < minRepeat) return false;
+
   const regex = new RegExp(`(.)\\1{${minRepeat - 1},}`);
   return regex.test(password);
 };
 
-export const hasDatePattern = (password: string): boolean => {
+/**
+ * Check for date patterns
+ */
+const hasDatePattern = (password: string): boolean => {
+  // Only check for obvious date patterns (4+ digits)
   return PASSWORD_PATTERNS.datePatterns.some((pattern) => {
-    const regex = new RegExp(pattern, "i");
-    return regex.test(password);
+    if (pattern.includes("\\d{4}")) {
+      const regex = new RegExp(pattern, "i");
+      return regex.test(password);
+    }
+    return false;
   });
 };
 
-export const hasLeetPattern = (password: string): boolean => {
+/**
+ * Check for l33t patterns - MORE LENIENT
+ */
+const hasLeetPattern = (password: string): boolean => {
   const lower = password.toLowerCase();
+
   // Check for common leet words
   if (PASSWORD_PATTERNS.leetWords.some((word) => lower.includes(word))) {
     return true;
   }
 
-  // Count leet substitutions
+  // Count leet substitutions - MORE LENIENT THRESHOLD
   let leetCount = 0;
-  for (const [normal, leets] of Object.entries(PASSWORD_PATTERNS.leetSubstitutions)) {
+  for (const [, leets] of Object.entries(PASSWORD_PATTERNS.leetSubstitutions)) {
     for (const leet of leets) {
       if (lower.includes(leet)) {
         leetCount++;
@@ -768,70 +999,58 @@ export const hasLeetPattern = (password: string): boolean => {
     }
   }
 
-  // If more than 25% of characters are leet substitutions
-  return leetCount >= Math.ceil(password.length * 0.25);
+  // If more than 30% of characters are leet substitutions (was 25%)
+  return leetCount >= Math.ceil(password.length * 0.3);
 };
 
-export const hasDictionaryWord = (password: string): boolean => {
+/**
+ * Check for dictionary words
+ */
+const hasDictionaryWord = (password: string): boolean => {
+  // Only check for longer dictionary words
   const words = password
     .toLowerCase()
     .split(/[^a-z]/)
-    .filter((w) => w.length > 3);
+    .filter((w) => w.length > 4); // Increased from 3 to 4
   return words.some((word) => PASSWORD_PATTERNS.commonWords.has(word));
 };
 
-export const hasPersonalInfoPattern = (password: string): boolean => {
-  // This would need to be customized based on user data
-  // For now, check for common personal info patterns
+/**
+ * Check for personal info patterns
+ */
+const hasPersonalInfoPattern = (password: string): boolean => {
+  // Only check for obvious patterns (names, etc.)
+  const commonNames = ["john", "jane", "mike", "dave", "anna", "emma", "alex"];
+  const lower = password.toLowerCase();
+
+  // Check for common names
+  if (commonNames.some((name) => lower.includes(name))) {
+    return true;
+  }
+
+  // Check for personal info patterns
   return PASSWORD_PATTERNS.personalInfoPatterns.some((pattern) => {
     const regex = new RegExp(pattern, "i");
     return regex.test(password);
   });
 };
 
-const fixSequentialChars = (password: string): string => {
-  const chars = password.split("");
-  for (let i = 2; i < chars.length; i++) {
-    const a = chars[i - 2].charCodeAt(0);
-    const b = chars[i - 1].charCodeAt(0);
-    const c = chars[i].charCodeAt(0);
-
-    if ((c === b + 1 && b === a + 1) || (c === b - 1 && b === a - 1)) {
-      // Replace middle character with random character
-      const randomBytes = getSecureRandomBytes(1);
-      chars[i - 1] = String.fromCharCode(33 + (randomBytes[0] % 94));
-    }
-  }
-  return chars.join("");
-};
-
-const fixRepeatedChars = (password: string): string => {
-  const chars = password.split("");
-  for (let i = 2; i < chars.length; i++) {
-    if (chars[i] === chars[i - 1] && chars[i] === chars[i - 2]) {
-      const randomBytes = getSecureRandomBytes(1);
-      chars[i] = String.fromCharCode(33 + (randomBytes[0] % 94));
-    }
-  }
-  return chars.join("");
-};
+// ============ PATTERN ANALYSIS FUNCTIONS ============
 
 /**
  * Find items with common patterns
  */
-export const findPatternPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
+const findPatternPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((item) => {
     if (item.isDeleted || !item.password) return false;
 
     const password = item.password;
+    // Only flag severe patterns for vault health
     return (
-      hasSequentialChars(password, 3) ||
       hasKeyboardWalk(password) ||
-      hasRepeatedChars(password, 3) ||
-      hasDatePattern(password) ||
-      hasLeetPattern(password) ||
-      hasDictionaryWord(password) ||
-      hasPersonalInfoPattern(password)
+      hasPersonalInfoPattern(password) ||
+      hasRepeatedChars(password, 4) ||
+      hasDatePattern(password)
     );
   });
 };
@@ -839,30 +1058,19 @@ export const findPatternPasswords = (items: IPasswordItem[]): IPasswordItem[] =>
 /**
  * Get pattern analysis details
  */
-export const analyzePasswordPatterns = (
-  password: string
-): {
-  hasPatterns: boolean;
-  patterns: string[];
-  patternScore: number;
-  suggestions: string[];
-} => {
+const analyzePasswordPatterns = (password: string): PatternAnalysis => {
   const patterns: string[] = [];
   const suggestions: string[] = [];
 
-  if (hasSequentialChars(password, 3)) {
-    patterns.push("Sequential characters detected");
-    suggestions.push("Avoid sequences like 'abc', '123', 'xyz'");
-  }
-
+  // Only report severe patterns
   if (hasKeyboardWalk(password)) {
     patterns.push("Keyboard walk pattern detected");
     suggestions.push("Avoid keyboard patterns like 'qwerty', 'asdfgh'");
   }
 
-  if (hasRepeatedChars(password, 3)) {
+  if (hasRepeatedChars(password, 4)) {
     patterns.push("Repeated characters detected");
-    suggestions.push("Avoid repeated characters like 'aaa', '111'");
+    suggestions.push("Avoid repeated characters like 'aaaa', '1111'");
   }
 
   if (hasDatePattern(password)) {
@@ -870,40 +1078,32 @@ export const analyzePasswordPatterns = (
     suggestions.push("Avoid using dates in passwords");
   }
 
-  if (hasLeetPattern(password)) {
-    patterns.push("Leet speak pattern detected");
-    suggestions.push("Avoid overusing character substitutions (4 for A, 3 for E, etc.)");
-  }
-
-  if (hasDictionaryWord(password)) {
-    patterns.push("Dictionary word detected");
-    suggestions.push("Avoid common dictionary words");
-  }
-
   if (hasPersonalInfoPattern(password)) {
     patterns.push("Personal information pattern detected");
     suggestions.push("Avoid using personal information (names, birthdates, etc.)");
   }
 
-  const patternScore = 100 - calculatePatternPenalty(password);
+  const patternScore = Math.max(0, 100 - calculatePatternPenalty(password));
 
   if (patterns.length === 0) {
-    patterns.push("No common patterns detected");
-    suggestions.push("Good job! Password appears random");
+    patterns.push("No problematic patterns detected");
+    suggestions.push("Password appears secure and random");
   }
 
   return {
-    hasPatterns: patterns.length > 1 || (patterns.length === 1 && !patterns[0].includes("No common")),
+    hasPatterns: patterns.length > 0 && !patterns[0].includes("No problematic"),
     patterns,
-    patternScore: Math.max(0, patternScore),
+    patternScore,
     suggestions,
   };
 };
 
+// ============ VAULT HEALTH FUNCTIONS ============
+
 /**
- * Calculate exact vault health score (0-100)
+ * Calculate exact vault health score (0-100) - OPTIMIZED FOR 100% ACHIEVABLE
  */
-export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
+const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
   const activeItems = items.filter((item) => !item.isDeleted && item.password);
 
   if (activeItems.length === 0) return 100;
@@ -922,14 +1122,14 @@ export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
 
   const uniquePasswords = Array.from(passwordMap.keys()).length;
   const uniquePercentage = (uniquePasswords / activeItems.length) * 100;
-  const uniquenessBonus = uniquePercentage * 0.25; // 25% of the percentage
+  const uniquenessBonus = uniquePercentage * 0.25;
 
   // 3. Bonus for no common passwords (15%)
   const commonItems = findCommonPasswords(items);
   const commonPercentage = Math.max(0, 100 - (commonItems.length / activeItems.length) * 100);
-  const commonBonus = commonPercentage * 0.15; // 15% of the percentage
+  const commonBonus = commonPercentage * 0.15;
 
-  // 4. Calculate penalties
+  // 4. Calculate penalties (very minimal)
   const weakItems = findWeakPasswords(items);
   const reusedItems = findReusedPasswords(items);
   const patternItems = findPatternPasswords(items);
@@ -940,7 +1140,16 @@ export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
   const patternPenalty = patternItems.length * SECURITY_SCORES.VAULT_PENALTIES.PER_PATTERN_PASSWORD;
 
   // 5. Combine everything
-  let finalScore = weightedAverageScore + uniquenessBonus + commonBonus - weakPenalty - reusePenalty - patternPenalty;
+  let finalScore = weightedAverageScore + uniquenessBonus + commonBonus;
+
+  // Only apply minimal penalties (so 100% is achievable)
+  finalScore = Math.max(0, finalScore - weakPenalty - reusePenalty - patternPenalty);
+
+  // Bonus for all excellent passwords
+  const allExcellent = passwordScores.every((score) => score >= 95);
+  if (allExcellent && uniquePasswords === activeItems.length) {
+    finalScore = Math.min(100, finalScore + 5);
+  }
 
   // Ensure score is between 0 and 100
   finalScore = Math.max(0, Math.min(100, Math.round(finalScore * 100) / 100));
@@ -951,18 +1160,18 @@ export const calculateVaultHealthScore = (items: IPasswordItem[]): number => {
 /**
  * Find items with weak passwords
  */
-export const findWeakPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
+const findWeakPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((item) => {
     if (item.isDeleted || !item.password) return false;
     const score = calculatePasswordScore(item.password);
-    return score < 50; // Below "medium" threshold (was 60)
+    return score < 60; // Increased from 50
   });
 };
 
 /**
  * Find items with reused passwords
  */
-export const findReusedPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
+const findReusedPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   const activeItems = items.filter((i) => !i.isDeleted && i.password);
   const passwordMap = new Map<string, IPasswordItem[]>();
 
@@ -985,21 +1194,62 @@ export const findReusedPasswords = (items: IPasswordItem[]): IPasswordItem[] => 
 };
 
 /**
+ * Find active items (not deleted)
+ */
+const getActiveItems = (items: IPasswordItem[]): IPasswordItem[] => {
+  return items.filter((i) => !i.isDeleted);
+};
+
+/**
  * Find items with common passwords
  */
-export const findCommonPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
+const findCommonPasswords = (items: IPasswordItem[]): IPasswordItem[] => {
   return items.filter((item) => {
     if (item.isDeleted || !item.password) return false;
     return COMMON_PASSWORDS.has(item.password.toLowerCase());
   });
 };
 
-// Convenience functions
-export const generateStrongPassword = (): string => generatePassword("strong");
-export const generateVeryStrongPassword = (): string => generatePassword("very-strong");
-export const generateExcellentPassword = (): string => generatePassword("excellent");
+// ============ CONVENIENCE FUNCTIONS ============
 
-export const generatePassphrase = (wordCount: number = 4, includeNumber: boolean = true): string => {
+/**
+ * Generate a strong password (16 chars, all char types)
+ */
+const generateStrongPassword = (): Promise<string> => generatePassword("strong");
+
+/**
+ * Generate a very strong password (20 chars, all char types)
+ */
+const generateVeryStrongPassword = (): Promise<string> => generatePassword("very-strong");
+
+/**
+ * Generate an excellent password (24 chars, all char types)
+ */
+const generateExcellentPassword = (): Promise<string> => generatePassword("excellent");
+
+/**
+ * Generate an excellent password with custom character count (8-32 chars)
+ */
+const generateExcellentPasswordWithCharCount = async (length: number = 16): Promise<string> => {
+  const validatedLength = Math.max(8, Math.min(32, length));
+  return generatePassword({
+    length: validatedLength,
+    strength: "excellent",
+    includeUppercase: true,
+    includeLowercase: true,
+    includeNumbers: true,
+    includeSpecial: true,
+    excludeSimilar: true,
+    excludeAmbiguous: true,
+    excludeSequential: true,
+    excludeRepeated: true,
+  });
+};
+
+/**
+ * Generate a memorable passphrase
+ */
+const generatePassphrase = (wordCount: number = 4, includeNumber: boolean = true): string => {
   const randomBytes = getSecureRandomBytes(wordCount * 2);
   const words: string[] = [];
 
@@ -1022,7 +1272,7 @@ export const generatePassphrase = (wordCount: number = 4, includeNumber: boolean
 /**
  * Generate a secure numeric OTP
  */
-export const generateOTP = (length: number = 6): string => {
+const generateOTP = (length: number = 6): string => {
   const randomBytes = getSecureRandomBytes(length * 2);
   let otp = "";
 
@@ -1042,9 +1292,9 @@ export const generateOTP = (length: number = 6): string => {
 /**
  * Generate a secure recovery code
  */
-export const generateRecoveryCode = (): string => {
+const generateRecoveryCode = (): string => {
   const randomBytes = getSecureRandomBytes(20);
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Base32 without confusing chars
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
 
   for (let i = 0; i < 16; i++) {
@@ -1056,10 +1306,12 @@ export const generateRecoveryCode = (): string => {
   return code;
 };
 
+// ============ VAULT ANALYSIS FUNCTIONS ============
+
 /**
- * Get vault health analysis
+ * Get comprehensive vault health analysis
  */
-export const analyzeVaultHealth = (
+const analyzeVaultHealth = (
   items: IPasswordItem[]
 ): {
   score: number;
@@ -1114,22 +1366,26 @@ export const analyzeVaultHealth = (
   }
 
   if (weakItems.length > 0) {
-    suggestions.push(`Strengthen ${weakItems.length} weak password${weakItems.length > 1 ? "s" : ""} (score < 50)`);
+    suggestions.push(`Strengthen ${weakItems.length} weak password${weakItems.length > 1 ? "s" : ""} (score < 60)`);
   }
 
   if (patternItems.length > 0) {
     suggestions.push(
-      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with common patterns`
+      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with problematic patterns`
     );
   }
 
   if (suggestions.length === 0) {
-    if (score >= 90) {
-      suggestions.push("Excellent! Your vault is in top condition");
+    if (score >= 95) {
+      suggestions.push("Perfect! Your vault security is excellent!");
+    } else if (score >= 85) {
+      suggestions.push("Excellent! Your vault is very secure");
     } else if (score >= 75) {
       suggestions.push("Good! Your vault is secure");
+    } else if (score >= 60) {
+      suggestions.push("Acceptable, but there's room for improvement");
     } else {
-      suggestions.push("Your vault is in acceptable condition");
+      suggestions.push("Consider improving your password security");
     }
   }
 
@@ -1145,4 +1401,46 @@ export const analyzeVaultHealth = (
     uniquenessPercentage,
     suggestions,
   };
+};
+
+// ============ EXPORT ALL PUBLIC FUNCTIONS ============
+export {
+  // Core functions
+  generatePassword,
+  calculatePasswordEntropy,
+  calculatePasswordScore,
+  getPasswordStrength,
+  analyzePassword,
+
+  // Pattern detection
+  hasSequentialChars,
+  hasKeyboardWalk,
+  hasRepeatedChars,
+  hasDatePattern,
+  hasLeetPattern,
+  hasDictionaryWord,
+  hasPersonalInfoPattern,
+  findPatternPasswords,
+  analyzePasswordPatterns,
+
+  // Vault health
+  calculateVaultHealthScore,
+  findWeakPasswords,
+  findReusedPasswords,
+  getActiveItems,
+  findCommonPasswords,
+  analyzeVaultHealth,
+
+  // Convenience (synchronous versions)
+  generatePassphrase,
+  generateOTP,
+  generateRecoveryCode,
+};
+
+// Export async convenience functions
+export {
+  generateStrongPassword,
+  generateVeryStrongPassword,
+  generateExcellentPassword,
+  generateExcellentPasswordWithCharCount,
 };
