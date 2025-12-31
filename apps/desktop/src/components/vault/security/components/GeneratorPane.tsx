@@ -122,8 +122,8 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
           <Slider
             value={[passphraseWords]}
             onValueChange={(v) => setPassphraseWords(v[0])}
-            min={3}
-            max={20}
+            min={1}
+            max={128}
             step={1}
             className="py-2"
           />

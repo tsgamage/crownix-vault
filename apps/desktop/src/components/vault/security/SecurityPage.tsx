@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { SecurityIssueType } from "./security.config";
 
-import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
 
