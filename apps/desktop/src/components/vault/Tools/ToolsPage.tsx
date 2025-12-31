@@ -4,8 +4,54 @@ import { Separator } from "@/components/ui/separator";
 import { GENERATOR_CARDS, type GeneratorType } from "../security/security.config";
 import { SecurityAnalysisCard } from "../security/components/SecurityAnalysisCard";
 import { GeneratorPane } from "../security/components/GeneratorPane";
-import { WrenchIcon } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+const TOOLS_DETAILS: { title: string; description: string }[] = [
+  {
+    title: "01. Zero-Knowledge Generation",
+    description:
+      "All secrets are generated locally on your device using cryptographically secure random number generators (CSPRNGs). No data ever leaves your vault—not during generation, storage, or usage.",
+  },
+  {
+    title: "02. Cryptographic Entropy",
+    description:
+      "Our generators use high-entropy sources—including system randomness and hardware-based entropy—to ensure every secret is unpredictable and resistant to modern brute-force attacks.",
+  },
+  {
+    title: "03. Standards-Compliant Algorithms",
+    description:
+      "We adhere to NIST, FIPS, and other recognized cryptographic standards to ensure the integrity and security of every generated secret, from passwords to recovery keys.",
+  },
+  {
+    title: "04. Ephemeral Generation Process",
+    description:
+      "No secrets are stored or logged during generation. Once created, they exist only where you choose to place them—never on our servers or in unprotected memory.",
+  },
+  {
+    title: "05. User-Controlled Complexity",
+    description:
+      "You decide the length, character sets, and word combinations, giving you full control over the strength and usability of every generated secret.",
+  },
+  {
+    title: "06. Secure Backup & Recovery",
+    description:
+      "Recovery codes and passphrases are generated with the same cryptographic rigor as passwords, ensuring backup access methods are just as secure as your primary credentials.",
+  },
+  {
+    title: "07. Resistance to Advanced Attacks",
+    description:
+      "Our generators account for GPU-based, dictionary, and rainbow table attacks, with configurable options to increase entropy and defense against emerging threats.",
+  },
+];
+
+const ToolDetails = ({ title, description, className }: { title: string; description: string; className?: string }) => {
+  return (
+    <div className={`space-y-3 ${className}`}>
+      <h4 className="text-lg font-bold tracking-tight">{title}</h4>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+    </div>
+  );
+};
 
 export default function ToolsPage() {
   const [selectedTool, setSelectedTool] = useState<GeneratorType | null>(null);
@@ -57,20 +103,9 @@ export default function ToolsPage() {
                   <Separator className="flex-1 opacity-20" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-3">
-                    <h4 className="text-lg font-bold tracking-tight">Zero-Knowledge Generation</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      All secrets are generated locally on your device using cryptographically secure random number
-                      generators. No data ever leaves your vault.
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="text-lg font-bold tracking-tight">Cryptographic Entropy</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Our generators utilize high-entropy sources to ensure that every secret is unpredictable and
-                      resistant to modern brute-force attacks.
-                    </p>
-                  </div>
+                  {TOOLS_DETAILS.map((tool) => (
+                    <ToolDetails key={tool.title} title={tool.title} description={tool.description} />
+                  ))}
                 </div>
               </div>
             </div>
