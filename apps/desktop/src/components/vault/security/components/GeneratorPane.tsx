@@ -21,7 +21,6 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  generateExcellentPasswordWithCharCount,
   generatePassphrase,
   generateOTP,
   generateRecoveryCode,
@@ -30,6 +29,7 @@ import {
   analyzePassword,
   analyzePasswordPatterns,
   type PasswordAnalysis,
+  generatePassword,
 } from "@/utils/Password/pwd.utils";
 import type { GeneratorType } from "../security.config";
 import { toast } from "sonner";
@@ -59,7 +59,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
     setIsGenerating(true);
     try {
       if (type === "password") {
-        const pwd = await generateExcellentPasswordWithCharCount(length);
+        const pwd = await generatePassword({ length, strength: "excellent" });
         setValue(pwd);
       } else if (type === "passphrase") {
         setValue(generatePassphrase(passphraseWords));
@@ -83,7 +83,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
     if (type !== "analyzer") {
       handleGenerate();
     }
-  }, [type, length, passphraseWords, otpLength]);
+  }, [type]);
 
   const handleAnalyze = () => {
     if (!analyzerValue) return;
@@ -313,7 +313,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                         </Label>
                         <div className="grid gap-2">
                           {analysisResults.weaknesses.map((w, i) =>
-                            w === "No major weaknesses detected" ? (
+                            w === "Excellent password - no weaknesses detected" ? (
                               <div
                                 key={i}
                                 className="flex gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 items-start"
@@ -365,12 +365,12 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                               key={i}
                               className={cn(
                                 "flex gap-3 p-3 rounded-xl items-start",
-                                p.includes("No common")
+                                p.includes("No problematic")
                                   ? "bg-primary/5 border border-primary/10"
                                   : "bg-orange-500/5 border border-orange-500/10"
                               )}
                             >
-                              {p.includes("No common") ? (
+                              {p.includes("No problematic") ? (
                                 <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                               ) : (
                                 <AlertCircle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
@@ -378,7 +378,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                               <span
                                 className={cn(
                                   "text-xs font-medium leading-relaxed",
-                                  p.includes("No common") ? "text-primary/80" : "text-orange-700/80"
+                                  p.includes("No problematic") ? "text-primary/80" : "text-orange-700/80"
                                 )}
                               >
                                 {p}
@@ -415,8 +415,6 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
   }
 
   return (
-    <div className="h-full flex flex-col bg-background border-l border-border/40 w-[400px] shadow-2xl">
-      {Content}
-    </div>
+    <div className="h-full flex flex-col bg-background border-l border-border/40 w-[400px] shadow-2xl">{Content}</div>
   );
 }

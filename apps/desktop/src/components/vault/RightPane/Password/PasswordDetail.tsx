@@ -155,12 +155,6 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
     }
   };
 
-  useEffect(() => {
-    if (isPasswordEditing && formData?.password) {
-      handleGeneratePassword();
-    }
-  }, [length]);
-
   if (!formData) {
     return (
       <div className="h-full flex items-center justify-center bg-background text-muted-foreground">
@@ -471,7 +465,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     value={[length]}
                     onValueChange={(v) => setLength(v[0])}
                     min={8}
-                    max={128}
+                    max={32}
                     step={1}
                     className="py-2"
                   />

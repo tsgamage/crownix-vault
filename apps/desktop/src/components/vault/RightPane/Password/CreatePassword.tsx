@@ -102,12 +102,6 @@ export function CreatePassword() {
   };
 
   useEffect(() => {
-    if (formData.password) {
-      handleGeneratePassword();
-    }
-  }, [length]);
-
-  useEffect(() => {
     setPasswordStrength(Math.floor(calculatePasswordScore(formData?.password || "")));
   }, [formData?.password]);
 
@@ -338,7 +332,7 @@ export function CreatePassword() {
                   value={[length]}
                   onValueChange={(v) => setLength(v[0])}
                   min={8}
-                  max={128}
+                  max={32}
                   step={1}
                   className="py-2"
                 />
