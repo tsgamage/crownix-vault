@@ -1,8 +1,8 @@
 import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
-import type { IPasswordCategory } from "@/utils/types/global.types";
 import { create } from "zustand";
 import { useUiStore } from "../ui.store";
 import { usePasswordStore } from "./password.store";
+import type { IPasswordCategory } from "@/utils/types/vault";
 
 interface IPasswordCategoryStore {
   passwordCategories: IPasswordCategory[];

@@ -1,4 +1,4 @@
-import type { IPasswordItem } from "@/utils/types/global.types";
+import type { IPasswordItem } from "@/utils/types/vault";
 import { cn } from "@/lib/utils";
 import { Copy, KeyRoundIcon, Star, User, Trash2, ExternalLink, StarOff, RotateCcw, Check, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";

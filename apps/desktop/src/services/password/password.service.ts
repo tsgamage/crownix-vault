@@ -1,5 +1,5 @@
+import type { IPasswordItem } from "@/utils/types/vault";
 import { DatabaseService } from "../db.service";
-import type { IPasswordItem } from "../../utils/types/global.types";
 
 export class PasswordService {
   static loadPasswordItems(vault: IPasswordItem[]) {

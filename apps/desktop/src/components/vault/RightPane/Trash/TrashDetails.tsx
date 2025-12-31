@@ -5,7 +5,7 @@ import * as LucideIcons from "lucide-react";
 import { useUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
-import type { IPasswordItem, IPasswordCategory } from "@/utils/types/global.types";
+import type { IPasswordCategory, IPasswordItem } from "@/utils/types/vault";
 
 const getIcon = (iconName: string) => {
   const Icon = (LucideIcons as any)[iconName];

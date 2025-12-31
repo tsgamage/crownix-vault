@@ -1,7 +1,7 @@
 import { PasswordService } from "@/services/password/password.service";
-import type { IPasswordItem } from "@/utils/types/global.types";
 import { create } from "zustand";
 import { useUiStore } from "../ui.store";
+import type { IPasswordItem } from "@/utils/types/vault";
 
 interface IPasswordStore {
   passwordItems: IPasswordItem[];

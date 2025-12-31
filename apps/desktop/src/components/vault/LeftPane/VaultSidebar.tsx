@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarNavItem } from "./components/SidebarNavItem";
-import { type IPasswordCategory, type IVault } from "@/utils/types/global.types";
 import { useUiStore, type IUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
@@ -23,6 +22,8 @@ import { PasswordCategoryService } from "@/services/password/passwordCategory.se
 import { SessionService } from "@/services/session.service";
 import { VaultFileService } from "@/services/vaultFile.service";
 import { downloadVaultFile } from "@/utils/utils";
+import type { IPasswordCategory, IVault } from "@/utils/types/vault";
+import { useSettingsStore } from "@/store/vault/settings.store";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
@@ -50,6 +51,9 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const vaultHeader = useFileStore((state) => state.vaultHeader);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
+  const vaultSettings = useSettingsStore((state) => state.vaultSettings);
+  const appSettings = useSettingsStore((state) => state.appSettings);
+
   const mainNav = [
     { id: "all", label: "All Items", icon: LayoutGrid, count: totalPasswords },
     { id: "favorites", label: "Favorites", icon: Star, count: totalFavorites },
@@ -70,7 +74,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     const vault: IVault = {
       passwordItems,
       passwordCategories,
-      settings: {},
+      settings: vaultSettings,
     };
 
     const key = SessionService.getKey();
@@ -97,13 +101,13 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   return (
     <div className="h-full flex flex-col bg-background border-r border-border/50">
       {/* --- BRANDING / PROFILE --- */}
-      <div className="p-4 mb-2">
+      <div className="p-4 mb-2" title={vaultSettings.vaultName}>
         <div className="flex items-center gap-3 p-2 rounded-xl bg-background border border-border/40 shadow-xs">
           <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
             <Lock className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-bold truncate">Personal Vault</h1>
+            <h1 className="text-sm font-bold truncate">{vaultSettings.vaultName || "Crownix Vault"}</h1>
             <div className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] text-muted-foreground uppercase font-semibold">Encrypted</span>
@@ -192,12 +196,10 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
 
         <SidebarNavItem label="Settings" icon={Settings} isActive={false} onClick={() => setIsSettingsOpen(true)} />
 
-        {/* <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
-          <span className="flex items-center gap-1">
-            <HardDrive className="w-3 h-3" /> 1.2 MB
-          </span>
-          <span>v1.0.0</span>
-        </div> */}
+        <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
+          <span className="flex items-center gap-1">{appSettings.appName}</span>
+          <span>v{appSettings.appVersion}</span>
+        </div>
       </div>
     </div>
   );

@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
-import type { IPasswordCategory } from "@/utils/types/global.types";
 import * as LucideIcons from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import type { IPasswordCategory } from "@/utils/types/vault";
 
 export default function CategoryListItem({
   isSelected,

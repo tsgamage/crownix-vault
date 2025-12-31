@@ -1,43 +1,4 @@
-// --- Password Types ---
-export interface IPasswordCustomField {
-  id: string;
-  label: string;
-  type: "text" | "hidden" | "url" | "phone" | "email";
-  value: string;
-}
-
-export interface IPasswordItem {
-  id: string;
-  title: string;
-  username?: string;
-  password: string;
-  isDeleted: boolean;
-
-  urls?: string[];
-  icon?: string;
-  notes?: string;
-  fields?: IPasswordCustomField[];
-
-  categoryId?: string;
-  tags?: string[];
-  isFavorite: boolean;
-
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface IPasswordCategory {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  description?: string;
-  createdAt: number;
-  updatedAt: number;
-  isDeleted: boolean;
-}
-
-// --- Settings Types ---
+// --- Settings Modal Types ---
 export type SettingType = "toggle" | "select" | "button" | "input" | "danger-button";
 
 export interface SettingOption {
@@ -55,6 +16,7 @@ export interface SettingItem {
   actionLabel?: string;
   placeholder?: string;
   danger?: boolean;
+  disabled?: boolean;
 }
 
 export interface SettingsSection {
@@ -84,12 +46,4 @@ export interface DialogConfig {
   buttons: DialogButton[];
   variant?: "default" | "danger" | "success" | "warning"; // High-level variant for styling
   content?: React.ReactNode;
-}
-
-export interface ISettings {}
-
-export interface IVault {
-  passwordItems: IPasswordItem[];
-  passwordCategories: IPasswordCategory[];
-  settings: ISettings;
 }

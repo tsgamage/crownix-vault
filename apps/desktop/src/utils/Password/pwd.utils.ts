@@ -1,7 +1,7 @@
-import type { IPasswordItem } from "../types/global.types";
 import { WORD_LIST } from "@/data/word-list";
 import { COMMON_PASSWORDS } from "@/data/common-passwords";
 import { PASSWORD_PATTERNS } from "@/data/password-patterns";
+import type { IPasswordItem } from "../types/vault";
 
 // Types for password options
 export type PasswordStrength = "very-weak" | "weak" | "medium" | "strong" | "very-strong" | "excellent";
@@ -1312,7 +1312,7 @@ const generateRecoveryCode = (): string => {
  * Get comprehensive vault health analysis
  */
 const analyzeVaultHealth = (
-  items: IPasswordItem[]
+  items: IPasswordItem[],
 ): {
   score: number;
   totalItems: number;
@@ -1361,7 +1361,7 @@ const analyzeVaultHealth = (
     suggestions.push(
       `Stop reusing ${uniqueReused.size} password${uniqueReused.size > 1 ? "s" : ""} across ${
         reusedItems.length
-      } accounts`
+      } accounts`,
     );
   }
 
@@ -1371,7 +1371,7 @@ const analyzeVaultHealth = (
 
   if (patternItems.length > 0) {
     suggestions.push(
-      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with problematic patterns`
+      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with problematic patterns`,
     );
   }
 

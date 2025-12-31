@@ -21,6 +21,7 @@ import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import TrashList from "@/components/vault/middlePane/TrashList/TrashList";
 import TrashDetails from "@/components/vault/RightPane/Trash/TrashDetails";
 import ToolsPage from "@/components/vault/Tools/ToolsPage";
+import { useSettingsStore } from "@/store/vault/settings.store";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -85,6 +86,10 @@ export default function VaultScreen() {
   const isSecurityTabActive = activeTabId === "security";
   const isToolsTabActive = activeTabId === "tools";
 
+  const { appSettings, vaultSettings } = useSettingsStore();
+  console.log(appSettings);
+  console.log(vaultSettings);
+
   return (
     <div
       onContextMenu={(e) => e.preventDefault()}
@@ -96,7 +101,7 @@ export default function VaultScreen() {
         {isSettingsOpen && <Settings />}
 
         {/* Left Sidebar */}
-        <div className="w-[18%] min-w-[200px] h-full">
+        <div className="w-[18%] min-w-50 h-full">
           <VaultSidebar />
         </div>
 
@@ -107,7 +112,7 @@ export default function VaultScreen() {
         {!isSecurityTabActive && !isToolsTabActive && !isSettingsOpen && (
           <>
             {/* Middle Pane */}
-            <div className="w-[30%] min-w-[300px] h-full">
+            <div className="w-[30%] min-w-75 h-full">
               {isOrganizeTabActive && <CategoryList />}
               {isAnyPasswordTabActive && <PasswordList />}
               {isTrashPasswordsTabActive && <TrashList />}

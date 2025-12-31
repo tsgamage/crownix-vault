@@ -9,10 +9,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SearchInput } from "../../common/SearchInput";
 import { ListFilter, LayoutGrid, RefreshCcw } from "lucide-react";
-import type { IPasswordItem } from "@/utils/types/global.types";
 import { PasswordListItem } from "./PasswordListItem";
 import { PasswordListSkeleton } from "./PasswordListSkeleton";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUiStore } from "@/store/ui.store";
 import { getPasswordStrength } from "@/utils/Password/pwd.utils";
 import AllTabEmptyState from "./EmptyStates/AllTabEmptyState";
@@ -22,6 +21,8 @@ import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { IPasswordItem } from "@/utils/types/vault";
+import { useSettingsStore } from "@/store/vault/settings.store";
 
 type SortOption = "name" | "recent" | "oldest";
 type GroupOption = "none" | "category" | "strength" | "name";
@@ -30,11 +31,18 @@ export function PasswordList() {
   const [sortOption, setSortOption] = useState<SortOption>("name");
   const [groupOption, setGroupOption] = useState<GroupOption>("none");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const appSettings = useSettingsStore((state) => state.appSettings);
   const isLoadingPasswords = useUiStore((state) => state.isLoadingPasswords);
   const activeTabId = useUiStore((state) => state.activeTabId);
 
   const passwordItems = usePasswordStore((state) => state.passwordItems);
   const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
+
+  useEffect(() => {
+    setSortOption(appSettings.defaultSortBy);
+    setGroupOption(appSettings.defaultGroupBy);
+  }, [appSettings]);
 
   const filteredPasswords = passwordItems.filter((item) => {
     const matchesTab =
@@ -45,7 +53,7 @@ export function PasswordList() {
     if (!matchesTab) return false;
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
       return (
         item.title.toLowerCase().includes(query) ||
         item.username?.toLowerCase().includes(query) ||
@@ -235,13 +243,13 @@ export function PasswordList() {
                         groupOption === "category" && groupName !== "Uncategorized"
                           ? getCategoryColor(groupItems[0].categoryId)
                           : "",
-                        groupOption === "category" ? "pt-0 rounded-t-2xl" : ""
+                        groupOption === "category" ? "pt-0 rounded-t-2xl" : "",
                       )}
                     >
                       <span
                         className={cn(
                           "text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60",
-                          groupOption === "category" ? "text-white" : ""
+                          groupOption === "category" ? "text-white" : "",
                         )}
                       >
                         {groupName}

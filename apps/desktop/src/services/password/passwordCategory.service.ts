@@ -1,5 +1,5 @@
+import type { IPasswordCategory } from "@/utils/types/vault";
 import { DatabaseService } from "../db.service";
-import type { IPasswordCategory } from "../../utils/types/global.types";
 
 export class PasswordCategoryService {
   static loadPasswordCategories(passwordCategories: IPasswordCategory[]) {

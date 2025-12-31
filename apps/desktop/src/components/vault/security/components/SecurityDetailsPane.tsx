@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle2, X, AlertCircle, ArrowRight, ShieldAlert } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import type { IPasswordItem } from "@/utils/types/global.types";
+import type { IPasswordItem } from "@/utils/types/vault";
 import { SECURITY_CARDS, type SecurityIssueType } from "../security.config";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui.store";
@@ -64,7 +64,7 @@ export function SecurityDetailsPane({ type, title, items, onClose, isSheet = fal
                   <CheckCircle2 className="size-8 text-primary" />
                 </div>
                 <h4 className="font-bold text-lg tracking-tight">Vault Secured</h4>
-                <p className="text-sm text-muted-foreground max-w-[240px] mt-2 leading-relaxed">
+                <p className="text-sm text-muted-foreground max-w-60 mt-2 leading-relaxed">
                   No security issues found in this category.
                 </p>
               </div>
@@ -110,7 +110,7 @@ export function SecurityDetailsPane({ type, title, items, onClose, isSheet = fal
   }
 
   return (
-    <div className="h-full flex flex-col bg-background border-l border-border/40 w-[420px] relative z-20">
+    <div className="h-full flex flex-col bg-background border-l border-border/40 w-105 relative z-20">
       {Content}
     </div>
   );

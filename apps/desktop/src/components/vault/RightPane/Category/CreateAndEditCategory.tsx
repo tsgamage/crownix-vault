@@ -4,12 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, Save } from "lucide-react";
-import type { IPasswordCategory } from "@/utils/types/global.types";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
+import type { IPasswordCategory } from "@/utils/types/vault";
 
 const COLORS = [
   { name: "Green", class: "bg-green-900" },
@@ -144,7 +144,7 @@ export default function CreateAndEditCategory() {
               placeholder="What is this category for?"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="resize-none min-h-[100px]"
+              className="resize-none min-h-25"
             />
           </div>
         </div>

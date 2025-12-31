@@ -1,4 +1,3 @@
-import type { IPasswordItem, IPasswordCategory } from "@/utils/types/global.types";
 import { cn } from "@/lib/utils";
 import { KeyRoundIcon, RotateCcw, Trash2, Folder } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -8,6 +7,7 @@ import { useUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { useDialog } from "@/context/DialogContext";
+import type { IPasswordCategory, IPasswordItem } from "@/utils/types/vault";
 
 interface TrashListItemProps {
   item: IPasswordItem | IPasswordCategory;

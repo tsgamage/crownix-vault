@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { type IPasswordCustomField } from "@/utils/types/global.types";
 import {
   Eye,
   EyeOff,
@@ -23,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import type { IPasswordCustomField } from "@/utils/types/vault";
 
 interface CustomFieldManagerProps {
   fields: IPasswordCustomField[];

@@ -16,7 +16,7 @@ export default function CategoryList() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCategories = passwordCategories.filter(
-    (cat) => cat.name.toLowerCase().includes(searchQuery.toLowerCase()) && !cat.isDeleted
+    (cat) => cat.name.toLowerCase().includes(searchQuery.toLowerCase()) && !cat.isDeleted,
   );
 
   const syncDB = useUiStore((state) => state.syncDB);

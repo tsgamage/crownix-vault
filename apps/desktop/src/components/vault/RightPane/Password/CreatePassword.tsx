@@ -9,8 +9,6 @@ import { Slider } from "@/components/ui/slider";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useDialog } from "@/context/DialogContext";
-import { type IPasswordItem } from "@/utils/types/global.types";
-
 import { PasswordIconPicker } from "./components/PasswordIconPicker";
 import { UrlManager } from "./components/UrlManager";
 import { TagManager } from "./components/TagManager";
@@ -20,14 +18,17 @@ import {
   generateExcellentPasswordWithCharCount,
   getPasswordStrength,
 } from "@/utils/Password/pwd.utils";
-import { MOCK_PASSWORD_CATEGORIES } from "@/data/initial-vault";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
+import type { IPasswordItem } from "@/utils/types/vault";
+import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 
 export function CreatePassword() {
   const createPassword = usePasswordStore((state) => state.createPasswordItem);
   const setSelectedPasswordId = usePasswordStore((state) => state.setSelectedPasswordId);
   const setIsPasswordCreateShown = useUiStore((state) => state.setIsPasswordCreateShown);
+
+  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
 
   const handleCancelClick = () => {
     setIsPasswordCreateShown(false);
@@ -130,7 +131,7 @@ export function CreatePassword() {
         }
       }
     },
-    [handleCancelClick, formData, openDialog, closeDialog]
+    [handleCancelClick, formData, openDialog, closeDialog],
   );
 
   useEffect(() => {
@@ -204,11 +205,11 @@ export function CreatePassword() {
                 value={formData.categoryId}
                 onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
               >
-                <SelectTrigger tabIndex={-1} className="h-8 w-[200px] text-xs">
+                <SelectTrigger tabIndex={-1} className="h-8 w-50 text-xs">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_PASSWORD_CATEGORIES.map((cat) => (
+                  {passwordCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${cat.color}`} />
@@ -311,7 +312,7 @@ export function CreatePassword() {
                       passwordStrength <= 25 && "bg-destructive",
                       passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
                       passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
-                      passwordStrength > 75 && "bg-emerald-500"
+                      passwordStrength > 75 && "bg-emerald-500",
                     )}
                     style={{ width: `${passwordStrength}%` }}
                   />
@@ -364,7 +365,7 @@ export function CreatePassword() {
               <Label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Notes</Label>
               <Textarea
                 placeholder="Add secure notes, security questions, or PINs here..."
-                className="min-h-[120px] resize-none text-sm bg-background"
+                className="min-h-30 resize-none text-sm bg-background"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />

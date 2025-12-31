@@ -6,9 +6,10 @@ import { PasswordCategoryService } from "@/services/password/passwordCategory.se
 import { VaultFileService } from "@/services/vaultFile.service";
 import { useFileStore } from "@/store/file.store";
 import { useSessionStore } from "@/store/session.store";
-import type { IVault } from "@/utils/types/global.types";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { IVault } from "@/utils/types/vault";
+import { useSettingsStore } from "@/store/vault/settings.store";
 
 export default function UnlockScreen() {
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
@@ -16,6 +17,7 @@ export default function UnlockScreen() {
 
   const vaultFile = useFileStore((state) => state.vaultFile);
   const setVaultHeader = useFileStore((state) => state.setVaultHeader);
+  const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
 
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
 
@@ -34,10 +36,7 @@ export default function UnlockScreen() {
     if (!vaultFile) return;
 
     try {
-      const decryptedVaultFile = await VaultFileService.openVaultFile(
-        password,
-        vaultFile
-      );
+      const decryptedVaultFile = await VaultFileService.openVaultFile(password, vaultFile);
       SessionService.setKey(decryptedVaultFile.key);
 
       const vault: IVault = decryptedVaultFile.vault;
@@ -45,6 +44,7 @@ export default function UnlockScreen() {
       await DatabaseService.init();
       PasswordService.loadPasswordItems(vault.passwordItems);
       PasswordCategoryService.loadPasswordCategories(vault.passwordCategories);
+      setVaultSettings(vault.settings);
 
       setVaultHeader(decryptedVaultFile.header);
       setIsUnlocked(true);
@@ -58,32 +58,24 @@ export default function UnlockScreen() {
     <div
       onContextMenu={(e) => e.preventDefault()}
       draggable={false}
-      className="min-h-screen w-full flex flex-col items-center justify-center bg-background selection:bg-emerald-500/30"
+      className="min-h-screen w-full flex flex-col items-center justify-center bg-background "
     >
       <main className="w-full max-w-md px-6 flex flex-col items-center gap-10 animate-in fade-in zoom-in-95 duration-500">
         {/* Branding Section */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-[1.25rem] bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
+          <div className="mx-auto w-16 h-16 rounded-4xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
             C
           </div>
 
           <div className="space-y-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Welcome Back
-            </h1>
-            <p className="text-sm text-muted-foreground/80 font-normal">
-              Enter your master password to unlock.
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Welcome Back</h1>
+            <p className="text-sm text-muted-foreground/80 font-normal">Enter your master password to unlock.</p>
           </div>
         </div>
 
         {/* Action Section */}
         <div className="w-full flex flex-col items-center gap-6">
-          <UnlockForm
-            onUnlock={handleUnlock}
-            isError={isPasswordWrong}
-            setIsError={setIsPasswordWrong}
-          />
+          <UnlockForm onUnlock={handleUnlock} isError={isPasswordWrong} setIsError={setIsPasswordWrong} />
         </div>
       </main>
 

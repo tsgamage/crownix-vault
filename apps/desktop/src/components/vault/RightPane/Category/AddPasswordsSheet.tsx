@@ -1,14 +1,13 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Folder, Check, KeyRoundIcon } from "lucide-react";
+import { Folder, Check, KeyRoundIcon } from "lucide-react";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
-import type { IPasswordCategory } from "@/utils/types/global.types";
 import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../../common/SearchInput";
+import type { IPasswordCategory } from "@/utils/types/vault";
 
 interface AddPasswordsSheetProps {
   isOpen: boolean;
@@ -122,7 +121,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border border-transparent transition-all cursor-pointer group",
                       selectedIds.has(item.id) ? "bg-emerald-500/10 border-emerald-500/20" : "hover:bg-muted/50",
-                      isCurrentCategory && "opacity-50 pointer-events-none"
+                      isCurrentCategory && "opacity-50 pointer-events-none",
                     )}
                     onClick={() => !isCurrentCategory && toggleSelection(item.id)}
                   >
@@ -131,7 +130,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
                       disabled={isCurrentCategory}
                       className={cn(
                         "data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600",
-                        isCurrentCategory && "opacity-50"
+                        isCurrentCategory && "opacity-50",
                       )}
                     />
 

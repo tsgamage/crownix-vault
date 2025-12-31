@@ -16,7 +16,7 @@ import {
   Save,
   RefreshCw,
   Folder,
-  X,
+  XIcon,
   RotateCcw,
   ChevronLeft,
   KeyRoundIcon,
@@ -26,7 +26,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useDialog } from "@/context/DialogContext";
 import { RegeneratePasswordWarning } from "@/modals/RegeneratePasswordWarning";
 import { cn } from "@/lib/utils";
-import { type IPasswordItem } from "@/utils/types/global.types";
 
 import { PasswordIconPicker } from "./components/PasswordIconPicker";
 import { UrlManager } from "./components/UrlManager";
@@ -51,6 +50,7 @@ import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { useUiStore } from "@/store/ui.store";
 import { Badge } from "@/components/ui/badge";
+import type { IPasswordItem } from "@/utils/types/vault";
 
 export function PasswordDetail({ showBackButton }: { showBackButton?: boolean }) {
   const isPasswordEditing = useUiStore((state) => state.isPasswordEditShown);
@@ -96,7 +96,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
           })();
       }
     },
-    [selectedPassword, clearSelectedId]
+    [selectedPassword, clearSelectedId],
   );
   useEffect(() => {
     window.addEventListener("keydown", handleEscapePress);
@@ -242,7 +242,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   placeholder="Item Title"
                 />
               ) : (
-                <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-[235px]" title={formData.title}>
+                <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-58.75" title={formData.title}>
                   {formData.title}
                 </h2>
               )}
@@ -253,7 +253,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   value={formData.categoryId}
                   onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
                 >
-                  <SelectTrigger className="h-8 w-[200px] text-xs">
+                  <SelectTrigger className="h-8 w-50 text-xs">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -310,7 +310,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   onClick={handleCancel}
                   title="Cancel"
                 >
-                  <X className="w-4 h-4" /> Cancel
+                  <XIcon className="w-4 h-4" /> Cancel
                 </Button>
                 <Button
                   variant="default"
@@ -330,7 +330,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                   className={cn(
                     "h-9 w-9",
                     formData.isFavorite &&
-                      "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500"
+                      "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500",
                   )}
                 >
                   <Star className="w-4 h-4" />
@@ -390,7 +390,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "user" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                      copiedField === "user" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10",
                     )}
                     onClick={() => handleCopy(formData.username || "", "user")}
                   >
@@ -445,7 +445,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10",
                     )}
                     onClick={() => handleCopy(formData.password || "", "pass")}
                   >
@@ -464,7 +464,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                         passwordStrength <= 25 && "bg-destructive",
                         passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
                         passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
-                        passwordStrength > 75 && "bg-emerald-500"
+                        passwordStrength > 75 && "bg-emerald-500",
                       )}
                       style={{ width: `${passwordStrength}%` }}
                     />
@@ -527,12 +527,12 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
               {isPasswordEditing ? (
                 <Textarea
                   placeholder="Add secure notes here..."
-                  className="min-h-[120px] resize-none text-sm bg-background"
+                  className="min-h-30 resize-none text-sm bg-background"
                   value={formData.notes || ""}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               ) : (
-                <div className="text-sm text-foreground/80 py-3 px-4 rounded-md bg-muted/20 border border-border/30 min-h-[100px] whitespace-pre-wrap leading-relaxed">
+                <div className="text-sm text-foreground/80 py-3 px-4 rounded-md bg-muted/20 border border-border/30 min-h-25 whitespace-pre-wrap leading-relaxed">
                   {formData.notes || <span className="text-muted-foreground italic">No notes added</span>}
                 </div>
               )}

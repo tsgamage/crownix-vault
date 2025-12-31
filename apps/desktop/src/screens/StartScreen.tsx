@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { useFileStore } from "@/store/file.store";
 import { VaultFileService } from "@/services/vaultFile.service";
-import { MOCK_VAULT } from "@/data/initial-vault";
+import { InitialVault } from "@/data/initial-vault";
 
 export default function StartScreen() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function StartScreen() {
   }, [vaultFile]);
 
   const handleCreateVault = async (password: string) => {
-    const newVaultCreateData = MOCK_VAULT;
+    const newVaultCreateData = InitialVault;
     const newVaultFile = await VaultFileService.createVaultFile(password, newVaultCreateData);
     setVaultFile(newVaultFile);
   };
@@ -35,14 +35,14 @@ export default function StartScreen() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center bg-background selection:bg-emerald-500/30"
+      className="min-h-screen w-full flex flex-col items-center justify-center bg-background"
       onContextMenu={(e) => e.preventDefault()}
       draggable={false}
     >
-      <main className="w-full max-w-md px-6 flex flex-col items-center gap-10 animate-in fade-in zoom-in-95 duration-500">
+      <main className="w-full max-w-md px-6 flex flex-col items-center gap-10">
         {/* Branding Section */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-[1.25rem] bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
+          <div className="mx-auto w-16 h-16 rounded-4xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
             C
           </div>
 

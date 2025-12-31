@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { usePasswordStore } from "./vault/password.store";
 import { usePasswordCategoryStore } from "./vault/passwordCategory.store";
-import type { IPasswordCategory, IPasswordItem } from "@/utils/types/global.types";
+import type { IPasswordCategory, IPasswordItem } from "@/utils/types/vault";
 
 type TabId = "all" | "favorites" | "trash" | "organize" | "security" | "tools" | `cat-${string}`;
 

@@ -33,13 +33,10 @@ export function MasterPasswordForm({ onCreateVault }: MasterPasswordFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full max-w-md space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label
-            htmlFor="master-password"
-            className="text-muted-foreground ml-1 mb-2 block"
-          >
+          <Label htmlFor="master-password" className="text-muted-foreground ml-1 mb-2 block">
             Master Password
           </Label>
           <div className="relative">
@@ -60,14 +57,8 @@ export function MasterPasswordForm({ onCreateVault }: MasterPasswordFormProps) {
               className="absolute right-0 top-0 h-full w-10 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              <span className="sr-only">
-                {showPassword ? "Hide password" : "Show password"}
-              </span>
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground/60 ml-1 mt-1.5 font-normal">
@@ -78,13 +69,10 @@ export function MasterPasswordForm({ onCreateVault }: MasterPasswordFormProps) {
         <div
           className={cn(
             "space-y-2 overflow-hidden transition-all duration-500 ease-in-out",
-            showConfirm ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
+            showConfirm ? "max-h-32 opacity-100" : "max-h-0 opacity-0",
           )}
         >
-          <Label
-            htmlFor="confirm-password"
-            className="text-muted-foreground ml-1 mb-2 block"
-          >
+          <Label htmlFor="confirm-password" className="text-muted-foreground ml-1 mb-2 block">
             Confirm Password
           </Label>
           <Input
@@ -100,9 +88,7 @@ export function MasterPasswordForm({ onCreateVault }: MasterPasswordFormProps) {
         <div
           className={cn(
             "transition-all duration-500 ease-in-out",
-            showConfirm
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-5 pointer-events-none"
+            showConfirm ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5 pointer-events-none",
           )}
         >
           <Alert variant="destructive" className="py-2.5">
@@ -117,9 +103,7 @@ export function MasterPasswordForm({ onCreateVault }: MasterPasswordFormProps) {
         <div
           className={cn(
             "pt-2 transition-all duration-500 delay-100",
-            passwordsMatch
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-4 pointer-events-none"
+            passwordsMatch ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
           )}
         >
           <Button

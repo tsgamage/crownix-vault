@@ -105,7 +105,6 @@ export default function SecurityPage() {
             issueCounts={issueCounts}
             selectedIssue={selectedIssue}
             onSelectIssue={handleSelectIssue}
-            passwordsCount={allItems.length}
             vaultAnalysis={analysis.vaultHealth}
           />
         </ScrollArea>
@@ -118,7 +117,7 @@ export default function SecurityPage() {
       </Sheet>
 
       <Sheet open={isSheetOpen} onOpenChange={(open) => !open && handleCloseRightPane()}>
-        <SheetContent className="w-[400px] sm:w-[540px] p-0">
+        <SheetContent className="w-100 sm:w-135 p-0">
           {selectedIssue && (
             <SecurityDetailsPane
               type={selectedIssue}

@@ -1,15 +1,10 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { type SettingItem as ISettingItem } from "@/utils/types/global.types";
+import { cn } from "@/lib/utils";
 
 interface SettingsItemProps {
   item: ISettingItem;
@@ -22,8 +17,9 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
       case "toggle":
         return (
           <Switch
+            disabled={item.disabled}
             checked={item.value as boolean}
-            onCheckedChange={(checked) => onChange(item.id, checked)}
+            onCheckedChange={(checked) => (item.disabled ? undefined : onChange(item.id, checked))}
           />
         );
 
@@ -31,9 +27,10 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
         return (
           <Select
             value={item.value as string}
-            onValueChange={(value) => onChange(item.id, value)}
+            onValueChange={(value) => (item.disabled ? undefined : onChange(item.id, value))}
+            disabled={item.disabled}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
               <SelectValue placeholder="Select option" />
             </SelectTrigger>
             <SelectContent>
@@ -50,7 +47,8 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
         return (
           <Button
             variant="outline"
-            onClick={() => onChange(item.id, undefined)}
+            onClick={() => (item.disabled ? undefined : onChange(item.id, undefined))}
+            disabled={item.disabled}
           >
             {item.actionLabel || "Click me"}
           </Button>
@@ -60,7 +58,8 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
         return (
           <Button
             variant="destructive"
-            onClick={() => onChange(item.id, undefined)}
+            onClick={() => (item.disabled ? undefined : onChange(item.id, undefined))}
+            disabled={item.disabled}
           >
             {item.actionLabel || "Delete"}
           </Button>
@@ -70,9 +69,10 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
         return (
           <Input
             value={item.value as string}
-            onChange={(e) => onChange(item.id, e.target.value)}
+            onChange={(e) => (item.disabled ? undefined : onChange(item.id, e.target.value))}
             placeholder={item.placeholder}
-            className="max-w-[200px]"
+            className="max-w-50"
+            disabled={item.disabled}
           />
         );
 
@@ -82,12 +82,13 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
   };
 
   return (
-    <div className="flex items-center justify-between py-4">
+    <div
+      className={cn("flex items-center justify-between py-4", item.disabled ? "opacity-50" : "")}
+      title={item.disabled ? "This option is not available yet" : undefined}
+    >
       <div className="space-y-0.5 max-w-[70%]">
         <Label className="text-base font-medium">{item.title}</Label>
-        {item.description && (
-          <p className="text-sm text-muted-foreground">{item.description}</p>
-        )}
+        {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
       </div>
       <div className="shrink-0 ml-4">{renderControl()}</div>
     </div>

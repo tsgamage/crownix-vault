@@ -25,7 +25,6 @@ export function SettingsModal({ config, onSettingChange }: SettingsModalProps) {
   }, [config, activeSectionId]);
 
   const hasSidebar = config.sections.length > 1;
-
   const activeSection = config.sections.find((s) => s.id === activeSectionId);
 
   return (

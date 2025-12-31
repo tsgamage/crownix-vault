@@ -33,10 +33,7 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
     <div className="w-full max-w-sm space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label
-            htmlFor="unlock-password"
-            className="text-muted-foreground ml-1 mb-2 block"
-          >
+          <Label htmlFor="unlock-password" className="text-muted-foreground ml-1 mb-2 block">
             Master Password
           </Label>
           <div className="relative">
@@ -66,14 +63,8 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
               className="absolute right-0 top-0 h-full w-10 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-              <span className="sr-only">
-                {showPassword ? "Hide password" : "Show password"}
-              </span>
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
             </Button>
           </div>
         </div>
