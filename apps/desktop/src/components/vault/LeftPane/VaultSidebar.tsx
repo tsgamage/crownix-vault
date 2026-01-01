@@ -16,15 +16,10 @@ import { SidebarNavItem } from "./components/SidebarNavItem";
 import { useUiStore, type IUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
-import { useFileStore } from "@/store/file.store";
-import { useSessionStore } from "@/store/session.store";
-import { PasswordService } from "@/services/password/password.service";
-import { PasswordCategoryService } from "@/services/password/passwordCategory.service";
-import { SessionService } from "@/services/session.service";
-import { VaultFileService } from "@/services/vaultFile.service";
-import { downloadVaultFile } from "@/utils/utils";
-import type { IPasswordCategory, IVault } from "@/utils/types/vault";
+import type { IPasswordCategory } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
+import { SessionService } from "@/services/session.service";
+import { useSessionStore } from "@/store/session.store";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
@@ -49,11 +44,9 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const totalFavorites = passwords.filter((p) => p.isFavorite && !p.isDeleted).length;
   const totalPasswordCategories = passwordCategories.filter((p) => !p.isDeleted).length;
 
-  const vaultHeader = useFileStore((state) => state.vaultHeader);
-  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
-
   const vaultSettings = useSettingsStore((state) => state.vaultSettings);
   const appSettings = useSettingsStore((state) => state.appSettings);
+  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const mainNav = [
     { id: "all", label: "All Items", icon: LayoutGrid, count: totalPasswords },
@@ -66,26 +59,6 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     },
   ];
 
-  const handleLock = async () => {
-    if (!vaultHeader) return;
-
-    const passwordItems = PasswordService.exportPasswordItems();
-    const passwordCategories = PasswordCategoryService.exportPasswordCategories();
-
-    const vault: IVault = {
-      passwordItems,
-      passwordCategories,
-      settings: vaultSettings,
-    };
-
-    const key = SessionService.getKey();
-    const vaultFile = await VaultFileService.buildVaultFileWithKey(vault, key, vaultHeader);
-
-    downloadVaultFile(vaultFile);
-    SessionService.lock();
-    setIsUnlocked(false);
-  };
-
   const handleNewClick = () => {
     if (activeTabId === "organize") {
       setIsPasswordCategoryCreateShown(true);
@@ -97,6 +70,11 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     } else {
       setIsPasswordCreateShown(true);
     }
+  };
+
+  const handleLockVault = () => {
+    SessionService.lock();
+    setIsUnlocked(false);
   };
 
   return (
@@ -176,7 +154,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
           label="Lock Vault"
           icon={LockIcon}
           isActive={false}
-          onClick={handleLock}
+          onClick={handleLockVault}
           variant="destructive"
         />
         <SidebarNavItem

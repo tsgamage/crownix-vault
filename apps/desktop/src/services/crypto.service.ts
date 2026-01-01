@@ -7,17 +7,10 @@ export class CryptoService {
     return btoa(String.fromCharCode(...bytes));
   }
 
-  static async deriveKey(
-    password: string,
-    salt: Uint8Array
-  ): Promise<CryptoKey> {
-    const baseKey = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"]
-    );
+  static async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+    const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, [
+      "deriveKey",
+    ]);
 
     return crypto.subtle.deriveKey(
       {
@@ -29,7 +22,7 @@ export class CryptoService {
       baseKey,
       { name: "AES-GCM", length: 256 },
       false,
-      ["encrypt", "decrypt"]
+      ["encrypt", "decrypt"],
     );
   }
 
@@ -38,11 +31,7 @@ export class CryptoService {
 
     const encoded = new TextEncoder().encode(JSON.stringify(data));
 
-    const encrypted = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      key,
-      encoded
-    );
+    const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
 
     return {
       iv,
@@ -50,16 +39,8 @@ export class CryptoService {
     };
   }
 
-  static async decryptJSON(
-    ciphertext: Uint8Array,
-    iv: Uint8Array,
-    key: CryptoKey
-  ) {
-    const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      key,
-      ciphertext
-    );
+  static async decryptJSON(ciphertext: Uint8Array, iv: Uint8Array, key: CryptoKey) {
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
 
     return JSON.parse(new TextDecoder().decode(decrypted));
   }

@@ -12,16 +12,15 @@ import type { IVault } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
 
 export default function UnlockScreen() {
+  const navigate = useNavigate();
+
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const vaultFile = useFileStore((state) => state.vaultFile);
   const setVaultHeader = useFileStore((state) => state.setVaultHeader);
   const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
-
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!vaultFile) {
@@ -42,6 +41,7 @@ export default function UnlockScreen() {
       const vault: IVault = decryptedVaultFile.vault;
 
       await DatabaseService.init();
+
       PasswordService.loadPasswordItems(vault.passwordItems);
       PasswordCategoryService.loadPasswordCategories(vault.passwordCategories);
       setVaultSettings(vault.settings);

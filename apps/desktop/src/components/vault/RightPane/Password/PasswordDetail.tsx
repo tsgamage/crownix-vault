@@ -52,6 +52,7 @@ import { useUiStore } from "@/store/ui.store";
 import { Badge } from "@/components/ui/badge";
 import type { IPasswordItem } from "@/utils/types/vault";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Props {
   backButton?: {
@@ -114,8 +115,11 @@ export function PasswordDetail({ backButton }: Props) {
     };
   }, [handleEscapePress]);
 
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async (text: string, field: string) => {
+    await invoke("copy_to_clipboard_with_timeout", {
+      text: text,
+      timeoutSecs: 5,
+    });
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { usePasswordStore } from "./vault/password.store";
 import { usePasswordCategoryStore } from "./vault/passwordCategory.store";
 import type { IPasswordCategory, IPasswordItem } from "@/utils/types/vault";
+import { useFileStore } from "./file.store";
 
 type TabId = "all" | "favorites" | "trash" | "organize" | "security" | "tools" | `cat-${string}`;
 
@@ -123,6 +124,7 @@ export const useUiStore = create<IUiStore>((set, get) => ({
     console.log("Syncing DB");
     usePasswordStore.getState().refresh();
     usePasswordCategoryStore.getState().refresh();
+    useFileStore.getState().syncFile();
   },
 
   resetUi: () => {

@@ -47,6 +47,7 @@ export default function VaultScreen() {
   const setIsPasswordEditShown = useUiStore((state) => state.setIsPasswordEditShown);
   const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
   const setIsPasswordCategoryEditShown = useUiStore((state) => state.setIsPasswordCategoryEditShown);
+  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   useEffect(() => {
     if (!isUnlocked) {
@@ -89,8 +90,6 @@ export default function VaultScreen() {
   const isOrganizeTabActive = activeTabId === "organize";
   const isSecurityTabActive = activeTabId === "security";
   const isToolsTabActive = activeTabId === "tools";
-
-  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const handleOnIdle = () => {
     if (vaultConfig.autoLock.enabled) {
