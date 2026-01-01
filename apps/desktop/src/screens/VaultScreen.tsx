@@ -117,7 +117,7 @@ export default function VaultScreen() {
         {isSettingsOpen && <Settings />}
 
         {/* Left Sidebar */}
-        <div className="w-[18%] min-w-50 h-full">
+        <div className="w-[18%] min-w-50 h-full min-h-0">
           <VaultSidebar />
         </div>
 
@@ -128,14 +128,14 @@ export default function VaultScreen() {
         {!isSecurityTabActive && !isToolsTabActive && !isSettingsOpen && (
           <>
             {/* Middle Pane */}
-            <div className="w-[30%] min-w-75 h-full">
+            <div className="w-[30%] min-w-75 h-full min-h-0">
               {isOrganizeTabActive && <CategoryList />}
               {isAnyPasswordTabActive && <PasswordList />}
               {isTrashPasswordsTabActive && <TrashList />}
             </div>
 
             {/* Right Pane */}
-            <div className="flex-1 h-full">
+            <div className="flex-1 h-full min-h-0">
               {isAnyPasswordTabActive && (isPasswordCreateShown ? <CreatePassword /> : <PasswordDetail />)}
               {isOrganizeTabActive &&
                 (isPasswordCategoryCreateShown ? (

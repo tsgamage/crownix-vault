@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type SortOption = "name" | "recent";
 
@@ -86,8 +87,8 @@ export default function TrashList() {
       </div>
 
       {/* List Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="flex flex-col gap-1.5 p-2 pb-10">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="flex flex-col gap-1.5 p-2 pb-10 pr-4">
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-xl m-2 bg-muted/20">
               <Trash2Icon className="w-10 h-10 mx-auto mb-3 opacity-20" />
@@ -122,7 +123,8 @@ export default function TrashList() {
             </>
           )}
         </div>
-      </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 }

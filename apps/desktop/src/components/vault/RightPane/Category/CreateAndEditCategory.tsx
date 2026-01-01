@@ -10,6 +10,7 @@ import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
 import type { IPasswordCategory } from "@/utils/types/vault";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const COLORS = [
   { name: "Green", class: "bg-green-900" },
@@ -124,102 +125,106 @@ export default function CreateAndEditCategory() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 max-w-2xl mx-auto w-full">
-        <div className="space-y-6 p-6 rounded-xl border border-border/40 bg-card/50 shadow-xs">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label>Category Name</Label>
-            <Input
-              placeholder="e.g., Social Media"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="text-lg font-medium"
-            />
-          </div>
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-6 space-y-8 max-w-2xl mx-auto w-full pr-4">
+          <div className="space-y-6 p-6 rounded-xl border border-border/40 bg-card/50 shadow-xs">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label>Category Name</Label>
+              <Input
+                placeholder="e.g., Social Media"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="text-lg font-medium"
+              />
+            </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              placeholder="What is this category for?"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="resize-none min-h-25"
-            />
-          </div>
-        </div>
-
-        {/* Appearance */}
-        <div className="space-y-6 p-6 rounded-xl border border-border/40 bg-card/50 shadow-xs">
-          <h3 className="font-medium text-sm text-foreground/80">Appearance</h3>
-
-          {/* Color Picker */}
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Color</Label>
-            <div className="flex flex-wrap gap-3">
-              {COLORS.map((color) => (
-                <button
-                  key={color.name}
-                  onClick={() => setFormData({ ...formData, color: color.class })}
-                  className={cn(
-                    "w-8 h-8 rounded-full transition-all ring-offset-background",
-                    color.class,
-                    formData.color === color.class
-                      ? "ring-2 ring-emerald-500 ring-offset-2 scale-110"
-                      : "hover:scale-105 opacity-80 hover:opacity-100"
-                  )}
-                  title={color.name}
-                />
-              ))}
+            {/* Description */}
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                placeholder="What is this category for?"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="resize-none min-h-25"
+              />
             </div>
           </div>
 
-          {/* Icon Picker */}
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Icon</Label>
-            <div className="grid grid-cols-7 gap-2">
-              {ICONS.map((iconName) => {
-                const Icon = (LucideIcons as any)[iconName];
-                const isSelected = formData.icon === iconName;
+          {/* Appearance */}
+          <div className="space-y-6 p-6 rounded-xl border border-border/40 bg-card/50 shadow-xs">
+            <h3 className="font-medium text-sm text-foreground/80">Appearance</h3>
 
-                return (
+            {/* Color Picker */}
+            <div className="space-y-3">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Color</Label>
+              <div className="flex flex-wrap gap-3">
+                {COLORS.map((color) => (
                   <button
-                    key={iconName}
-                    onClick={() => setFormData({ ...formData, icon: iconName })}
+                    key={color.name}
+                    onClick={() => setFormData({ ...formData, color: color.class })}
                     className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center border transition-all",
-                      isSelected
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                      "w-8 h-8 rounded-full transition-all ring-offset-background",
+                      color.class,
+                      formData.color === color.class
+                        ? "ring-2 ring-emerald-500 ring-offset-2 scale-110"
+                        : "hover:scale-105 opacity-80 hover:opacity-100",
                     )}
-                  >
-                    {Icon && <Icon className="w-5 h-5" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="pt-4 border-t border-border/40">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider block mb-3">Preview</Label>
-            <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 max-w-xs">
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0",
-                  formData.color
-                )}
-              >
-                {IconComponent && <IconComponent className="w-5 h-5" />}
+                    title={color.name}
+                  />
+                ))}
               </div>
-              <div>
-                <div className="font-medium">{formData.name || "Category Name"}</div>
-                <div className="text-xs text-muted-foreground">{formData.description || "Description"}</div>
+            </div>
+
+            {/* Icon Picker */}
+            <div className="space-y-3">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Icon</Label>
+              <div className="grid grid-cols-7 gap-2">
+                {ICONS.map((iconName) => {
+                  const Icon = (LucideIcons as any)[iconName];
+                  const isSelected = formData.icon === iconName;
+
+                  return (
+                    <button
+                      key={iconName}
+                      onClick={() => setFormData({ ...formData, icon: iconName })}
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center border transition-all",
+                        isSelected
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      {Icon && <Icon className="w-5 h-5" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="pt-4 border-t border-border/40">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider block mb-3">Preview</Label>
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 max-w-xs">
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0",
+                    formData.color,
+                  )}
+                >
+                  {IconComponent && <IconComponent className="w-5 h-5" />}
+                </div>
+                <div>
+                  <div className="font-medium">{formData.name || "Category Name"}</div>
+                  <div className="text-xs text-muted-foreground">{formData.description || "Description"}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 }

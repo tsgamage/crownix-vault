@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { GENERATOR_CARDS, type GeneratorType } from "../security/security.config";
 import { SecurityAnalysisCard } from "../security/components/SecurityAnalysisCard";
@@ -110,6 +110,7 @@ export default function ToolsPage() {
               </div>
             </div>
           </div>
+          <ScrollBar orientation="vertical" />
         </ScrollArea>
       </div>
 

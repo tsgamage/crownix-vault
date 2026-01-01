@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { IPasswordItem } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type SortOption = "name" | "recent" | "oldest";
 type GroupOption = "none" | "category" | "strength" | "name";
@@ -221,7 +222,7 @@ export function PasswordList() {
       </div>
 
       {/* --- LIST CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <ScrollArea className="flex-1 min-h-0">
         {isLoadingPasswords ? (
           <PasswordListSkeleton />
         ) : (
@@ -268,7 +269,8 @@ export function PasswordList() {
               ))}
           </div>
         )}
-      </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 }

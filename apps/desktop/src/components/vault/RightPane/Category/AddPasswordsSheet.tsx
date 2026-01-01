@@ -8,6 +8,7 @@ import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../../common/SearchInput";
 import type { IPasswordCategory } from "@/utils/types/vault";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface AddPasswordsSheetProps {
   isOpen: boolean;
@@ -105,8 +106,8 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
         </div>
 
         {/* LIST */}
-        <div className="flex-1 overflow-y-auto p-0">
-          <div className="flex flex-col p-2 gap-1">
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="flex flex-col p-2 gap-1 pr-4">
             {filteredPasswords.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">No passwords found</div>
             ) : (
@@ -166,7 +167,8 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
               })
             )}
           </div>
-        </div>
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
 
         {/* FOOTER */}
         <div className="p-4 border-t border-border/40 bg-muted/10">

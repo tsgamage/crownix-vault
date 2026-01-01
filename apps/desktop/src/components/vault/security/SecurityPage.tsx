@@ -9,7 +9,7 @@ import {
 import { SecurityDashboard } from "./components/SecurityDashboard";
 import { SecurityDetailsPane } from "./components/SecurityDetailsPane";
 import { PasswordDetail } from "../RightPane/Password/PasswordDetail";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { SecurityIssueType } from "./security.config";
 
@@ -107,12 +107,13 @@ export default function SecurityPage() {
             onSelectIssue={handleSelectIssue}
             vaultAnalysis={analysis.vaultHealth}
           />
+          <ScrollBar orientation="vertical" />
         </ScrollArea>
       </div>
 
       <Sheet open={isPasswordDetailsShown} onOpenChange={(open) => !open && handleClosePasswordDetailsSheet()}>
         <SheetContent className="w-[50%] sm:max-w-none p-0 border-none">
-          <PasswordDetail showBackButton />
+          <PasswordDetail backButton={{ show: true }} />
         </SheetContent>
       </Sheet>
 

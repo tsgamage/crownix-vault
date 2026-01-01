@@ -11,6 +11,7 @@ import {
   WrenchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNavItem } from "./components/SidebarNavItem";
 import { useUiStore, type IUiStore } from "@/store/ui.store";
 import { usePasswordStore } from "@/store/vault/password.store";
@@ -128,45 +129,48 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
       </div>
 
       {/* --- NAVIGATION --- */}
-      <div className="flex-1 px-3 space-y-6 overflow-y-auto custom-scrollbar">
-        {/* Main Section */}
-        <div className="space-y-1">
-          {mainNav.map((item) => (
-            <SidebarNavItem
-              key={item.id}
-              label={item.label}
-              icon={item.icon}
-              count={item.count}
-              isActive={activeTabId === item.id}
-              onClick={() => setActiveTabId(item.id as IUiStore["activeTabId"])}
-            />
-          ))}
-        </div>
-
-        {/* Pinned Categories Section */}
-        {pinnedCategories.length > 0 && (
+      <ScrollArea className="flex-1 min-h-0 px-3">
+        <div className="space-y-6 pr-4 pb-10">
+          {/* Main Section */}
           <div className="space-y-1">
-            <div className="px-3 flex items-center justify-between group">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pinned</span>
-              <Button variant="ghost" size="icon" className="h-4 w-4 opacity-0 group-hover:opacity-100">
-                <Settings className="w-3 h-3" />
-              </Button>
-            </div>
-            {pinnedCategories.map((cat) => (
+            {mainNav.map((item) => (
               <SidebarNavItem
-                key={cat.id}
-                label={cat.name}
-                color={cat.color}
-                count={cat.count}
-                isActive={activeTabId === `cat-${cat.id}`}
-                onClick={() => setActiveTabId(`cat-${cat.id}`)}
+                key={item.id}
+                label={item.label}
+                icon={item.icon}
+                count={item.count}
+                isActive={activeTabId === item.id}
+                onClick={() => setActiveTabId(item.id as IUiStore["activeTabId"])}
               />
             ))}
           </div>
-        )}
-      </div>
 
-      {/* --- BOTTOM SECTION --- */}
+          {/* Pinned Categories Section */}
+          {pinnedCategories.length > 0 && (
+            <div className="space-y-1">
+              <div className="px-3 flex items-center justify-between group">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pinned</span>
+                <Button variant="ghost" size="icon" className="h-4 w-4 opacity-0 group-hover:opacity-100">
+                  <Settings className="w-3 h-3" />
+                </Button>
+              </div>
+              {pinnedCategories.map((cat) => (
+                <SidebarNavItem
+                  key={cat.id}
+                  label={cat.name}
+                  color={cat.color}
+                  count={cat.count}
+                  isActive={activeTabId === `cat-${cat.id}`}
+                  onClick={() => setActiveTabId(`cat-${cat.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
+
+      {/* --- BOTTOM ACTIONS --- */}
       <div className="p-4 border-t border-border/40 bg-muted/10 space-y-1">
         <SidebarNavItem
           label="Lock Vault"

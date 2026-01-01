@@ -18,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   generatePassphrase,
@@ -189,14 +189,14 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                 <div
                   className={cn(
                     "relative min-h-[160px] p-6 rounded-2xl bg-card border border-border/60 shadow-inner flex items-center justify-center text-center transition-all duration-300 group",
-                    "hover:border-primary/30"
+                    "hover:border-primary/30",
                   )}
                 >
                   <div
                     className={cn(
                       "font-mono font-bold break-all leading-tight tracking-wide",
                       type === "otp" ? "text-5xl" : value.length > 24 ? "text-xl" : "text-3xl",
-                      !value && "text-muted-foreground/30 italic text-xl"
+                      !value && "text-muted-foreground/30 italic text-xl",
                     )}
                   >
                     {value || "Generating..."}
@@ -231,8 +231,8 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                           calculatePasswordScore(value) < 40
                             ? "text-red-500"
                             : calculatePasswordScore(value) < 70
-                            ? "text-orange-500"
-                            : "text-emerald-500"
+                              ? "text-orange-500"
+                              : "text-emerald-500",
                         )}
                       >
                         {getPasswordStrength(value).replace("-", " ")} ({Math.round(calculatePasswordScore(value))}%)
@@ -287,8 +287,8 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                             analysisResults.score < 40
                               ? "bg-red-500/10 text-red-500"
                               : analysisResults.score < 70
-                              ? "bg-orange-500/10 text-orange-500"
-                              : "bg-emerald-500/10 text-emerald-500"
+                                ? "bg-orange-500/10 text-orange-500"
+                                : "bg-emerald-500/10 text-emerald-500",
                           )}
                         >
                           {analysisResults.strength.replace("-", " ")}
@@ -329,7 +329,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                                 <span className="text-xs text-red-700/80 font-medium leading-relaxed">{w}</span>
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -367,7 +367,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                                 "flex gap-3 p-3 rounded-xl items-start",
                                 p.includes("No problematic")
                                   ? "bg-primary/5 border border-primary/10"
-                                  : "bg-orange-500/5 border border-orange-500/10"
+                                  : "bg-orange-500/5 border border-orange-500/10",
                               )}
                             >
                               {p.includes("No problematic") ? (
@@ -378,7 +378,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
                               <span
                                 className={cn(
                                   "text-xs font-medium leading-relaxed",
-                                  p.includes("No problematic") ? "text-primary/80" : "text-orange-700/80"
+                                  p.includes("No problematic") ? "text-primary/80" : "text-orange-700/80",
                                 )}
                               >
                                 {p}
@@ -405,6 +405,7 @@ export function GeneratorPane({ type, onClose, isSheet = false }: GeneratorPaneP
               </div>
             )}
           </div>
+          <ScrollBar orientation="vertical" />
         </ScrollArea>
       </div>
     </>
