@@ -21,7 +21,9 @@ import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import TrashList from "@/components/vault/middlePane/TrashList/TrashList";
 import TrashDetails from "@/components/vault/RightPane/Trash/TrashDetails";
 import ToolsPage from "@/components/vault/Tools/ToolsPage";
-import { useSettingsStore } from "@/store/vault/settings.store";
+import { SessionService } from "@/services/session.service";
+import { useIdleTimer } from "react-idle-timer";
+import { vaultConfig } from "@/utils/constraints";
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ export default function VaultScreen() {
   const activeTabId = useUiStore((state) => state.activeTabId);
 
   const syncDB = useUiStore((state) => state.syncDB);
+  const resetUi = useUiStore((state) => state.resetUi);
 
   const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
   const selectedCategoryId = usePasswordCategoryStore((state) => state.selectedCategoryId);
@@ -47,10 +50,11 @@ export default function VaultScreen() {
 
   useEffect(() => {
     if (!isUnlocked) {
-      navigate("/", { replace: true });
+      navigate("/locked", { replace: true });
+    } else {
+      resetUi();
+      syncDB();
     }
-    clearSelectedPasswordId();
-    syncDB();
   }, [isUnlocked]);
 
   // Closing creating pane if user clicks on a password item
@@ -86,9 +90,21 @@ export default function VaultScreen() {
   const isSecurityTabActive = activeTabId === "security";
   const isToolsTabActive = activeTabId === "tools";
 
-  const { appSettings, vaultSettings } = useSettingsStore();
-  console.log(appSettings);
-  console.log(vaultSettings);
+  const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
+
+  const handleOnIdle = () => {
+    if (vaultConfig.autoLock.enabled) {
+      setIsUnlocked(false);
+      SessionService.lock();
+    }
+  };
+
+  useIdleTimer({
+    timeout: vaultConfig.autoLock.timeout,
+    onIdle: handleOnIdle,
+    startOnMount: true,
+    crossTab: true,
+  });
 
   return (
     <div

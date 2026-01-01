@@ -44,7 +44,7 @@ export interface IUiStore {
 
   selectedTrashId: string | null;
   setSelectedTrashId: (id: string | null) => void;
-  
+
   selectedTrashType: "password" | "category" | null;
   setSelectedTrashType: (type: "password" | "category" | null) => void;
 
@@ -60,9 +60,10 @@ export interface IUiStore {
   activeTabId: TabId;
   setActiveTabId: (activeTabId: TabId) => void;
   syncDB: () => void;
+  resetUi: () => void;
 }
 
-export const useUiStore = create<IUiStore>((set) => ({
+export const useUiStore = create<IUiStore>((set, get) => ({
   isLoadingPasswords: false,
   setIsLoadingPasswords: (isLoadingPasswords: boolean) => set({ isLoadingPasswords }),
 
@@ -122,5 +123,25 @@ export const useUiStore = create<IUiStore>((set) => ({
     console.log("Syncing DB");
     usePasswordStore.getState().refresh();
     usePasswordCategoryStore.getState().refresh();
+  },
+
+  resetUi: () => {
+    get().setActiveTabId("all");
+    usePasswordStore.getState().clearSelectedPasswordId();
+    usePasswordCategoryStore.getState().clearSelectedCategoryId();
+    get().setIsSettingsOpen(false);
+
+    get().setIsPasswordDetailsShown(false);
+    get().setIsPasswordCreateShown(false);
+    get().setIsPasswordEditShown(false);
+
+    get().setIsPasswordCategoryDetailsShown(false);
+    get().setIsPasswordCategoryCreateShown(false);
+    get().setIsPasswordCategoryEditShown(false);
+
+    get().setSelectedTrashId(null);
+    get().setSelectedTrashType(null);
+    get().setIsTrashListShown(false);
+    get().setIsTrashDetailsShown(false);
   },
 }));

@@ -78,11 +78,6 @@ export default function UnlockScreen() {
           <UnlockForm onUnlock={handleUnlock} isError={isPasswordWrong} setIsError={setIsPasswordWrong} />
         </div>
       </main>
-
-      {/* Footer / Copyright */}
-      <footer className="absolute bottom-6 text-[10px] text-muted-foreground/40 font-medium tracking-wider uppercase pointer-events-none">
-        Crownix Security Systems © 2025
-      </footer>
     </div>
   );
 }
