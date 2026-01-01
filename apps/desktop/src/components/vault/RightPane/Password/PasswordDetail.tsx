@@ -51,8 +51,16 @@ import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { useUiStore } from "@/store/ui.store";
 import { Badge } from "@/components/ui/badge";
 import type { IPasswordItem } from "@/utils/types/vault";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-export function PasswordDetail({ showBackButton }: { showBackButton?: boolean }) {
+interface Props {
+  backButton?: {
+    show: boolean;
+    origin?: string;
+  };
+}
+
+export function PasswordDetail({ backButton }: Props) {
   const isPasswordEditing = useUiStore((state) => state.isPasswordEditShown);
   const setIsPasswordEditing = useUiStore((state) => state.setIsPasswordEditShown);
   const setIsPasswordDetailsShown = useUiStore((state) => state.setIsPasswordDetailsShown);
@@ -73,6 +81,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
   const clearSelectedId = usePasswordStore((state) => state.clearSelectedPasswordId);
   const updatePasswordItem = usePasswordStore((state) => state.updatePasswordItem);
   const selectedPassword = passwordItems.find((p) => p.id === selectedPasswordId) || null;
+  const activeTabId = useUiStore((state) => state.activeTabId);
 
   useEffect(() => {
     setFormData(selectedPassword);
@@ -192,16 +201,29 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
 
   const currentCategory = passwordCategories.find((c) => c.id === formData.categoryId);
 
+  const activeTabName = () => {
+    switch (activeTabId) {
+      case "all":
+        return "All";
+      case "favorites":
+        return "Favorites";
+      case "organize":
+        return currentCategory?.name || "Organize";
+      default:
+        return "Other";
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm">
-      {/* --- HEADER --- */}
-      {showBackButton && (
-        <div className="px-6 py-6">
-          <div className="flex items-center text-muted-foreground">
+    <div className="h-full flex flex-col bg-background">
+      {/* --- Breadcrumb with back button --- */}
+      <div className="px-6 py-2">
+        <div className="flex items-center text-muted-foreground">
+          {backButton?.show && (
             <Button
               variant="ghost"
-              size="sm"
-              className="h-6 px-2 -ml-2 gap-1 text-xs"
+              size="lg"
+              className="h-8 px-2 -ml-2 mr-2 gap-1 text-xs"
               onClick={() => {
                 clearSelectedId();
                 setIsPasswordDetailsShown(false);
@@ -209,164 +231,171 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
             >
               <ChevronLeft className="w-3 h-3" /> Back
             </Button>
-            <span className="mx-2 opacity-20">/</span>
-            <span className="text-xs font-medium uppercase tracking-wider">View Password Details</span>
-          </div>
-        </div>
-      )}
-      <div className={cn("pb-4 border-b border-border/40", showBackButton ? "px-6 " : "p-6 ")}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-5 min-w-0 flex-1">
-            <ContextMenu>
-              <ContextMenuTrigger>
-                <PasswordIconPicker
-                  icon={formData.icon}
-                  isEditing={isPasswordEditing}
-                  onChange={(icon) => setFormData({ ...formData, icon })}
-                />
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem onClick={() => setFormData({ ...formData, icon: "" })}>
-                  <RotateCcw />
-                  Reset Icon
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-
-            <div className="flex-1 min-w-0 space-y-1 ">
-              {isPasswordEditing ? (
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="text-lg font-bold h-9"
-                  placeholder="Item Title"
-                />
-              ) : (
-                <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-58.75" title={formData.title}>
-                  {formData.title}
-                </h2>
-              )}
-
-              {/* Category Display / Selector */}
-              {isPasswordEditing ? (
-                <Select
-                  value={formData.categoryId}
-                  onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
-                >
-                  <SelectTrigger className="h-8 w-50 text-xs">
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem key="none" value="none">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full`} />
-                        None
-                      </div>
-                    </SelectItem>
-                    {passwordCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id} disabled={cat.isDeleted}>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${cat.color}`} />
-                          {cat.name}
-                          {cat.isDeleted && (
-                            <Badge className="h-5" variant="destructive">
-                              Deleted
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {currentCategory ? (
-                    <span className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-muted border border-border/50 text-xs font-medium">
-                      <span className={`w-2 h-2 rounded-full ${currentCategory.color || "bg-gray-400"}`} />
-                      {currentCategory.name}
-                      {currentCategory.isDeleted && (
-                        <Badge className="h-5" variant="destructive">
-                          Deleted
-                        </Badge>
-                      )}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-xs opacity-60">
-                      <Folder className="w-3 h-3" /> Uncategorized
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Header Actions */}
-          <div className="flex gap-1">
-            {isPasswordEditing ? (
-              <>
-                <Button
-                  variant="ghost"
-                  className="text-destructive hover:bg-destructive/10 hover:text-destructive  "
-                  onClick={handleCancel}
-                  title="Cancel"
-                >
-                  <XIcon className="w-4 h-4" /> Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                  onClick={handleSave}
-                  title="Save"
-                >
-                  <Save className="w-4 h-4" /> Save
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleFavorite}
-                  className={cn(
-                    "h-9 w-9",
-                    formData.isFavorite &&
-                      "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500",
-                  )}
-                >
-                  <Star className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setIsPasswordEditing(true)}
-                  title="Edit"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>Export </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            )}
-          </div>
+          )}
+          <span className="text-xs font-medium uppercase tracking-wider truncate max-w-25" title={activeTabName()}>
+            {backButton?.origin || activeTabName()}
+          </span>
+          <span className="mx-2 opacity-80">/</span>
+          <span className="text-xs font-medium uppercase tracking-wider  truncate max-w-50">
+            {formData.title || "View Password Details"}
+          </span>
         </div>
       </div>
 
       {/* --- SCROLLABLE CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className={cn("pb-4 border-b border-border/40", backButton?.show ? "px-6 " : "p-6 ")}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-5 min-w-0 flex-1">
+              {/* ICON */}
+              <ContextMenu>
+                <ContextMenuTrigger>
+                  <PasswordIconPicker
+                    icon={formData.icon}
+                    isEditing={isPasswordEditing}
+                    onChange={(icon) => setFormData({ ...formData, icon })}
+                  />
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => setFormData({ ...formData, icon: "" })}>
+                    <RotateCcw />
+                    Reset Icon
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+
+              <div className="flex-1 min-w-0 space-y-1 ">
+                {/* NAME */}
+                {isPasswordEditing ? (
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="text-lg font-bold h-9"
+                    placeholder="Item Title"
+                  />
+                ) : (
+                  <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-58.75" title={formData.title}>
+                    {formData.title}
+                  </h2>
+                )}
+
+                {/* Category Display / Selector */}
+                {isPasswordEditing ? (
+                  <Select
+                    value={formData.categoryId}
+                    onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
+                  >
+                    <SelectTrigger className="h-8 w-50 text-xs">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem key="none" value="none">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full`} />
+                          None
+                        </div>
+                      </SelectItem>
+                      {passwordCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id} disabled={cat.isDeleted}>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${cat.color}`} />
+                            {cat.name}
+                            {cat.isDeleted && (
+                              <Badge className="h-5" variant="destructive">
+                                Deleted
+                              </Badge>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {currentCategory ? (
+                      <span className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-muted border border-border/50 text-xs font-medium">
+                        <span className={`w-2 h-2 rounded-full ${currentCategory.color || "bg-gray-400"}`} />
+                        {currentCategory.name}
+                        {currentCategory.isDeleted && (
+                          <Badge className="h-5" variant="destructive">
+                            Deleted
+                          </Badge>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs opacity-60">
+                        <Folder className="w-3 h-3" /> Uncategorized
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex gap-1">
+              {isPasswordEditing ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive  "
+                    onClick={handleCancel}
+                    title="Cancel"
+                  >
+                    <XIcon className="w-4 h-4" /> Cancel
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                    onClick={handleSave}
+                    title="Save"
+                  >
+                    <Save className="w-4 h-4" /> Save
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleFavorite}
+                    className={cn(
+                      "h-9 w-9",
+                      formData.isFavorite &&
+                        "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500",
+                    )}
+                  >
+                    <Star className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setIsPasswordEditing(true)}
+                    title="Edit"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem>Export </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="p-6 space-y-8 max-w-3xl mx-auto">
           {/* Main Credentials */}
           <div className="space-y-5 p-5 rounded-xl border border-border/40 bg-card/50 shadow-xs">
@@ -454,7 +483,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                 )}
               </div>
 
-              {/* Strength Meter (Visual only) */}
+              {/* Strength Meter */}
               {
                 <div className="pt-2 flex items-center justify-between text-[10px] space-x-2">
                   <div className="h-1 flex-1 bg-muted rounded-full overflow-hidden">
@@ -474,7 +503,7 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
                 </div>
               }
 
-              {/* Password Length Slider (Only in Edit Mode) */}
+              {/* Password Length Slider */}
               {isPasswordEditing && (
                 <div className="pt-4 space-y-4 p-4 rounded-xl bg-muted/30 border border-border/50">
                   <div className="flex justify-between items-center px-1">
@@ -556,7 +585,8 @@ export function PasswordDetail({ showBackButton }: { showBackButton?: boolean })
             </p>
           </div>
         </div>
-      </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 }

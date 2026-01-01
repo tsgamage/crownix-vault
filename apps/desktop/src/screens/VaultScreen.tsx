@@ -142,7 +142,7 @@ export default function VaultScreen() {
                   <CreateAndEditCategory />
                 ) : (
                   <>
-                    {selectedPasswordId && <PasswordDetail showBackButton />}
+                    {selectedPasswordId && <PasswordDetail backButton={{ show: true }} />}
                     <CategoryDetails />
                   </>
                 ))}

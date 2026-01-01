@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Eye, EyeOff, Save, ChevronLeft } from "lucide-react";
+import { RefreshCw, Eye, EyeOff, Save, ChevronLeft, RotateCcw } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
 import type { IPasswordItem } from "@/utils/types/vault";
 import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export function CreatePassword() {
   const createPassword = usePasswordStore((state) => state.createPasswordItem);
@@ -143,13 +145,13 @@ export function CreatePassword() {
 
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in">
-      {/* --- HEADER --- */}
-      <div className="p-6 pb-4 border-b border-border/40">
-        <div className="flex items-center mb-4 text-muted-foreground">
+      {/* --- Breadcrumb with back button (match PasswordDetail style) --- */}
+      <div className="px-6 py-2">
+        <div className="flex items-center text-muted-foreground">
           <Button
             variant="ghost"
-            size="sm"
-            className="h-6 px-2 -ml-2 gap-1 text-xs"
+            size="lg"
+            className="h-8 px-2 -ml-2 mr-2 gap-1 text-xs"
             onClick={() => {
               if (isFormEmpty(formData)) {
                 handleCancelClick();
@@ -179,67 +181,82 @@ export function CreatePassword() {
           >
             <ChevronLeft className="w-3 h-3" /> Back
           </Button>
-          <span className="mx-2 opacity-20">/</span>
-          <span className="text-xs font-medium uppercase tracking-wider">Create New Item</span>
-        </div>
-
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-5 min-w-0 flex-1">
-            {/* Icon Picker (Always in Edit Mode here) */}
-            <PasswordIconPicker
-              icon={formData.icon}
-              isEditing={true}
-              onChange={(icon) => setFormData({ ...formData, icon })}
-            />
-
-            <div className="flex-1 min-w-0 space-y-2">
-              <Input
-                autoFocus
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="text-lg font-bold h-10 border-transparent hover:border-input focus:border-emerald-500/50 transition-all px-0 pl-2 -ml-2 bg-transparent"
-                placeholder="Item Name (e.g. Facebook)"
-              />
-
-              <Select
-                value={formData.categoryId}
-                onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
-              >
-                <SelectTrigger tabIndex={-1} className="h-8 w-50 text-xs">
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {passwordCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${cat.color}`} />
-                        {cat.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Header Actions */}
-          <div className="flex gap-2">
-            <Button
-              tabIndex={-1}
-              variant="default"
-              size="sm"
-              className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 gap-2"
-              onClick={handleSave}
-              disabled={!formData.title}
-            >
-              <Save className="w-4 h-4" /> Save Item
-            </Button>
-          </div>
+          <span className="text-xs font-medium uppercase tracking-wider truncate max-w-50">Create</span>
+          <span className="mx-2 opacity-80">/</span>
+          <span className="text-xs font-medium uppercase tracking-wider truncate max-w-50">Create New Item</span>
         </div>
       </div>
 
-      {/* --- SCROLLABLE CONTENT --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar" tabIndex={-1}>
+      {/* --- SCROLLABLE CONTENT using ScrollArea (shadcn) --- */}
+      <ScrollArea className="flex-1 overflow-y-auto">
+        {/* Header area inside scrollable (icon, title, category, actions) */}
+        <div className="pb-4 border-b border-border/40 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-5 min-w-0 flex-1">
+              {/* ICON - with context menu to reset like in PasswordDetail */}
+              <ContextMenu>
+                <ContextMenuTrigger>
+                  <PasswordIconPicker
+                    icon={formData.icon}
+                    isEditing={true}
+                    onChange={(icon) => setFormData({ ...formData, icon })}
+                  />
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => setFormData({ ...formData, icon: "" })}>
+                    <RotateCcw />
+                    Reset Icon
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+
+              <div className="flex-1 min-w-0 space-y-2">
+                <Input
+                  autoFocus
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="text-lg font-bold h-9 border-transparent hover:border-input focus:border-emerald-500/50 transition-all px-0 pl-2 -ml-2 bg-transparent"
+                  placeholder="Item Name (e.g. Facebook)"
+                />
+
+                <Select
+                  value={formData.categoryId}
+                  onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
+                >
+                  <SelectTrigger tabIndex={-1} className="h-8 w-50 text-xs">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {passwordCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${cat.color}`} />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex gap-2">
+              <Button
+                tabIndex={-1}
+                variant="default"
+                size="sm"
+                className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 gap-2"
+                onClick={handleSave}
+                disabled={!formData.title}
+              >
+                <Save className="w-4 h-4" /> Save Item
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main scrollable body */}
         <div className="p-6 space-y-8 max-w-3xl mx-auto">
           {/* Main Credentials */}
           <div className="space-y-5 p-5 rounded-xl border border-border/40 bg-card/50 shadow-xs">
@@ -378,7 +395,10 @@ export function CreatePassword() {
             />
           </div>
         </div>
-      </div>
+
+        {/* scrollbar */}
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
     </div>
   );
 }
