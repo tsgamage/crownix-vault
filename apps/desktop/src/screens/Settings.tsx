@@ -1,12 +1,21 @@
 import { useTheme, type Theme } from "@/components/providers/ThemeProvider";
+import useDebounce from "@/hooks/use-debounce";
 import { SettingsModal } from "@/modals/settings/Settings";
+import { useFileStore } from "@/store/file.store";
 import { useSettingsStore } from "@/store/vault/settings.store";
 import type { SettingsConfig } from "@/utils/types/global.types";
 import type { ISettingsGroupByOptions, ISettingsSortByOptions } from "@/utils/types/vault";
+import { useEffect } from "react";
 
 export default function Settings() {
   const { appSettings, setAppSettings, vaultSettings, setVaultSettings } = useSettingsStore();
   const { setTheme, theme } = useTheme();
+  const debouncedVaultName = useDebounce(vaultSettings.vaultName, 500);
+  const syncFile = useFileStore((state) => state.syncFile);
+
+  useEffect(() => {
+    syncFile();
+  }, [debouncedVaultName]);
 
   const INITIAL_SETTINGS_CONFIG: SettingsConfig = {
     sections: [
@@ -103,7 +112,7 @@ export default function Settings() {
         setTheme(value as Theme);
         break;
       case "vaultName":
-          setVaultSettings({ ...vaultSettings, [id]: value });
+        setVaultSettings({ ...vaultSettings, [id]: value });
         break;
       default:
         setAppSettings({ ...appSettings, [id]: value });

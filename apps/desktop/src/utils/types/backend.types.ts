@@ -9,3 +9,14 @@ export type PickExistingVaultFileResult =
   | { success: false; message: string };
 
 export type SaveVaultFileResult = { success: true } | { success: false; message: string };
+
+export type AutoLoadVaultResult =
+  | {
+      success: true;
+      buffer: number[];
+      path: string;
+    }
+  | {
+      success: false;
+      backup: boolean;
+    };

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRightIcon, EyeIcon, EyeOffIcon, FolderIcon, ImportIcon } from "lucide-react";
+import { ArrowRightIcon, EyeIcon, EyeOffIcon, FolderIcon, ImportIcon, AlertCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFileStore } from "@/store/file.store";
@@ -8,7 +8,9 @@ import { InitialVault } from "@/data/initial-vault";
 import { invoke } from "@tauri-apps/api/core";
 import { Label } from "@/components/ui/label";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { useDialog } from "@/context/DialogContext";
 import type {
+  AutoLoadVaultResult,
   CreateVaultFileResult,
   PickExistingVaultFileResult,
   PickVaultFolderResult,
@@ -16,6 +18,7 @@ import type {
 
 export default function StartScreen() {
   const navigate = useNavigate();
+  const { openDialog, closeDialog } = useDialog();
 
   const vaultFile = useFileStore((state) => state.vaultFile);
   const setVaultFile = useFileStore((state) => state.setVaultFile);
@@ -24,12 +27,69 @@ export default function StartScreen() {
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [backupAvailable, setBackupAvailable] = useState(false);
+  const [isCheckingAutoLoadVault, setIsCheckingAutoLoadVault] = useState(true);
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
 
   useEffect(() => {
     if (vaultFile) {
       navigate("/unlock", { replace: true });
     }
   }, [vaultFile]);
+
+  useEffect(() => {
+    const autoLoadVault = async () => {
+      setIsCheckingAutoLoadVault(true);
+      const response: AutoLoadVaultResult = await invoke("auto_load_vault");
+      setIsCheckingAutoLoadVault(false);
+      if (response.success) {
+        setVaultFilePath(response.path);
+        setVaultFile(new Uint8Array(response.buffer));
+      } else if (response.backup) {
+        setBackupAvailable(true);
+        setShowRecoveryDialog(true);
+      } else {
+        await invoke("clear_vault_config");
+      }
+    };
+    autoLoadVault();
+  }, []);
+
+  useEffect(() => {
+    if (showRecoveryDialog && backupAvailable) {
+      openDialog({
+        title: "Original Vault File Missing",
+        description: "We couldn't find your original vault file, but we found a backup. Would you like to recover it?",
+        icon: AlertCircleIcon,
+        variant: "warning",
+        buttons: [
+          {
+            label: "Cancel",
+            variant: "ghost",
+            onClick: () => {
+              closeDialog();
+              setShowRecoveryDialog(false);
+            },
+          },
+          {
+            label: "Recover Backup",
+            variant: "default",
+            onClick: async () => {
+              setShowRecoveryDialog(false);
+              setBackupAvailable(false);
+              try {
+                await invoke("export_backup_vault");
+              } catch (error) {
+                alert("Error recovering backup file");
+              }
+            },
+          },
+        ],
+      });
+    }
+  }, [showRecoveryDialog, backupAvailable, openDialog, closeDialog]);
+
+  if (isCheckingAutoLoadVault) return null;
 
   const handleImportVault = async () => {
     const response: PickExistingVaultFileResult = await invoke("pick_existing_vault_file");

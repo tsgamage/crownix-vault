@@ -24,7 +24,10 @@ pub fn run() {
             vault_fs::pick_vault_folder,
             vault_fs::create_vault_file,
             vault_fs::pick_existing_vault_file,
-            vault_fs::save_vault_file_atomic
+            vault_fs::save_vault_file_atomic,
+            vault_fs::auto_load_vault,
+            vault_fs::export_backup_vault,
+            vault_fs::clear_vault_config,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
