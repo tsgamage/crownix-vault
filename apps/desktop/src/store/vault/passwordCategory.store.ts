@@ -16,7 +16,7 @@ interface IPasswordCategoryStore {
   updatePasswordCategory: (category: IPasswordCategory) => void;
   deletePasswordCategory: (id: string) => void;
 }
-export const usePasswordCategoryStore = create<IPasswordCategoryStore>((set, get) => ({
+export const usePasswordCategoryStore = create<IPasswordCategoryStore>((set) => ({
   passwordCategories: [],
   selectedCategoryId: null,
 

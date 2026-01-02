@@ -1,3 +1,5 @@
+// Made types as any to avoid type errors
+// TODO: Remove any types
 export class CryptoService {
   static base64ToBytes(base64: string): Uint8Array {
     return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
@@ -15,14 +17,14 @@ export class CryptoService {
     return crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
-        salt,
+        salt: salt as any,
         iterations: 200_000,
         hash: "SHA-256",
       },
       baseKey,
       { name: "AES-GCM", length: 256 },
       false,
-      ["encrypt", "decrypt"],
+      ["encrypt", "decrypt"]
     );
   }
 
@@ -40,7 +42,7 @@ export class CryptoService {
   }
 
   static async decryptJSON(ciphertext: Uint8Array, iv: Uint8Array, key: CryptoKey) {
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as any }, key, ciphertext as any);
 
     return JSON.parse(new TextDecoder().decode(decrypted));
   }

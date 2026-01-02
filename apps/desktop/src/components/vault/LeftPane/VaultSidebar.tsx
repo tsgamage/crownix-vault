@@ -1,15 +1,4 @@
-import {
-  LayoutGrid,
-  Star,
-  Trash2,
-  Plus,
-  Lock,
-  ShieldCheck,
-  Settings,
-  LockIcon,
-  FolderIcon,
-  WrenchIcon,
-} from "lucide-react";
+import { LayoutGrid, Star, Trash2, Plus, ShieldCheck, Settings, LockIcon, FolderIcon, WrenchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SidebarNavItem } from "./components/SidebarNavItem";

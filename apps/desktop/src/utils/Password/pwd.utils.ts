@@ -387,7 +387,6 @@ const optimizePasswordForScoring = (password: string, opts: Required<PasswordOpt
   const maxOptimizationAttempts = 5;
 
   for (let attempt = 0; attempt < maxOptimizationAttempts; attempt++) {
-    let changed = false;
     const chars = optimized.split("");
 
     // Check and fix problematic patterns
@@ -396,7 +395,6 @@ const optimizePasswordForScoring = (password: string, opts: Required<PasswordOpt
       const char = chars[i];
       if (isPotentialLeetChar(char)) {
         chars[i] = getRandomCharFromSets(opts, char);
-        changed = true;
       }
 
       // Check for sequences
@@ -407,7 +405,6 @@ const optimizePasswordForScoring = (password: string, opts: Required<PasswordOpt
 
         if ((c === b + 1 && b === a + 1) || (c === b - 1 && b === a - 1)) {
           chars[i - 1] = getRandomCharFromSets(opts, chars[i - 1]);
-          changed = true;
         }
       }
 
@@ -415,7 +412,6 @@ const optimizePasswordForScoring = (password: string, opts: Required<PasswordOpt
       if (i >= 2 && opts.excludeRepeated) {
         if (chars[i] === chars[i - 1] && chars[i] === chars[i - 2]) {
           chars[i] = getRandomCharFromSets(opts, chars[i]);
-          changed = true;
         }
       }
     }
@@ -727,7 +723,6 @@ const calculateCharacterVarietyScore = (password: string): number => {
 
   // Bonus for balanced distribution
   if (typeCount >= 2 && password.length >= 8) {
-    const totalChars = password.length;
     const lowerCount = (password.match(/[a-z]/g) || []).length;
     const upperCount = (password.match(/[A-Z]/g) || []).length;
     const numberCount = (password.match(/[0-9]/g) || []).length;
@@ -1312,7 +1307,7 @@ const generateRecoveryCode = (): string => {
  * Get comprehensive vault health analysis
  */
 const analyzeVaultHealth = (
-  items: IPasswordItem[],
+  items: IPasswordItem[]
 ): {
   score: number;
   totalItems: number;
@@ -1361,7 +1356,7 @@ const analyzeVaultHealth = (
     suggestions.push(
       `Stop reusing ${uniqueReused.size} password${uniqueReused.size > 1 ? "s" : ""} across ${
         reusedItems.length
-      } accounts`,
+      } accounts`
     );
   }
 
@@ -1371,7 +1366,7 @@ const analyzeVaultHealth = (
 
   if (patternItems.length > 0) {
     suggestions.push(
-      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with problematic patterns`,
+      `Improve ${patternItems.length} password${patternItems.length > 1 ? "s" : ""} with problematic patterns`
     );
   }
 
