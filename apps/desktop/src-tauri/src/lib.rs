@@ -1,6 +1,6 @@
 use std::{thread, time::Duration};
 
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 mod vault_fs;

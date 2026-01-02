@@ -118,7 +118,7 @@ export function PasswordDetail({ backButton }: Props) {
   const handleCopy = async (text: string, field: string) => {
     await invoke("copy_to_clipboard_with_timeout", {
       text: text,
-      timeoutSecs: 5,
+      timeoutSecs: 60,
     });
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
