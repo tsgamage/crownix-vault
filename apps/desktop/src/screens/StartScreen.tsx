@@ -98,9 +98,7 @@ export default function StartScreen() {
     setVaultFilePath(null);
     const response: PickVaultFolderResult = await invoke("pick_vault_folder");
 
-    if (!response.success) {
-      return message("Folder selection failed", { title: "Folder Selection", kind: "error" });
-    }
+    if (!response.success) return;
     if (response.found && !response.multiple) {
       return message("Vault file found in same location, please import it by selecting import below", {
         title: "Vault File Found",

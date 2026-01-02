@@ -6,8 +6,6 @@ export const VaultSettings: IVaultSettings = {
 };
 
 export const AppSettings: IAppSettings = {
-  appName: "Crownix Vault",
-  appVersion: "1.0.0",
   language: "en",
   defaultGroupBy: "none",
   defaultSortBy: "name",

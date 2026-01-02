@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { IVault } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
+import { invoke } from "@tauri-apps/api/core";
+import type { LoadAppSettingsResult } from "@/utils/types/backend.types";
 
 export default function UnlockScreen() {
   const navigate = useNavigate();
@@ -21,6 +23,8 @@ export default function UnlockScreen() {
   const setVaultHeader = useFileStore((state) => state.setVaultHeader);
   const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
+
+  const setAppSettings = useSettingsStore((state) => state.setAppSettings);
 
   useEffect(() => {
     if (!vaultFile) {
@@ -51,6 +55,11 @@ export default function UnlockScreen() {
     } catch (err) {
       console.log(err);
       setIsPasswordWrong(true);
+    }
+
+    const appSettingsResponse: LoadAppSettingsResult = await invoke("load_app_settings");
+    if (appSettingsResponse.success) {
+      setAppSettings(appSettingsResponse.data);
     }
   };
 

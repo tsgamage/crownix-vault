@@ -20,6 +20,7 @@ import type { IPasswordCategory } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
 import { SessionService } from "@/services/session.service";
 import { useSessionStore } from "@/store/session.store";
+import { appConfig } from "@/utils/constraints";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
@@ -45,7 +46,6 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const totalPasswordCategories = passwordCategories.filter((p) => !p.isDeleted).length;
 
   const vaultSettings = useSettingsStore((state) => state.vaultSettings);
-  const appSettings = useSettingsStore((state) => state.appSettings);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const mainNav = [
@@ -179,8 +179,8 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
         <SidebarNavItem label="Settings" icon={Settings} isActive={false} onClick={() => setIsSettingsOpen(true)} />
 
         <div className="mt-2 px-2 flex items-center justify-between text-[10px] text-muted-foreground opacity-50">
-          <span className="flex items-center gap-1">{appSettings.appName}</span>
-          <span>v{appSettings.appVersion}</span>
+          <span className="flex items-center gap-1">{appConfig.appName}</span>
+          <span>v{appConfig.appVersion}</span>
         </div>
       </div>
     </div>

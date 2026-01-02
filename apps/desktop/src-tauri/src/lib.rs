@@ -32,6 +32,8 @@ pub fn run() {
             vault_fs::auto_load_vault,
             vault_fs::export_backup_vault,
             vault_fs::clear_vault_config,
+            vault_fs::load_app_settings,
+            vault_fs::save_app_settings,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

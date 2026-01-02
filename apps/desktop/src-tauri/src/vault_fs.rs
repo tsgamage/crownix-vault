@@ -28,7 +28,7 @@ struct AppConfig {
 }
 
 // =======================================================
-// Result types (BOOLEAN success – FINAL)
+// Result types (FINAL)
 // =======================================================
 
 #[derive(Serialize)]
@@ -69,13 +69,27 @@ pub struct ExportBackupResult {
     pub message: Option<String>,
 }
 
+#[derive(Serialize)]
+pub struct LoadSettingsResult {
+    pub success: bool,
+    pub data: Option<serde_json::Value>,
+    pub message: Option<String>,
+}
+
 // =======================================================
-// Config helpers (Tauri v2)
+// Config helpers
 // =======================================================
 
+fn app_dir(app: &AppHandle) -> Option<PathBuf> {
+    app.path().app_config_dir().ok()
+}
+
 fn config_path(app: &AppHandle) -> Option<PathBuf> {
-    let dir = app.path().app_config_dir().ok()?;
-    Some(dir.join("config.json"))
+    Some(app_dir(app)?.join("config.json"))
+}
+
+fn settings_path(app: &AppHandle) -> Option<PathBuf> {
+    Some(app_dir(app)?.join("settings.json"))
 }
 
 fn save_config(app: &AppHandle, vault_path: &Path) {
@@ -94,6 +108,20 @@ fn load_config(app: &AppHandle) -> Option<PathBuf> {
     let data = fs::read(path).ok()?;
     let cfg: AppConfig = serde_json::from_slice(&data).ok()?;
     Some(PathBuf::from(cfg.vault_path))
+}
+
+// =======================================================
+// Backup helpers (SAFE LOCATION)
+// =======================================================
+
+fn backup_dir(app: &AppHandle) -> Option<PathBuf> {
+    let dir = app_dir(app)?.join("backup");
+    let _ = fs::create_dir_all(&dir);
+    Some(dir)
+}
+
+fn backup_path(app: &AppHandle) -> Option<PathBuf> {
+    Some(backup_dir(app)?.join("vault.bak"))
 }
 
 // =======================================================
@@ -120,10 +148,6 @@ fn validate_vault_header(buffer: &[u8]) -> bool {
     };
 
     header["magic"] == MAGIC && header["version"] == VERSION
-}
-
-fn backup_path(vault_path: &Path) -> PathBuf {
-    vault_path.with_extension("cxv.bak")
 }
 
 // =======================================================
@@ -247,16 +271,17 @@ pub fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
 }
 
 // =======================================================
-// 4️⃣ Atomic save + backup
+// 4️⃣ Atomic save + SAFE backup
 // =======================================================
 
 #[command]
 pub fn save_vault_file_atomic(app: AppHandle, vault_path: String, buffer: Vec<u8>) -> SimpleResult {
     let path = PathBuf::from(vault_path);
-    let bak = backup_path(&path);
 
-    if path.exists() {
-        let _ = fs::copy(&path, &bak);
+    if let Some(bak) = backup_path(&app) {
+        if path.exists() {
+            let _ = fs::copy(&path, &bak);
+        }
     }
 
     let tmp = path.with_extension("cxv.tmp");
@@ -286,7 +311,7 @@ pub fn save_vault_file_atomic(app: AppHandle, vault_path: String, buffer: Vec<u8
 }
 
 // =======================================================
-// 5️⃣ Auto-load vault on startup
+// 5️⃣ Auto-load vault
 // =======================================================
 
 #[command]
@@ -314,30 +339,29 @@ pub fn auto_load_vault(app: AppHandle) -> AutoLoadResult {
         };
     }
 
-    let bak = backup_path(&path);
+    let has_backup = backup_path(&app).map(|b| b.exists()).unwrap_or(false);
     AutoLoadResult {
         success: false,
         buffer: None,
         path: None,
-        backup: Some(bak.exists()),
+        backup: Some(has_backup),
     }
 }
 
 // =======================================================
-// 6️⃣ Export backup, open folder, return path
+// 6️⃣ Export backup
 // =======================================================
 
 #[command]
 pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
-    let Some(vault_path) = load_config(&app) else {
+    let Some(bak) = backup_path(&app) else {
         return ExportBackupResult {
             success: false,
             backup_path: None,
-            message: Some("No vault config found".into()),
+            message: Some("No backup directory".into()),
         };
     };
 
-    let bak = backup_path(&vault_path);
     if !bak.exists() {
         return ExportBackupResult {
             success: false,
@@ -366,19 +390,14 @@ pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-
     let export_path = folder_path.join(format!("CrownixVault_backup_{}.cxv", ts));
 
     match fs::copy(&bak, &export_path) {
         Ok(_) => {
-            // OPEN THE FOLDER
             let _ = app
                 .opener()
                 .open_path(folder_path.to_string_lossy().to_string(), None::<String>);
-
-            // delete original .bak after successful export
             let _ = fs::remove_file(&bak);
-
             ExportBackupResult {
                 success: true,
                 backup_path: Some(export_path.to_string_lossy().to_string()),
@@ -394,7 +413,67 @@ pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
 }
 
 // =======================================================
-// 7️⃣ Clear config
+// 7️⃣ App settings (NON-VAULT)
+// =======================================================
+
+#[command]
+pub fn save_app_settings(app: AppHandle, settings: serde_json::Value) -> SimpleResult {
+    let Some(path) = settings_path(&app) else {
+        return SimpleResult {
+            success: false,
+            message: Some("Config directory unavailable".into()),
+        };
+    };
+
+    match fs::write(path, settings.to_string()) {
+        Ok(_) => SimpleResult {
+            success: true,
+            message: None,
+        },
+        Err(_) => SimpleResult {
+            success: false,
+            message: Some("Failed to save settings".into()),
+        },
+    }
+}
+
+#[command]
+pub fn load_app_settings(app: AppHandle) -> LoadSettingsResult {
+    let Some(path) = settings_path(&app) else {
+        return LoadSettingsResult {
+            success: false,
+            data: None,
+            message: Some("Config directory unavailable".into()),
+        };
+    };
+
+    if !path.exists() {
+        return LoadSettingsResult {
+            success: true,
+            data: Some(serde_json::json!({})),
+            message: None,
+        };
+    }
+
+    match fs::read_to_string(&path)
+        .ok()
+        .and_then(|c| serde_json::from_str(&c).ok())
+    {
+        Some(json) => LoadSettingsResult {
+            success: true,
+            data: Some(json),
+            message: None,
+        },
+        None => LoadSettingsResult {
+            success: false,
+            data: None,
+            message: Some("Invalid settings file".into()),
+        },
+    }
+}
+
+// =======================================================
+// 8️⃣ Clear config
 // =======================================================
 
 #[command]

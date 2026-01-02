@@ -3,14 +3,29 @@ import useDebounce from "@/hooks/use-debounce";
 import { SettingsModal } from "@/modals/settings/Settings";
 import { useFileStore } from "@/store/file.store";
 import { useSettingsStore } from "@/store/vault/settings.store";
+import type { SaveAppSettingsResult } from "@/utils/types/backend.types";
 import type { SettingsConfig } from "@/utils/types/global.types";
 import type { ISettingsGroupByOptions, ISettingsSortByOptions } from "@/utils/types/vault";
+import { invoke } from "@tauri-apps/api/core";
+import { message } from "@tauri-apps/plugin-dialog";
 import { useEffect } from "react";
 
 export default function Settings() {
   const { appSettings, setAppSettings, vaultSettings, setVaultSettings } = useSettingsStore();
   const { setTheme, theme } = useTheme();
   const debouncedVaultName = useDebounce(vaultSettings.vaultName, 500);
+  const debouncedAppSettings = useDebounce(appSettings as any, 500);
+
+  useEffect(() => {
+    async function saveAppSettings() {
+      const response: SaveAppSettingsResult = await invoke("save_app_settings", { settings: debouncedAppSettings });
+      if (!response.success) {
+        message("Failed to save settings", { title: "Error", kind: "error" });
+      }
+    }
+    saveAppSettings();
+  }, [debouncedAppSettings]);
+
   const syncFile = useFileStore((state) => state.syncFile);
 
   useEffect(() => {
