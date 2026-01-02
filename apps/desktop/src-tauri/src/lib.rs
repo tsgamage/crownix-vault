@@ -1,8 +1,13 @@
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 use std::{thread, time::Duration};
-use tauri::{command, AppHandle};
+
+use tauri::{command, AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
+
 mod vault_fs;
+
+// =======================================================
+// Clipboard with auto-clear
+// =======================================================
 
 #[command]
 fn copy_to_clipboard_with_timeout(app: AppHandle, text: String, timeout_secs: u64) {
@@ -15,14 +20,20 @@ fn copy_to_clipboard_with_timeout(app: AppHandle, text: String, timeout_secs: u6
     });
 }
 
+// =======================================================
+// App entry point
+// =======================================================
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
+        // Plugins
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        // Commands
         .invoke_handler(tauri::generate_handler![
             copy_to_clipboard_with_timeout,
             vault_fs::pick_vault_folder,
@@ -35,7 +46,19 @@ pub fn run() {
             vault_fs::load_app_settings,
             vault_fs::save_app_settings,
         ])
+        // Setup
         .setup(|app| {
+            // 🔧 DEV-ONLY DevTools
+            #[cfg(debug_assertions)]
+            {
+                let handle = app.handle();
+
+                if let Some(window) = handle.get_webview_window("main") {
+                    window.open_devtools(); // ✅ correct in Tauri v2
+                }
+            }
+
+            // 🔧 DEV-ONLY logging
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -43,6 +66,7 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
             Ok(())
         })
         .run(tauri::generate_context!())

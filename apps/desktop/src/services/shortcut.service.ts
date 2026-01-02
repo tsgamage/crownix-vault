@@ -5,6 +5,30 @@ class ShortcutService {
 
   constructor() {
     window.addEventListener("keydown", this.onKeyDown, true);
+
+    // Prevent Developer Tools
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i")) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true
+    );
+
+    // Prevent Right Click
+    window.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
+
+    // Prevent Zoom
+    window.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && ["r", "+", "-", "0"].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+    });
   }
 
   private onKeyDown = (e: KeyboardEvent) => {
