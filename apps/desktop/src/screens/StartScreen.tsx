@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRightIcon, EyeIcon, EyeOffIcon, FolderIcon, ImportIcon, AlertCircleIcon } from "lucide-react";
+import { ArrowRightIcon, EyeIcon, EyeOffIcon, FolderIcon, ImportIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFileStore } from "@/store/file.store";
@@ -8,17 +8,16 @@ import { InitialVault } from "@/data/initial-vault";
 import { invoke } from "@tauri-apps/api/core";
 import { Label } from "@/components/ui/label";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
-import { useDialog } from "@/context/DialogContext";
 import type {
   AutoLoadVaultResult,
   CreateVaultFileResult,
   PickExistingVaultFileResult,
   PickVaultFolderResult,
 } from "@/utils/types/backend.types";
+import { ask, confirm, message } from "@tauri-apps/plugin-dialog";
 
 export default function StartScreen() {
   const navigate = useNavigate();
-  const { openDialog, closeDialog } = useDialog();
 
   const vaultFile = useFileStore((state) => state.vaultFile);
   const setVaultFile = useFileStore((state) => state.setVaultFile);
@@ -27,7 +26,6 @@ export default function StartScreen() {
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [backupAvailable, setBackupAvailable] = useState(false);
   const [isCheckingAutoLoadVault, setIsCheckingAutoLoadVault] = useState(true);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
 
@@ -46,7 +44,6 @@ export default function StartScreen() {
         setVaultFilePath(response.path);
         setVaultFile(new Uint8Array(response.buffer));
       } else if (response.backup) {
-        setBackupAvailable(true);
         setShowRecoveryDialog(true);
       } else {
         await invoke("clear_vault_config");
@@ -56,38 +53,35 @@ export default function StartScreen() {
   }, []);
 
   useEffect(() => {
-    if (showRecoveryDialog && backupAvailable) {
-      openDialog({
-        title: "Original Vault File Missing",
-        description: "We couldn't find your original vault file, but we found a backup. Would you like to recover it?",
-        icon: AlertCircleIcon,
-        variant: "warning",
-        buttons: [
-          {
-            label: "Cancel",
-            variant: "ghost",
-            onClick: () => {
-              closeDialog();
-              setShowRecoveryDialog(false);
-            },
-          },
-          {
-            label: "Recover Backup",
-            variant: "default",
-            onClick: async () => {
-              setShowRecoveryDialog(false);
-              setBackupAvailable(false);
-              try {
-                await invoke("export_backup_vault");
-              } catch (error) {
-                alert("Error recovering backup file");
-              }
-            },
-          },
-        ],
+    async function showDialog() {
+      const response = await ask(
+        "We couldn't find your original vault file, but we found a backup. Would you like to recover it??",
+        { title: "Original Vault File Missing", kind: "warning" }
+      );
+
+      if (!response) {
+        message("Backup recovery cancelled", { title: "Backup Recovery", kind: "info" });
+        return;
+      }
+
+      const confirmation = await confirm("Please select a folder to save your backup file", {
+        title: "Backup Recovery",
+        kind: "info",
       });
+
+      if (confirmation) {
+        setShowRecoveryDialog(false);
+        try {
+          await invoke("export_backup_vault");
+        } catch (error) {
+          message("Error recovering backup file", { title: "Backup Recovery", kind: "error" });
+        }
+      } else {
+        message("Backup recovery cancelled", { title: "Backup Recovery", kind: "info" });
+      }
     }
-  }, [showRecoveryDialog, backupAvailable, openDialog, closeDialog]);
+    if (showRecoveryDialog) showDialog();
+  }, [showRecoveryDialog]);
 
   if (isCheckingAutoLoadVault) return null;
 
@@ -105,13 +99,19 @@ export default function StartScreen() {
     const response: PickVaultFolderResult = await invoke("pick_vault_folder");
 
     if (!response.success) {
-      return console.log("Folder selection failed");
+      return message("Folder selection failed", { title: "Folder Selection", kind: "error" });
     }
     if (response.found && !response.multiple) {
-      return alert("Vault file found in same location, please import it by selecting import below");
+      return message("Vault file found in same location, please import it by selecting import below", {
+        title: "Vault File Found",
+        kind: "info",
+      });
     }
     if (response.found && response.multiple) {
-      return alert("Multiple vault files found in same location, please import one by selecting import below");
+      return message("Multiple vault files found in same location, please import one by selecting import below", {
+        title: "Vault File Found",
+        kind: "info",
+      });
     }
 
     setVaultFilePath(response.file_path);
@@ -127,7 +127,9 @@ export default function StartScreen() {
       fileName: "CrownixVault.cxv",
       buffer: Array.from(newVaultBuffer),
     });
-    if (!response.success) return alert("Vault file creation failed");
+    if (!response.success) {
+      return message("Vault file creation failed", { title: "Vault File Creation", kind: "error" });
+    }
     navigate("/unlock", { replace: true });
   };
 

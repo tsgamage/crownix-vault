@@ -24,6 +24,9 @@ import ToolsPage from "@/components/vault/Tools/ToolsPage";
 import { SessionService } from "@/services/session.service";
 import { useIdleTimer } from "react-idle-timer";
 import { vaultConfig } from "@/utils/constraints";
+import { useBlurAutoLock } from "@/hooks/use-blur-auto-lock";
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+let permissionGranted = false;
 
 export default function VaultScreen() {
   const navigate = useNavigate();
@@ -91,19 +94,39 @@ export default function VaultScreen() {
   const isSecurityTabActive = activeTabId === "security";
   const isToolsTabActive = activeTabId === "tools";
 
-  const handleOnIdle = () => {
+  useEffect(() => {
+    async function permissionCheck() {
+      permissionGranted = await isPermissionGranted();
+      if (!permissionGranted) {
+        const permission = await requestPermission();
+        permissionGranted = permission === "granted";
+      }
+    }
+    permissionCheck();
+  }, []);
+
+  const handleAutoLock = () => {
     if (vaultConfig.autoLock.enabled) {
       setIsUnlocked(false);
       SessionService.lock();
+      if (permissionGranted) {
+        sendNotification({
+          title: "Vault Locked",
+          body: "Your vault has been locked due to inactivity",
+        });
+      }
     }
   };
 
   useIdleTimer({
     timeout: vaultConfig.autoLock.timeout,
-    onIdle: handleOnIdle,
+    onIdle: handleAutoLock,
     startOnMount: true,
     crossTab: true,
+    disabled: !isUnlocked || !vaultConfig.autoLock.enabled,
   });
+
+  useBlurAutoLock(isUnlocked, handleAutoLock);
 
   return (
     <div

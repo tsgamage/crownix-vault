@@ -8,6 +8,7 @@ use std::{
 
 use tauri::{command, AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_opener::OpenerExt;
 
 // =======================================================
 // Constants
@@ -59,6 +60,13 @@ pub struct AutoLoadResult {
     pub buffer: Option<Vec<u8>>,
     pub path: Option<String>,
     pub backup: Option<bool>,
+}
+
+#[derive(Serialize)]
+pub struct ExportBackupResult {
+    pub success: bool,
+    pub backup_path: Option<String>,
+    pub message: Option<String>,
 }
 
 // =======================================================
@@ -316,36 +324,40 @@ pub fn auto_load_vault(app: AppHandle) -> AutoLoadResult {
 }
 
 // =======================================================
-// 6️⃣ Export backup and DELETE it
+// 6️⃣ Export backup, open folder, return path
 // =======================================================
 
 #[command]
-pub fn export_backup_vault(app: AppHandle) -> SimpleResult {
+pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
     let Some(vault_path) = load_config(&app) else {
-        return SimpleResult {
+        return ExportBackupResult {
             success: false,
+            backup_path: None,
             message: Some("No vault config found".into()),
         };
     };
 
     let bak = backup_path(&vault_path);
     if !bak.exists() {
-        return SimpleResult {
+        return ExportBackupResult {
             success: false,
+            backup_path: None,
             message: Some("No backup file found".into()),
         };
     }
 
     let Some(folder) = app.dialog().file().blocking_pick_folder() else {
-        return SimpleResult {
+        return ExportBackupResult {
             success: false,
+            backup_path: None,
             message: Some("Export cancelled".into()),
         };
     };
 
     let Ok(folder_path) = folder.into_path() else {
-        return SimpleResult {
+        return ExportBackupResult {
             success: false,
+            backup_path: None,
             message: Some("Invalid folder".into()),
         };
     };
@@ -359,14 +371,23 @@ pub fn export_backup_vault(app: AppHandle) -> SimpleResult {
 
     match fs::copy(&bak, &export_path) {
         Ok(_) => {
+            // OPEN THE FOLDER
+            let _ = app
+                .opener()
+                .open_path(folder_path.to_string_lossy().to_string(), None::<String>);
+
+            // delete original .bak after successful export
             let _ = fs::remove_file(&bak);
-            SimpleResult {
+
+            ExportBackupResult {
                 success: true,
+                backup_path: Some(export_path.to_string_lossy().to_string()),
                 message: None,
             }
         }
-        Err(_) => SimpleResult {
+        Err(_) => ExportBackupResult {
             success: false,
+            backup_path: None,
             message: Some("Failed to export backup".into()),
         },
     }

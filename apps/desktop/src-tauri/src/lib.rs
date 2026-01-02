@@ -17,8 +17,12 @@ fn copy_to_clipboard_with_timeout(app: AppHandle, text: String, timeout_secs: u6
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             copy_to_clipboard_with_timeout,
             vault_fs::pick_vault_folder,

@@ -20,3 +20,13 @@ export type AutoLoadVaultResult =
       success: false;
       backup: boolean;
     };
+
+export type ExportBackupResult =
+  | {
+      success: true;
+      backup_path: string;
+    }
+  | {
+      success: false;
+      message: string;
+    };

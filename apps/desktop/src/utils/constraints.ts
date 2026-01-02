@@ -1,7 +1,7 @@
 const vaultConfig = {
   autoLock: {
     enabled: true,
-    timeout: 900000,
+    timeout: 300_000, // 5 minutes
   },
 };
 
