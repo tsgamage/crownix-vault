@@ -82,10 +82,10 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     setIsUnlocked(false);
   };
 
+  // Shortcuts
   useShortcut(isUnlocked, "l", () => {
     handleLockVault();
   });
-
   useShortcut(isUnlocked, "a", () => {
     setActiveTabId("all");
     setIsSettingsOpen(false);
@@ -117,15 +117,21 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
       setIsSettingsOpen(true);
     }
   });
+  useShortcut(isUnlocked, "n", () => {
+    if (activeTabId === "all" || activeTabId === "favorites") {
+      setIsPasswordCreateShown(true);
+    } else if (activeTabId === "organize") {
+      setIsPasswordCategoryCreateShown(true);
+    }
+  });
 
   return (
     <div className="h-full flex flex-col bg-background border-r border-border/50">
       {/* --- BRANDING / PROFILE --- */}
       <div className="p-4 mb-2" title={vaultSettings.vaultName}>
         <div className="flex items-center gap-3 p-2 rounded-xl bg-background border border-border/40 shadow-xs">
-          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Lock className="w-5 h-5 text-white" />
-          </div>
+          <img className="mx-auto w-10 h-10 rounded-lg object-cover" src="/app_icon.png" alt="App Icon" />
+
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold truncate">{vaultSettings.vaultName || "Crownix Vault"}</h1>
             <div className="flex items-center gap-1">

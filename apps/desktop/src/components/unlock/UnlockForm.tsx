@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Loader2, Eye, EyeOff, Lock } from "lucide-react";
+import { useSessionStore } from "@/store/session.store";
 
 interface UnlockFormProps {
   isError: boolean;
@@ -14,24 +15,27 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const passwordRef = useRef<HTMLInputElement>(null);
   const canSubmit = password.length > 0 && !loading;
+  const isUnlocked = useSessionStore((state) => state.isUnlocked);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-
     setLoading(true);
-    // Simulate async operation
+    // Prevent brute force attack
     setTimeout(() => {
       onUnlock(password);
       setLoading(false);
+      setTimeout(() => {
+        passwordRef.current?.focus();
+      }, 50);
     }, 1000);
   };
 
   return (
     <div className="w-full max-w-sm space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={isUnlocked ? undefined : handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="unlock-password" className="text-muted-foreground ml-1 mb-2 block">
             Master Password
@@ -41,6 +45,7 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
               <Lock className="h-4 w-4" />
             </div>
             <Input
+              ref={passwordRef}
               id="unlock-password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
@@ -50,10 +55,12 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
                 setIsError(false);
               }}
               onChange={(e) => {
+                setIsError(false);
                 setPassword(e.target.value);
               }}
               autoFocus
               aria-invalid={isError}
+              disabled={loading || isUnlocked}
             />
             <Button
               type="button"
@@ -72,9 +79,9 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
         <Button
           type="submit"
           className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-primary-foreground font-medium transition-colors"
-          disabled={!canSubmit}
+          disabled={!canSubmit || loading || isUnlocked}
         >
-          {loading ? (
+          {loading || isUnlocked ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <>

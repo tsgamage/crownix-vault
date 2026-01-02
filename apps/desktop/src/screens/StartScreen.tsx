@@ -100,16 +100,19 @@ export default function StartScreen() {
 
     if (!response.success) return;
     if (response.found && !response.multiple) {
-      return message("Vault file found in same location, please import it by selecting import below", {
-        title: "Vault File Found",
+      return message("Vault file found in same location, please import it by clicking 'Import Existing Vault' below", {
+        title: "Existing Vault File Found",
         kind: "info",
       });
     }
     if (response.found && response.multiple) {
-      return message("Multiple vault files found in same location, please import one by selecting import below", {
-        title: "Vault File Found",
-        kind: "info",
-      });
+      return message(
+        "Multiple vault files found in same location, please import one by clicking 'Import Existing Vault' below",
+        {
+          title: "Multiple Vault Files Found",
+          kind: "info",
+        }
+      );
     }
 
     setVaultFilePath(response.file_path);
@@ -139,14 +142,12 @@ export default function StartScreen() {
     >
       <main className="w-full max-w-md px-6 flex flex-col items-center gap-10">
         {/* Branding Section */}
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-4xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
-            C
-          </div>
+        <div className="text-center ">
+          <img className="mx-auto w-32 h-32 object-cover" src="/app_icon.png" alt="App Icon" />
 
           <div className="space-y-1.5">
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">Crownix Vault</h1>
-            <p className="text-base text-muted-foreground/80 font-normal">Your digital fortress.</p>
+            <p className="text-base text-muted-foreground/80 font-normal">Start managing your passwords securely.</p>
           </div>
         </div>
 
@@ -210,11 +211,11 @@ export default function StartScreen() {
 
           <div className="flex flex-col items-center gap-2">
             <Button
-              variant="outline"
+              variant="link"
               onClick={handleImportVault}
-              className="h-10 px-6 rounded-lg text-sm font-medium transition-all"
+              className="h-10 px-6 rounded-lg text-sm font-medium cursor-pointer transition-all"
             >
-              <ImportIcon className="mr-2 h-4 w-4" />
+              {/* <ImportIcon className="mr-2 h-4 w-4" /> */}
               Import Existing Vault
             </Button>
           </div>

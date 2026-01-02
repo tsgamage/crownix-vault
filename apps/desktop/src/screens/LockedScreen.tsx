@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useSessionStore } from "@/store/session.store";
-import { Lock } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -22,14 +21,12 @@ export default function LockedScreen() {
     >
       <main className="w-full max-w-md px-6 flex flex-col items-center gap-8 animate-in fade-in zoom-in-95 duration-500">
         <div className="flex flex-col items-center gap-4">
-          <div className="mx-auto w-28 h-28 rounded-4xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-4xl shadow-md ring-1 ring-black/5">
-            <Lock className="h-12 w-12" aria-hidden />
-          </div>
+          <img className="mx-auto w-52 h-52 object-cover" src="/app_icon.png" alt="App Icon" />
 
           <div className="space-y-1.5 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Vault Locked</h1>
             <p className="text-sm text-muted-foreground/80 font-normal">
-              Your vault was locked due to inactivity. Please unlock to continue.
+              Your vault was locked. Please unlock to continue.
             </p>
           </div>
         </div>

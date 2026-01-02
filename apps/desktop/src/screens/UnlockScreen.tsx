@@ -12,6 +12,8 @@ import type { IVault } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
 import { invoke } from "@tauri-apps/api/core";
 import type { LoadAppSettingsResult } from "@/utils/types/backend.types";
+import { Button } from "@/components/ui/button";
+import { ask } from "@tauri-apps/plugin-dialog";
 
 export default function UnlockScreen() {
   const navigate = useNavigate();
@@ -20,7 +22,9 @@ export default function UnlockScreen() {
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const vaultFile = useFileStore((state) => state.vaultFile);
+  const setVaultFile = useFileStore((state) => state.setVaultFile);
   const setVaultHeader = useFileStore((state) => state.setVaultHeader);
+  const setVaultFilePath = useFileStore((state) => state.setVaultFilePath);
   const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
 
@@ -63,18 +67,30 @@ export default function UnlockScreen() {
     }
   };
 
+  const handleChangeVaultFile = async () => {
+    const result = await ask("Are you sure you want to change the vault file?", {
+      title: "Change vault file",
+      kind: "warning",
+    });
+
+    if (result) {
+      await invoke("clear_vault_config");
+      setVaultFile(null);
+      setVaultFilePath(null);
+      navigate("/", { replace: true });
+    }
+  };
+
   return (
     <div
       onContextMenu={(e) => e.preventDefault()}
       draggable={false}
-      className="min-h-screen w-full flex flex-col items-center justify-center bg-background "
+      className="min-h-screen -mt-5 w-full flex flex-col items-center justify-center bg-background "
     >
       <main className="w-full max-w-md px-6 flex flex-col items-center gap-10 animate-in fade-in zoom-in-95 duration-500">
         {/* Branding Section */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-4xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-3xl shadow-md ring-1 ring-black/5">
-            C
-          </div>
+          <img className="mx-auto w-32 h-32 object-cover" src="/app_icon.png" alt="App Icon" />
 
           <div className="space-y-1.5">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Welcome Back</h1>
@@ -87,6 +103,16 @@ export default function UnlockScreen() {
           <UnlockForm onUnlock={handleUnlock} isError={isPasswordWrong} setIsError={setIsPasswordWrong} />
         </div>
       </main>
+      <div tabIndex={-1} className="absolute bottom-6 flex w-full max-w-md px-6 flex-col border-t border-border pt-5">
+        <Button
+          tabIndex={-1}
+          variant="link"
+          className="w-full cursor-pointer justify-center gap-2"
+          onClick={handleChangeVaultFile}
+        >
+          Change vault file
+        </Button>
+      </div>
     </div>
   );
 }

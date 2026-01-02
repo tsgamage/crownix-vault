@@ -136,6 +136,7 @@ export default function CreateAndEditCategory() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="text-lg font-medium"
+                autoFocus
               />
             </div>
 
@@ -161,6 +162,7 @@ export default function CreateAndEditCategory() {
               <div className="flex flex-wrap gap-3">
                 {COLORS.map((color) => (
                   <button
+                    tabIndex={-1}
                     key={color.name}
                     onClick={() => setFormData({ ...formData, color: color.class })}
                     className={cn(
@@ -168,7 +170,7 @@ export default function CreateAndEditCategory() {
                       color.class,
                       formData.color === color.class
                         ? "ring-2 ring-emerald-500 ring-offset-2 scale-110"
-                        : "hover:scale-105 opacity-80 hover:opacity-100",
+                        : "hover:scale-105 opacity-80 hover:opacity-100"
                     )}
                     title={color.name}
                   />
@@ -186,13 +188,14 @@ export default function CreateAndEditCategory() {
 
                   return (
                     <button
+                      tabIndex={-1}
                       key={iconName}
                       onClick={() => setFormData({ ...formData, icon: iconName })}
                       className={cn(
                         "w-10 h-10 rounded-lg flex items-center justify-center border transition-all",
                         isSelected
                           ? "bg-primary/10 border-primary text-primary"
-                          : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                          : "bg-muted/30 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
                       )}
                     >
                       {Icon && <Icon className="w-5 h-5" />}
@@ -209,7 +212,7 @@ export default function CreateAndEditCategory() {
                 <div
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0",
-                    formData.color,
+                    formData.color
                   )}
                 >
                   {IconComponent && <IconComponent className="w-5 h-5" />}

@@ -106,7 +106,7 @@ export function PasswordDetail({ backButton }: Props) {
           })();
       }
     },
-    [selectedPassword, clearSelectedId],
+    [selectedPassword, clearSelectedId]
   );
   useEffect(() => {
     window.addEventListener("keydown", handleEscapePress);
@@ -253,7 +253,7 @@ export function PasswordDetail({ backButton }: Props) {
             <div className="flex items-center gap-5 min-w-0 flex-1">
               {/* ICON */}
               <ContextMenu>
-                <ContextMenuTrigger>
+                <ContextMenuTrigger disabled={!isPasswordEditing}>
                   <PasswordIconPicker
                     icon={formData.icon}
                     isEditing={isPasswordEditing}
@@ -366,7 +366,7 @@ export function PasswordDetail({ backButton }: Props) {
                     className={cn(
                       "h-9 w-9",
                       formData.isFavorite &&
-                        "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500",
+                        "text-yellow-500 fill-yellow-500/20 hover:bg-yellow-500/10 hover:text-yellow-500"
                     )}
                   >
                     <Star className="w-4 h-4" />
@@ -423,7 +423,7 @@ export function PasswordDetail({ backButton }: Props) {
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "user" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10",
+                      copiedField === "user" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
                     )}
                     onClick={() => handleCopy(formData.username || "", "user")}
                   >
@@ -478,7 +478,7 @@ export function PasswordDetail({ backButton }: Props) {
                     size="icon"
                     className={cn(
                       "shrink-0 bg-background/50",
-                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10",
+                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
                     )}
                     onClick={() => handleCopy(formData.password || "", "pass")}
                   >
@@ -497,7 +497,7 @@ export function PasswordDetail({ backButton }: Props) {
                         passwordStrength <= 25 && "bg-destructive",
                         passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
                         passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
-                        passwordStrength > 75 && "bg-emerald-500",
+                        passwordStrength > 75 && "bg-emerald-500"
                       )}
                       style={{ width: `${passwordStrength}%` }}
                     />
