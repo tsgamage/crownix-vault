@@ -79,7 +79,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     setActiveTabId("all");
     setIsSettingsOpen(false);
   });
-  useShortcut(isUnlocked, "f", () => {
+  useShortcut(isUnlocked, "s", () => {
     setActiveTabId("favorites");
     setIsSettingsOpen(false);
   });
@@ -87,7 +87,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     setActiveTabId("organize");
     setIsSettingsOpen(false);
   });
-  useShortcut(isUnlocked, "s", () => {
+  useShortcut(isUnlocked, "e", () => {
     setActiveTabId("security");
     setIsSettingsOpen(false);
   });

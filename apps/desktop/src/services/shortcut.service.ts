@@ -15,7 +15,7 @@ class ShortcutService {
           e.stopPropagation();
         }
       },
-      true
+      true,
     );
 
     // Prevent Right Click
@@ -26,6 +26,12 @@ class ShortcutService {
     // Prevent Zoom
     window.addEventListener("keydown", (e) => {
       if (e.ctrlKey && ["r", "+", "-", "0"].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && ["j", "g"].includes(e.key.toLowerCase())) {
         e.preventDefault();
       }
     });

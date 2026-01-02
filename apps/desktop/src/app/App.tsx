@@ -14,6 +14,8 @@ function App() {
         "s", // save page
         "r", // reload
         "f", // find
+        "g",
+        "j",
       ];
 
       if (blockedKeys.includes(e.key.toLowerCase())) {
