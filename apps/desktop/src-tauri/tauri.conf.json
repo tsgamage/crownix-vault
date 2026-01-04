@@ -25,9 +25,16 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://raw.githubusercontent.com/tsgamage/crownix-vault-releases/main/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU0QkI1MzlDOEU5MzM4RUQKUldUdE9KT09uRk83NUlJVHhYK0EyOGlUcUY0OFllOEJxRkkxYUt5djNKaHdnOENoVE52aTNoSy8K"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "createUpdaterArtifacts": true
   }
 }
