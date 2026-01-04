@@ -31,7 +31,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setVaultFilePath: (vaultFilePath: string | null) => set({ vaultFilePath }),
 
   syncFile: async () => {
-    console.log("Syncing file");
+    console.log("Saving file");
     const vaultHeader = get().vaultHeader;
     if (!vaultHeader) return;
 

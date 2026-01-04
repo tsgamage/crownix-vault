@@ -13,8 +13,8 @@ import { useEffect } from "react";
 export default function Settings() {
   const { appSettings, setAppSettings, vaultSettings, setVaultSettings } = useSettingsStore();
   const { setTheme, theme } = useTheme();
-  const debouncedVaultName = useDebounce(vaultSettings.vaultName, 500);
-  const debouncedAppSettings = useDebounce(appSettings as any, 500);
+  const debouncedVaultName = useDebounce(vaultSettings.vaultName, 2000);
+  const debouncedAppSettings = useDebounce(appSettings as any, 2000);
 
   useEffect(() => {
     async function saveAppSettings() {

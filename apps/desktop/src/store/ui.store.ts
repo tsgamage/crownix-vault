@@ -121,10 +121,10 @@ export const useUiStore = create<IUiStore>((set, get) => ({
   setIsSettingsOpen: (isSettingsOpen: boolean) => set({ isSettingsOpen }),
 
   syncDB: () => {
-    console.log("Syncing DB");
+    useFileStore.getState().syncFile();
+    console.log("Syncing Changes");
     usePasswordStore.getState().refresh();
     usePasswordCategoryStore.getState().refresh();
-    useFileStore.getState().syncFile();
   },
 
   resetUi: () => {
