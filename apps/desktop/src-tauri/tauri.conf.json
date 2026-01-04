@@ -16,7 +16,7 @@
         "title": "Crownix Vault",
         "width": 1050,
         "height": 750,
-        "resizable": false,
+        "resizable": true,
         "fullscreen": false,
         "devtools": false
       }

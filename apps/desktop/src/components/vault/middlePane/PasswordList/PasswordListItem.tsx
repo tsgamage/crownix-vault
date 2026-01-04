@@ -81,7 +81,7 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
+      <ContextMenuTrigger asChild className="relative">
         <div
           className={cn(
             "group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border border-transparent",
@@ -115,15 +115,15 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
           </div>
 
           {/* Text Info */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1 justify-center">
-            <h3 className="font-medium text-sm truncate">{item.title}</h3>
-            <p className="text-xs text-muted-foreground truncate flex items-center opacity-80">
+          <div className="flex-1 min-w-0 flex flex-col gap-1 justify-center ">
+            <h3 className="font-medium text-sm truncate max-w-[200px]">{item.title}</h3>
+            <p className="text-xs text-muted-foreground opacity-80 truncate max-w-[200px]">
               {item.username || "No username"}
             </p>
             {itemCategoryName && (
               <Badge
                 variant="secondary"
-                className={cn("h-4 opacity-80 text-xs truncate flex items-center", categoryColor)}
+                className={cn("h-4 opacity-80 text-xs truncate flex items-center max-w-[150px] ", categoryColor)}
               >
                 {itemCategoryName}
               </Badge>
@@ -132,7 +132,7 @@ export function PasswordListItem({ item, onCopy, categoryColor }: PasswordListIt
 
           {/* Quick Copy */}
           {activeTabId !== "trash" && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
+            <div className="absolute flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity right-2 bg-background/80 backdrop-blur-sm p-1 rounded-md shadow-sm border border-border/40">
               {item.username && (
                 <Button
                   variant="ghost"

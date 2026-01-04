@@ -105,7 +105,7 @@ export default function TrashListItem({ item, type }: TrashListItemProps) {
           </div>
 
           {/* Text Info */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1 justify-center">
+          <div className="flex-1 min-w-0 flex flex-col gap-1 justify-center max-w-[200px]">
             <h3 className="font-medium text-sm truncate">{title}</h3>
             <p className="text-xs text-muted-foreground truncate opacity-80">{subtitle}</p>
           </div>

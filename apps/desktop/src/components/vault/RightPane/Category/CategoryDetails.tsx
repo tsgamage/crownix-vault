@@ -49,7 +49,7 @@ export default function CategoryDetails() {
         category && !isPasswordDetailsShown && clearSelectedCategoryId();
       }
     },
-    [category, clearSelectedCategoryId, isPasswordDetailsShown],
+    [category, clearSelectedCategoryId, isPasswordDetailsShown]
   );
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function CategoryDetails() {
               <div className="flex items-start gap-4">
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border-2 border-border",
+                    "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border-2 border-border"
                   )}
                 >
                   <Icon className={cn("w-7 h-7")} />
@@ -124,7 +124,7 @@ export default function CategoryDetails() {
                   <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-[260px]" title={category.name}>
                     {category.name}
                   </h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed max-w-md line-clamp-2">
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-[260px] truncate line-clamp-2">
                     {category.description || "No description provided."}
                   </p>
                   <div className="flex items-center gap-3 pt-2 text-xs text-muted-foreground/60">

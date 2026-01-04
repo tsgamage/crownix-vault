@@ -45,7 +45,7 @@ export function TagManager({ tags = [], isEditing, onSave }: TagManagerProps) {
             onChange={(e) => handleTextChange(e.target.value)}
             onBlur={handleOnBlur}
             placeholder="work, social, finance (comma separated)"
-            className="min-h-[60px] resize-none text-sm"
+            className="min-h-[60px] max-w-md resize-none text-sm"
           />
           <p className="text-[10px] text-muted-foreground">
             Separate tags with commas

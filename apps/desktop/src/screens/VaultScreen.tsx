@@ -106,6 +106,7 @@ export default function VaultScreen() {
   }, []);
 
   const handleAutoLock = () => {
+    syncDB();
     if (vaultConfig.autoLock.enabled) {
       setIsUnlocked(false);
       SessionService.lock();

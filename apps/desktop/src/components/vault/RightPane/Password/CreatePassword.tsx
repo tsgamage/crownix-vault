@@ -25,6 +25,9 @@ import { usePasswordCategoryStore } from "@/store/vault/passwordCategory.store";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
+import { passwordSchema } from "@/zod/password-schema";
+import { toast } from "sonner";
+
 export function CreatePassword() {
   const createPassword = usePasswordStore((state) => state.createPasswordItem);
   const setSelectedPasswordId = usePasswordStore((state) => state.setSelectedPasswordId);
@@ -89,6 +92,13 @@ export function CreatePassword() {
       isDeleted: false,
     };
 
+    const result = passwordSchema.safeParse(newItem);
+
+    if (!result.success) {
+      result.error.issues.forEach((error) => toast.error(error.message));
+      return;
+    }
+
     createPassword(newItem);
     setSelectedPasswordId(newItemId);
     handleCancelClick();
@@ -133,7 +143,7 @@ export function CreatePassword() {
         }
       }
     },
-    [handleCancelClick, formData, openDialog, closeDialog],
+    [handleCancelClick, formData, openDialog, closeDialog]
   );
 
   useEffect(() => {
@@ -329,7 +339,7 @@ export function CreatePassword() {
                       passwordStrength <= 25 && "bg-destructive",
                       passwordStrength > 25 && passwordStrength <= 50 && "bg-orange-500",
                       passwordStrength > 50 && passwordStrength <= 75 && "bg-yellow-500",
-                      passwordStrength > 75 && "bg-emerald-500",
+                      passwordStrength > 75 && "bg-emerald-500"
                     )}
                     style={{ width: `${passwordStrength}%` }}
                   />

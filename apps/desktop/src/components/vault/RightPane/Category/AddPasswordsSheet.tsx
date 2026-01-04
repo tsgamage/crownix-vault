@@ -96,7 +96,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
         <div className="p-6 border-b border-border/40 space-y-4">
           <SheetHeader>
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl">Add to {targetCategory.name}</SheetTitle>
+              <SheetTitle className="text-xl truncate">Add to {targetCategory.name}</SheetTitle>
               {count > 0 && <span className="text-sm font-medium text-emerald-500">{count} selected</span>}
             </div>
             <SheetDescription>Select passwords to move to this category.</SheetDescription>
@@ -122,7 +122,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border border-transparent transition-all cursor-pointer group",
                       selectedIds.has(item.id) ? "bg-emerald-500/10 border-emerald-500/20" : "hover:bg-muted/50",
-                      isCurrentCategory && "opacity-50 pointer-events-none",
+                      isCurrentCategory && "opacity-50 pointer-events-none"
                     )}
                     onClick={() => !isCurrentCategory && toggleSelection(item.id)}
                   >
@@ -131,7 +131,7 @@ export function AddPasswordsSheet({ isOpen, onOpenChange, targetCategory }: AddP
                       disabled={isCurrentCategory}
                       className={cn(
                         "data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600",
-                        isCurrentCategory && "opacity-50",
+                        isCurrentCategory && "opacity-50"
                       )}
                     />
 

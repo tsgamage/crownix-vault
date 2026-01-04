@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useDialog } from "@/context/DialogContext";
 import { Trash2Icon, RotateCcw, Trash2, Folder, KeyRoundIcon } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -88,36 +89,43 @@ export default function TrashDetails() {
   const IconComponent = selectedType === "password" ? KeyRoundIcon : getIcon((item as any).icon);
 
   return (
-    <div className="h-full flex flex-col bg-background backdrop-blur-sm">
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-24 h-24 rounded-3xl bg-muted/50 flex items-center justify-center mb-6 border-2 border-border/50 shadow-sm">
-          <IconComponent className="w-10 h-10 text-muted-foreground/60" />
-        </div>
-
-        <h2 className="text-2xl font-bold tracking-tight mb-2 truncate w-full max-w-md px-6" title={title}>
-          {title}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-8">This item is in the trash.</p>
-
-        {description && (
-          <div className="w-full max-w-md bg-muted/30 border border-border/40 rounded-2xl p-6 mb-8 text-left space-y-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-              {selectedType === "password" ? "Notes" : "Description"}
-            </span>
-            <p className="text-sm text-muted-foreground/90 leading-relaxed whitespace-pre-wrap">{description}</p>
+    <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in">
+      <ScrollArea className="flex-1 w-full min-h-0">
+        <div className="flex flex-col items-center justify-center p-8 text-center min-h-full">
+          <div className="w-24 h-24 rounded-3xl bg-muted/50 flex items-center justify-center mb-6 border-2 border-border/50 shadow-sm shrink-0">
+            <IconComponent className="w-10 h-10 text-muted-foreground/60" />
           </div>
-        )}
 
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Button variant="outline" className="w-full h-11 shadow-sm transition-all" onClick={handleRestore}>
-            <RotateCcw className="w-4 h-4 mr-2" /> Restore Item
+          <h2 className="text-2xl font-bold tracking-tight mb-2 w-full max-w-md px-6 break-all" title={title}>
+            {title}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-8">This item is in the trash.</p>
+
+          {description && (
+            <div className="w-full max-w-md bg-muted/30 border border-border/40 rounded-2xl p-6 mb-8 text-left space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                {selectedType === "password" ? "Notes" : "Description"}
+              </span>
+              <p className="text-sm text-muted-foreground/90 leading-relaxed whitespace-pre-wrap break-all">
+                {description}
+              </p>
+            </div>
+          )}
+        </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
+
+      <div className="p-6 border-t border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="flex flex-row gap-3 w-full max-w-md mx-auto">
+          <Button variant="outline" className="flex-1 h-11 shadow-sm transition-all" onClick={handleRestore}>
+            <RotateCcw className="w-4 h-4 mr-2" /> Restore
           </Button>
           <Button
             variant="outline"
-            className="w-full h-11 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-all"
+            className="flex-1 h-11 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-all"
             onClick={handleDeletePermanently}
           >
-            <Trash2 className="w-4 h-4 mr-2" /> Delete Permanently
+            <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
         </div>
       </div>

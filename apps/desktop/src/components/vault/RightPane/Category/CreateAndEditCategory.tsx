@@ -11,6 +11,8 @@ import { usePasswordStore } from "@/store/vault/password.store";
 import { useUiStore } from "@/store/ui.store";
 import type { IPasswordCategory } from "@/utils/types/vault";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { passwordCategorySchema } from "@/zod/password-category-schema";
+import { toast } from "sonner";
 
 const COLORS = [
   { name: "Green", class: "bg-green-900" },
@@ -82,17 +84,39 @@ export default function CreateAndEditCategory() {
 
   const handleCreateCategory = () => {
     if (isEditing && editingData) {
-      updatePasswordCategory({
+      const data = {
         ...formData,
         id: editingData.id,
         isDeleted: false,
         createdAt: editingData.createdAt,
         updatedAt: Date.now(),
-      });
+      };
+      const result = passwordCategorySchema.safeParse(data);
+
+      if (!result.success) {
+        result.error.issues.forEach((error) => toast.error(error.message));
+        return;
+      }
+
+      updatePasswordCategory(data);
       hanleCancelCreateOrEditCategory();
     } else {
       const id = crypto.randomUUID();
-      createPasswordCategory({ ...formData, id, createdAt: Date.now(), updatedAt: Date.now(), isDeleted: false });
+      const data = {
+        ...formData,
+        id,
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      const result = passwordCategorySchema.safeParse(data);
+
+      if (!result.success) {
+        result.error.issues.forEach((error) => toast.error(error.message));
+        return;
+      }
+
+      createPasswordCategory(data);
       hanleCancelCreateOrEditCategory();
     }
   };
@@ -147,7 +171,7 @@ export default function CreateAndEditCategory() {
                 placeholder="What is this category for?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="resize-none min-h-25"
+                className="resize-none min-h-25 max-w-md"
               />
             </div>
           </div>
@@ -208,7 +232,7 @@ export default function CreateAndEditCategory() {
             {/* Preview */}
             <div className="pt-4 border-t border-border/40">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider block mb-3">Preview</Label>
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 max-w-xs">
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background/50 max-w-md">
                 <div
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0",
@@ -218,8 +242,10 @@ export default function CreateAndEditCategory() {
                   {IconComponent && <IconComponent className="w-5 h-5" />}
                 </div>
                 <div>
-                  <div className="font-medium">{formData.name || "Category Name"}</div>
-                  <div className="text-xs text-muted-foreground">{formData.description || "Description"}</div>
+                  <div className="font-medium max-w-[260px] truncate">{formData.name || "Category Name"}</div>
+                  <div className="text-xs text-muted-foreground max-w-[260px] truncate">
+                    {formData.description || "Description"}
+                  </div>
                 </div>
               </div>
             </div>

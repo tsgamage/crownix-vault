@@ -53,6 +53,8 @@ import { Badge } from "@/components/ui/badge";
 import type { IPasswordItem } from "@/utils/types/vault";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { passwordSchema } from "@/zod/password-schema";
+import { toast } from "sonner";
 
 interface Props {
   backButton?: {
@@ -122,6 +124,13 @@ export function PasswordDetail({ backButton }: Props) {
   };
 
   const handleSave = () => {
+    const result = passwordSchema.safeParse(formData);
+
+    if (!result.success) {
+      result.error.issues.forEach((error) => toast.error(error.message));
+      return;
+    }
+
     if (formData) {
       updatePasswordItem({ ...formData, updatedAt: Date.now() });
       setIsPasswordEditing(false);
@@ -557,13 +566,17 @@ export function PasswordDetail({ backButton }: Props) {
               {isPasswordEditing ? (
                 <Textarea
                   placeholder="Add secure notes here..."
-                  className="min-h-30 resize-none text-sm bg-background"
+                  className="min-h-30 max-w-md resize-none text-sm bg-background"
                   value={formData.notes || ""}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               ) : (
-                <div className="text-sm text-foreground/80 py-3 px-4 rounded-md bg-muted/20 border border-border/30 min-h-25 whitespace-pre-wrap leading-relaxed">
-                  {formData.notes || <span className="text-muted-foreground italic">No notes added</span>}
+                <div className="text-sm text-foreground/80 max-w-md break-all whitespace-pre-wrap py-3 px-4 rounded-md bg-muted/20 border border-border/30 min-h-25 leading-relaxed">
+                  {formData.notes ? (
+                    <p className="text-muted-foreground italic">{formData.notes}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">No notes added</p>
+                  )}
                 </div>
               )}
             </div>

@@ -21,7 +21,9 @@ export default function CategoryListItem({
   const passwords = usePasswordStore((state) => state.passwordItems);
 
   const Icon = getIcon(category.icon);
-  const categoryItemsCount = passwords.filter((password) => password.categoryId === category.id && !password.isDeleted).length;
+  const categoryItemsCount = passwords.filter(
+    (password) => password.categoryId === category.id && !password.isDeleted
+  ).length;
   const updateCategory = usePasswordCategoryStore((state) => state.updatePasswordCategory);
   const clearSelectedCategoryId = usePasswordCategoryStore((state) => state.clearSelectedCategoryId);
 
@@ -51,7 +53,7 @@ export default function CategoryListItem({
             <Icon className="w-5 h-5" />
           </div>
 
-          <div className="flex-1 min-w-0 relative">
+          <div className="flex-1 min-w-0 relative max-w-[200px]">
             <div className="flex items-center justify-between mb-0.5">
               <span className={cn("font-medium truncate", isSelected ? "text-foreground" : "text-foreground/90")}>
                 {category.name}
