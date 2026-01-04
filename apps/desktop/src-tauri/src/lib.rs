@@ -7,6 +7,7 @@ mod vault_fs;
 pub fn run() {
     tauri::Builder::default()
         // Plugins
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
