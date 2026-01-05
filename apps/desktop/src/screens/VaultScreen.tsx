@@ -26,15 +26,19 @@ import { useIdleTimer } from "react-idle-timer";
 import { vaultConfig } from "@/utils/constraints";
 import { useBlurAutoLock } from "@/hooks/use-blur-auto-lock";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { useFileStore } from "@/store/file.store";
+import useRegisterAllShortcuts from "@/hooks/use-register-all-shortcuts";
 let permissionGranted = false;
 
 export default function VaultScreen() {
+  useRegisterAllShortcuts();
   const navigate = useNavigate();
 
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const activeTabId = useUiStore((state) => state.activeTabId);
 
   const syncDB = useUiStore((state) => state.syncDB);
+  const saveFile = useFileStore((state) => state.saveFile);
   const resetUi = useUiStore((state) => state.resetUi);
 
   const selectedPasswordId = usePasswordStore((state) => state.selectedPasswordId);
@@ -106,7 +110,7 @@ export default function VaultScreen() {
   }, []);
 
   const handleAutoLock = () => {
-    syncDB();
+    saveFile();
     if (vaultConfig.autoLock.enabled) {
       setIsUnlocked(false);
       SessionService.lock();

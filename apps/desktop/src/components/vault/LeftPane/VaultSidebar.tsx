@@ -10,7 +10,6 @@ import { useSettingsStore } from "@/store/vault/settings.store";
 import { SessionService } from "@/services/session.service";
 import { useSessionStore } from "@/store/session.store";
 import { appConfig } from "@/utils/constraints";
-import { useShortcut } from "@/hooks/use-shortcuts";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
@@ -24,22 +23,16 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const activeTabId = useUiStore((state) => state.activeTabId);
   const setActiveTabId = useUiStore((state) => state.setActiveTabId);
 
-  const isSettingsOpen = useUiStore((state) => state.isSettingsOpen);
   const setIsSettingsOpen = useUiStore((state) => state.setIsSettingsOpen);
 
   const setIsPasswordCreateShown = useUiStore((state) => state.setIsPasswordCreateShown);
   const setIsPasswordCategoryCreateShown = useUiStore((state) => state.setIsPasswordCategoryCreateShown);
 
-  const passwords = usePasswordStore((state) => state.passwordItems);
-  const passwordCategories = usePasswordCategoryStore((state) => state.passwordCategories);
-
-  const totalPasswords = passwords.filter((p) => !p.isDeleted).length;
-  const totalFavorites = passwords.filter((p) => p.isFavorite && !p.isDeleted).length;
-  const totalPasswordCategories = passwordCategories.filter((p) => !p.isDeleted).length;
+  const totalPasswords = usePasswordStore((state) => state.totalPasswords);
+  const totalFavorites = usePasswordStore((state) => state.totalFavorites);
+  const totalPasswordCategories = usePasswordCategoryStore((state) => state.totalPasswordCategories);
 
   const vaultSettings = useSettingsStore((state) => state.vaultSettings);
-
-  const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
 
   const mainNav = [
@@ -70,49 +63,6 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
     SessionService.lock();
     setIsUnlocked(false);
   };
-
-  // Shortcuts
-  useShortcut(isUnlocked, "l", () => {
-    handleLockVault();
-  });
-  useShortcut(isUnlocked, "a", () => {
-    setActiveTabId("all");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, "s", () => {
-    setActiveTabId("favorites");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, "d", () => {
-    setActiveTabId("organize");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, "e", () => {
-    setActiveTabId("security");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, "t", () => {
-    setActiveTabId("trash");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, "q", () => {
-    setActiveTabId("tools");
-    setIsSettingsOpen(false);
-  });
-  useShortcut(isUnlocked, ",", () => {
-    if (isSettingsOpen) {
-      setIsSettingsOpen(false);
-    } else {
-      setIsSettingsOpen(true);
-    }
-  });
-  useShortcut(isUnlocked, "n", () => {
-    if (activeTabId === "all" || activeTabId === "favorites") {
-      setIsPasswordCreateShown(true);
-    } else if (activeTabId === "organize") {
-      setIsPasswordCategoryCreateShown(true);
-    }
-  });
 
   return (
     <div className="h-full flex flex-col bg-background border-r border-border/50">

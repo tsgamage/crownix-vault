@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { usePasswordStore } from "./vault/password.store";
 import { usePasswordCategoryStore } from "./vault/passwordCategory.store";
 import type { IPasswordCategory, IPasswordItem } from "@/utils/types/vault";
-import { useFileStore } from "./file.store";
 
 type TabId = "all" | "favorites" | "trash" | "organize" | "security" | "tools" | `cat-${string}`;
 
@@ -60,6 +59,7 @@ export interface IUiStore {
 
   activeTabId: TabId;
   setActiveTabId: (activeTabId: TabId) => void;
+
   syncDB: () => void;
   resetUi: () => void;
 }
@@ -121,7 +121,6 @@ export const useUiStore = create<IUiStore>((set, get) => ({
   setIsSettingsOpen: (isSettingsOpen: boolean) => set({ isSettingsOpen }),
 
   syncDB: () => {
-    useFileStore.getState().syncFile();
     console.log("Syncing Changes");
     usePasswordStore.getState().refresh();
     usePasswordCategoryStore.getState().refresh();

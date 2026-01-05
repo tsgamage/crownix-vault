@@ -65,7 +65,11 @@ function App() {
         console.error("Failed to check for updates:", error);
       }
     }
-    checkForUpdates();
+    try {
+      checkForUpdates();
+    } catch (err) {
+      console.log("Update check failed");
+    }
   }, []);
 
   return (

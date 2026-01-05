@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { useSettingsStore } from "./vault/settings.store";
 import { SessionService } from "@/services/session.service";
 import { invoke } from "@tauri-apps/api/core";
+import { useUiStore } from "./ui.store";
 
 interface FileStore {
   vaultFile: Uint8Array | null;
@@ -17,7 +18,9 @@ interface FileStore {
   vaultFilePath: string | null;
   setVaultFilePath: (vaultFilePath: string | null) => void;
 
-  syncFile: () => void;
+  saveFile: () => void;
+  isSavingFile: boolean;
+  isSaved: boolean;
 }
 
 export const useFileStore = create<FileStore>((set, get) => ({
@@ -30,8 +33,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
   vaultFilePath: null,
   setVaultFilePath: (vaultFilePath: string | null) => set({ vaultFilePath }),
 
-  syncFile: async () => {
+  isSavingFile: false,
+  isSaved: false,
+  saveFile: async () => {
     console.log("Saving file");
+    set({ isSavingFile: true });
     const vaultHeader = get().vaultHeader;
     if (!vaultHeader) return;
 
@@ -53,5 +59,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
       vaultPath: vaultFilePath,
       buffer: Array.from(vaultFile),
     });
+    useUiStore.getState().syncDB();
+    set({ isSavingFile: false });
+    set({ isSaved: true });
+    setTimeout(() => {
+      set({ isSaved: false });
+    }, 2000);
   },
 }));
