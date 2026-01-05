@@ -1,10 +1,12 @@
-import { boolean, string, z } from "zod";
+import { boolean, string, url, z } from "zod";
 
 export const passwordCustomFieldSchema = z.object({
   id: string(),
-  label: string(),
+  label: string()
+    .min(1, "Label is required for custom field")
+    .max(30, "Label must be at most 30 characters long for custom field"),
   type: z.enum(["text", "hidden", "url", "phone", "email"]),
-  value: string(),
+  value: string().min(1, "Value is required for custom field"),
 });
 
 export const passwordSchema = z.object({
@@ -14,7 +16,7 @@ export const passwordSchema = z.object({
   password: string(),
   isDeleted: boolean(),
 
-  urls: z.array(string()).optional(),
+  urls: z.array(url()).optional(),
   icon: string().optional(),
   notes: string().optional(),
   fields: z.array(passwordCustomFieldSchema).optional(),

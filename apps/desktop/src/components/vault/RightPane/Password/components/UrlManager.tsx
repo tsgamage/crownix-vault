@@ -84,7 +84,8 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-500 hover:underline truncate flex items-center gap-1"
+                    title={url}
+                    className="text-sm text-blue-500 hover:underline truncate flex items-center gap-1 max-w-sm"
                   >
                     {url}
                     <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
