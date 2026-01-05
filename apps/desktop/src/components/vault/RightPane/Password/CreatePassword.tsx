@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Eye, EyeOff, Save, ChevronLeft, RotateCcw } from "lucide-react";
+import { RefreshCw, Eye, EyeOff, Save, ChevronLeft, RotateCcw, CheckIcon, CopyIcon } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { passwordSchema } from "@/zod/password-schema";
 import { toast } from "sonner";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 export function CreatePassword() {
   const createPassword = usePasswordStore((state) => state.createPasswordItem);
@@ -55,6 +56,7 @@ export function CreatePassword() {
   const [length, setLength] = useState(16);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPasswordCopied, setIsPasswordCopied] = useState(false);
 
   const isFormEmpty = (formData: Partial<IPasswordItem>) => {
     if (formData.title || formData.username || formData.password || formData.notes) {
@@ -106,6 +108,7 @@ export function CreatePassword() {
 
   const handleGeneratePassword = async () => {
     setIsGenerating(true);
+    setIsPasswordCopied(false);
     try {
       const password = await generateExcellentPasswordWithCharCount(length);
       setFormData((prev) => ({ ...prev, password }));
@@ -152,6 +155,12 @@ export function CreatePassword() {
       window.removeEventListener("keydown", handleEscapePress);
     };
   }, [handleEscapePress]);
+
+  const handleCopy = async (text: string) => {
+    await writeText(text);
+    setIsPasswordCopied(true);
+    setTimeout(() => setIsPasswordCopied(false), 2000);
+  };
 
   return (
     <div className="h-full flex flex-col bg-background/50 backdrop-blur-sm animate-in">
@@ -327,6 +336,17 @@ export function CreatePassword() {
                   title="Regenerate"
                 >
                   <RefreshCw className={cn("w-4 h-4", isGenerating && "animate-spin")} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "shrink-0 bg-background/50",
+                    isPasswordCopied && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                  )}
+                  onClick={() => handleCopy(formData.password || "")}
+                >
+                  {isPasswordCopied ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
                 </Button>
               </div>
 

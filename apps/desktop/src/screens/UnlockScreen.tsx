@@ -57,7 +57,6 @@ export default function UnlockScreen() {
       setVaultHeader(decryptedVaultFile.header);
       setIsUnlocked(true);
     } catch (err) {
-      console.log(err);
       setIsPasswordWrong(true);
     }
 

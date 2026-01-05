@@ -478,19 +478,17 @@ export function PasswordDetail({ backButton }: Props) {
                   </Button>
                 )}
 
-                {!isPasswordEditing && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                      "shrink-0 bg-background/50",
-                      copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
-                    )}
-                    onClick={() => handleCopy(formData.password || "", "pass")}
-                  >
-                    {copiedField === "pass" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "shrink-0 bg-background/50",
+                    copiedField === "pass" && "text-emerald-600 border-emerald-500/50 bg-emerald-500/10"
+                  )}
+                  onClick={() => handleCopy(formData.password || "", "pass")}
+                >
+                  {copiedField === "pass" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
               </div>
 
               {/* Strength Meter */}
