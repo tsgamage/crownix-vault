@@ -1,4 +1,5 @@
 import initSqlJs, { type Database } from "sql.js";
+import wasmUrl from "@/assets/db/sql-wasm.wasm?url";
 
 export class DatabaseService {
   private static db: Database | null = null;
@@ -7,7 +8,7 @@ export class DatabaseService {
     if (this.db) return this.db;
 
     const SQL = await initSqlJs({
-      locateFile: (f) => `https://sql.js.org/dist/${f}`,
+      locateFile: () => wasmUrl,
     });
 
     this.db = new SQL.Database(); // :memory:
