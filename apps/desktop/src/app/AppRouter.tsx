@@ -4,14 +4,21 @@ import UnlockScreen from "@/screens/UnlockScreen";
 import VaultScreen from "@/screens/VaultScreen";
 import LockedScreen from "@/screens/LockedScreen";
 
+export const AppRoutes = {
+  unlock: "/unlock",
+  setup: "/setup",
+  vault: "/vault",
+  locked: "/locked",
+};
+
 export function AppRouter() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<StartScreen />} />
-        <Route path="/unlock" element={<UnlockScreen />} />
-        <Route path="/vault" element={<VaultScreen />} />
-        <Route path="/locked" element={<LockedScreen />} />
+        <Route path={AppRoutes.unlock} element={<UnlockScreen />} />
+        <Route path={AppRoutes.setup} element={<StartScreen />} />
+        <Route path={AppRoutes.vault} element={<VaultScreen />} />
+        <Route path={AppRoutes.locked} element={<LockedScreen />} />
         <Route path="*" element={<UnlockScreen />} />
       </Routes>
     </HashRouter>

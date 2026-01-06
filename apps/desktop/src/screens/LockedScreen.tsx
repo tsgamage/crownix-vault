@@ -1,3 +1,4 @@
+import { AppRoutes } from "@/app/AppRouter";
 import { Button } from "@/components/ui/button";
 import { useSessionStore } from "@/store/session.store";
 import { useEffect } from "react";
@@ -9,7 +10,7 @@ export default function LockedScreen() {
 
   useEffect(() => {
     if (isUnlocked) {
-      navigate("/vault", { replace: true });
+      navigate(AppRoutes.vault, { replace: true });
     }
   }, [isUnlocked]);
 
@@ -35,7 +36,7 @@ export default function LockedScreen() {
           <Button
             type="button"
             className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-primary-foreground font-medium transition-colors"
-            onClick={() => navigate("/unlock")}
+            onClick={() => navigate(AppRoutes.unlock, { replace: true })}
             aria-label="Navigate to unlock page"
           >
             Unlock Vault

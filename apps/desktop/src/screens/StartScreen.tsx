@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, EyeIcon, EyeOffIcon, FolderIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useFileStore } from "@/store/file.store";
 import { VaultFileService } from "@/services/vaultFile.service";
 import { InitialVault } from "@/data/initial-vault";
@@ -9,15 +9,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { Label } from "@/components/ui/label";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import type {
-  AutoLoadVaultResult,
   CreateVaultFileResult,
+  ExportBackupResult,
   PickExistingVaultFileResult,
   PickVaultFolderResult,
 } from "@/utils/types/backend.types";
 import { ask, confirm, message } from "@tauri-apps/plugin-dialog";
+import { AppRoutes } from "@/app/AppRouter";
 
 export default function StartScreen() {
   const navigate = useNavigate();
+  const isBackup = useLocation().state?.isBackup;
 
   const vaultFile = useFileStore((state) => state.vaultFile);
   const setVaultFile = useFileStore((state) => state.setVaultFile);
@@ -26,64 +28,26 @@ export default function StartScreen() {
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isCheckingAutoLoadVault, setIsCheckingAutoLoadVault] = useState(true);
-  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [showBackupDialog, setShowBackupDialog] = useState(isBackup);
 
   useEffect(() => {
     if (vaultFile) {
-      navigate("/unlock", { replace: true });
+      navigate(AppRoutes.unlock, { replace: true });
     }
   }, [vaultFile]);
 
-  useEffect(() => {
-    const autoLoadVault = async () => {
-      setIsCheckingAutoLoadVault(true);
-      const response: AutoLoadVaultResult = await invoke("auto_load_vault");
-      setIsCheckingAutoLoadVault(false);
-      if (response.success) {
-        setVaultFilePath(response.path);
-        setVaultFile(new Uint8Array(response.buffer));
-      } else if (response.backup) {
-        setShowRecoveryDialog(true);
-      } else {
-        await invoke("clear_vault_config");
-      }
-    };
-    autoLoadVault();
-  }, []);
-
-  useEffect(() => {
+  if (showBackupDialog) {
     async function showDialog() {
       const response = await ask(
         "We couldn't find your original vault file, but we found a backup. Would you like to recover it??",
         { title: "Original Vault File Missing", kind: "warning" }
       );
-
-      if (!response) {
-        message("Backup recovery cancelled", { title: "Backup Recovery", kind: "info" });
-        return;
-      }
-
-      const confirmation = await confirm("Please select a folder to save your backup file", {
-        title: "Backup Recovery",
-        kind: "info",
-      });
-
-      if (confirmation) {
-        setShowRecoveryDialog(false);
-        try {
-          await invoke("export_backup_vault");
-        } catch (error) {
-          message("Error recovering backup file", { title: "Backup Recovery", kind: "error" });
-        }
-      } else {
-        message("Backup recovery cancelled", { title: "Backup Recovery", kind: "info" });
+      if (response) {
+        handleExportBackup();
       }
     }
-    if (showRecoveryDialog) showDialog();
-  }, [showRecoveryDialog]);
-
-  if (isCheckingAutoLoadVault) return null;
+    showDialog();
+  }
 
   const handleImportVault = async () => {
     const response: PickExistingVaultFileResult = await invoke("pick_existing_vault_file");
@@ -91,7 +55,7 @@ export default function StartScreen() {
     if (!response.buffer) return console.log("Vault file not found");
     setVaultFilePath(response.path);
     setVaultFile(new Uint8Array(response.buffer));
-    navigate("/unlock", { replace: true });
+    navigate(AppRoutes.unlock, { replace: true });
   };
 
   const handleSelectFolder = async () => {
@@ -131,7 +95,30 @@ export default function StartScreen() {
     if (!response.success) {
       return message("Vault file creation failed", { title: "Vault File Creation", kind: "error" });
     }
-    navigate("/unlock", { replace: true });
+    navigate(AppRoutes.unlock, { replace: true });
+  };
+
+  const handleExportBackup = async () => {
+    const confirmation = await confirm("Please select a folder to save your backup file", {
+      title: "Save Backup File",
+      kind: "info",
+    });
+
+    if (confirmation) {
+      try {
+        const response: ExportBackupResult = await invoke("export_backup_vault");
+        if (response.success) {
+          setShowBackupDialog(false);
+        }
+        if (!response.success) {
+          message(response.message, { title: "Backup Recovery", kind: "warning" });
+        }
+      } catch (error) {
+        message("Error recovering backup file", { title: "Backup Recovery", kind: "error" });
+      }
+    } else {
+      message("Backup recovery cancelled", { title: "Backup Recovery", kind: "warning" });
+    }
   };
 
   return (
@@ -165,7 +152,7 @@ export default function StartScreen() {
                 type={showPassword ? "text" : "password"}
               />
               <InputGroupAddon align="inline-end">
-                <InputGroupButton onClick={() => setShowPassword(!showPassword)}>
+                <InputGroupButton tabIndex={-1} onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 </InputGroupButton>
               </InputGroupAddon>
@@ -178,7 +165,12 @@ export default function StartScreen() {
               Select a folder
             </Label>
             <InputGroup>
-              <InputGroupInput placeholder={"Select a folder"} value={vaultFilePath ? vaultFilePath : ""} readOnly />
+              <InputGroupInput
+                tabIndex={-1}
+                placeholder={"Select a folder"}
+                value={vaultFilePath ? vaultFilePath : ""}
+                readOnly
+              />
               <InputGroupAddon>
                 <FolderIcon />
               </InputGroupAddon>
@@ -210,12 +202,20 @@ export default function StartScreen() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
+            {showBackupDialog && (
+              <Button
+                variant="outline"
+                onClick={handleExportBackup}
+                className="h-10 px-6 rounded-lg text-sm font-medium cursor-pointer transition-all"
+              >
+                Recover my backup
+              </Button>
+            )}
             <Button
               variant="link"
               onClick={handleImportVault}
               className="h-10 px-6 rounded-lg text-sm font-medium cursor-pointer transition-all"
             >
-              {/* <ImportIcon className="mr-2 h-4 w-4" /> */}
               Import Existing Vault
             </Button>
           </div>

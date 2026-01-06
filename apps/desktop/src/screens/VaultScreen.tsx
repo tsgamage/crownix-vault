@@ -28,6 +28,7 @@ import { useBlurAutoLock } from "@/hooks/use-blur-auto-lock";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { useFileStore } from "@/store/file.store";
 import useRegisterAllShortcuts from "@/hooks/use-register-all-shortcuts";
+import { AppRoutes } from "@/app/AppRouter";
 let permissionGranted = false;
 
 export default function VaultScreen() {
@@ -58,7 +59,7 @@ export default function VaultScreen() {
 
   useEffect(() => {
     if (!isUnlocked) {
-      navigate("/locked", { replace: true });
+      navigate(AppRoutes.locked, { replace: true });
     } else {
       resetUi();
       syncDB();

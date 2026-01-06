@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Loader2, Eye, EyeOff, Lock } from "lucide-react";
+import { ArrowRight, Loader2, EyeOffIcon, EyeIcon, LockIcon } from "lucide-react";
 import { useSessionStore } from "@/store/session.store";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 
 interface UnlockFormProps {
   isError: boolean;
@@ -12,18 +12,21 @@ interface UnlockFormProps {
 }
 
 export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
+  const isUnlocked = useSessionStore((state) => state.isUnlocked);
+
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const passwordRef = useRef<HTMLInputElement>(null);
   const canSubmit = password.length > 0 && !loading;
-  const isUnlocked = useSessionStore((state) => state.isUnlocked);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     setLoading(true);
-    // Prevent brute force attack
+
+    // Prevent spamming
     setTimeout(() => {
       onUnlock(password);
       setLoading(false);
@@ -36,45 +39,38 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
   return (
     <div className="w-full max-w-sm space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <form onSubmit={isUnlocked ? undefined : handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="unlock-password" className="text-muted-foreground ml-1 mb-2 block">
-            Master Password
-          </Label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
-              <Lock className="h-4 w-4" />
-            </div>
-            <Input
-              ref={passwordRef}
-              id="unlock-password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              className="pl-9 pr-10"
-              value={password}
-              onBlur={() => {
-                setIsError(false);
-              }}
-              onChange={(e) => {
-                setIsError(false);
-                setPassword(e.target.value);
-              }}
-              autoFocus
-              aria-invalid={isError}
-              disabled={loading || isUnlocked}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              tabIndex={-1}
-              className="absolute right-0 top-0 h-full w-10 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-            </Button>
-          </div>
-        </div>
+        <Label htmlFor="folder" className="text-muted-foreground ml-1 mb-2 block">
+          Master Password
+        </Label>
+        <InputGroup>
+          <InputGroupAddon>
+            <LockIcon className="h-4 w-4" />
+          </InputGroupAddon>
+          <InputGroupInput
+            ref={passwordRef}
+            id="unlock-password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your password"
+            className="pl-9 pr-10"
+            autoComplete="off"
+            value={password}
+            onBlur={() => {
+              setIsError(false);
+            }}
+            onChange={(e) => {
+              setIsError(false);
+              setPassword(e.target.value);
+            }}
+            aria-invalid={isError}
+            disabled={loading || isUnlocked}
+            autoFocus
+          />
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton tabIndex={-1} onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
 
         <Button
           type="submit"

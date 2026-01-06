@@ -17,7 +17,7 @@ export function SearchInput({
   onChange,
   placeholder = "Search...",
   className,
-  shortcut = "/",
+  shortcut = "k",
 }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 

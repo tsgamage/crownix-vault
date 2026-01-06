@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 import type { IVault } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
 import { invoke } from "@tauri-apps/api/core";
-import type { LoadAppSettingsResult } from "@/utils/types/backend.types";
+import type { AutoLoadVaultResult, LoadAppSettingsResult } from "@/utils/types/backend.types";
 import { Button } from "@/components/ui/button";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { AppRoutes } from "@/app/AppRouter";
 
 export default function UnlockScreen() {
   const navigate = useNavigate();
@@ -27,17 +28,33 @@ export default function UnlockScreen() {
   const setVaultFilePath = useFileStore((state) => state.setVaultFilePath);
   const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
+  const [isCheckingAutoLoadVault, setIsCheckingAutoLoadVault] = useState(true);
 
   const setAppSettings = useSettingsStore((state) => state.setAppSettings);
 
   useEffect(() => {
-    if (!vaultFile) {
-      navigate("/", { replace: true });
-    }
     if (isUnlocked) {
-      navigate("/vault", { replace: true });
+      navigate(AppRoutes.vault, { replace: true });
     }
-  }, [vaultFile, navigate, isUnlocked]);
+  }, [navigate, isUnlocked]);
+
+  useEffect(() => {
+    const autoLoadVault = async () => {
+      setIsCheckingAutoLoadVault(true);
+      const response: AutoLoadVaultResult = await invoke("auto_load_vault");
+      setIsCheckingAutoLoadVault(false);
+      if (response.success) {
+        setVaultFilePath(response.path);
+        setVaultFile(new Uint8Array(response.buffer));
+      } else if (response.backup) {
+        navigate(AppRoutes.setup, { replace: true, state: { isBackup: true } });
+      } else {
+        await invoke("clear_vault_config");
+        navigate(AppRoutes.setup, { replace: true });
+      }
+    };
+    autoLoadVault();
+  }, []);
 
   const handleUnlock = async (password: string) => {
     if (!vaultFile) return;
@@ -76,9 +93,11 @@ export default function UnlockScreen() {
       await invoke("clear_vault_config");
       setVaultFile(null);
       setVaultFilePath(null);
-      navigate("/", { replace: true });
+      navigate(AppRoutes.setup, { replace: true });
     }
   };
+
+  if (isCheckingAutoLoadVault) return null;
 
   return (
     <div
@@ -87,7 +106,6 @@ export default function UnlockScreen() {
       className="min-h-screen -mt-5 w-full flex flex-col items-center justify-center bg-background "
     >
       <main className="w-full max-w-md px-6 flex flex-col items-center gap-10 animate-in fade-in zoom-in-95 duration-500">
-        {/* Branding Section */}
         <div className="text-center space-y-4">
           <img className="mx-auto w-32 h-32 object-cover" src="/app_icon.png" alt="App Icon" />
 
@@ -97,7 +115,6 @@ export default function UnlockScreen() {
           </div>
         </div>
 
-        {/* Action Section */}
         <div className="w-full flex flex-col items-center gap-6">
           <UnlockForm onUnlock={handleUnlock} isError={isPasswordWrong} setIsError={setIsPasswordWrong} />
         </div>
