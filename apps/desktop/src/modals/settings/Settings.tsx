@@ -1,10 +1,11 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SettingsSection } from "./components/SettingsSection";
 import { type SettingsConfig } from "@/utils/types/global.types";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui.store";
+import { SettingsIcon } from "lucide-react";
 
 interface SettingsModalProps {
   config: SettingsConfig;
@@ -30,11 +31,15 @@ export function SettingsModal({ config, onSettingChange }: SettingsModalProps) {
   return (
     <Dialog open={isSettingsOpen} onOpenChange={() => setIsSettingsOpen(false)}>
       <DialogContent className="sm:max-w-4xl h-[80vh] flex flex-col p-0 overflow-hidden bg-background">
-        <DialogHeader className="px-6 py-6 border-b border-border/50 bg-muted/20 shrink-0">
-          <DialogTitle className="text-2xl font-semibold tracking-tight">Settings</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Manage your vault preferences and security options.
-          </DialogDescription>
+        <DialogHeader className="px-6 py-6 border-b border-border/50 bg-muted/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 shadow-sm mt-1">
+              <SettingsIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-semibold tracking-tight">Settings</DialogTitle>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">

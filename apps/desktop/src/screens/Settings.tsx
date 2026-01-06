@@ -9,9 +9,16 @@ import type { ISettingsGroupByOptions, ISettingsSortByOptions } from "@/utils/ty
 import { invoke } from "@tauri-apps/api/core";
 import { message } from "@tauri-apps/plugin-dialog";
 import { useEffect } from "react";
+import KeyboardModal from "@/modals/Keyboard/Keyboard";
+import { useKeyboardShortcutsModal } from "@/hooks/use-keyboard-shortcuts-modal";
 
 export default function Settings() {
   const { appSettings, setAppSettings, vaultSettings, setVaultSettings } = useSettingsStore();
+  const {
+    isOpen: isKeyboardOpen,
+    open: openKeyboard,
+    onOpenChange: onKeyboardOpenChange,
+  } = useKeyboardShortcutsModal();
   const { setTheme, theme } = useTheme();
   const debouncedVaultName = useDebounce(vaultSettings.vaultName, 2000);
   const debouncedAppSettings = useDebounce(appSettings as any, 2000);
@@ -26,10 +33,10 @@ export default function Settings() {
     saveAppSettings();
   }, [debouncedAppSettings]);
 
-  const syncFile = useFileStore((state) => state.syncFile);
+  const saveFile = useFileStore((state) => state.saveFile);
 
   useEffect(() => {
-    syncFile();
+    saveFile();
   }, [debouncedVaultName]);
 
   const INITIAL_SETTINGS_CONFIG: SettingsConfig = {
@@ -63,6 +70,13 @@ export default function Settings() {
             ],
             disabled: true,
           },
+          {
+            id: "shortcuts",
+            type: "button",
+            title: "Keyboard Shortcuts",
+            description: "Customize keyboard shortcuts",
+            actionLabel: "Open Keyboard Shortcuts",
+          },
         ],
       },
       {
@@ -83,13 +97,6 @@ export default function Settings() {
             description: "Automatically backup your vault (not available yet)",
             value: false,
             disabled: true,
-          },
-          {
-            id: "autoLock",
-            type: "toggle",
-            title: "Auto Lock",
-            description: "Lock the vault after a 15 minutes of inactivity",
-            value: appSettings.autoLock,
           },
           {
             id: "defaultGroupBy",
@@ -122,6 +129,11 @@ export default function Settings() {
   };
 
   const handleSettingsChange = (id: string, value: string) => {
+    if (id === "shortcuts") {
+      openKeyboard();
+      return;
+    }
+
     switch (id) {
       case "theme":
         setTheme(value as Theme);
@@ -134,5 +146,16 @@ export default function Settings() {
     }
   };
 
-  return <SettingsModal config={INITIAL_SETTINGS_CONFIG} onSettingChange={handleSettingsChange} />;
+  return (
+    <>
+      <SettingsModal config={INITIAL_SETTINGS_CONFIG} onSettingChange={handleSettingsChange} />
+      <KeyboardModal
+        isOpen={isKeyboardOpen}
+        onOpenChange={onKeyboardOpenChange}
+        onSave={(_shortcuts) => {
+          // console.log("Saving shortcuts:", shortcuts);
+        }}
+      />
+    </>
+  );
 }
