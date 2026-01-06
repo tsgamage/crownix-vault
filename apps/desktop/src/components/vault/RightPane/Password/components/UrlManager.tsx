@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Check, Copy, ExternalLink, Plus, Trash2, Globe } from "lucide-react";
 import { useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 interface UrlManagerProps {
   urls: string[];
@@ -28,6 +29,10 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
   };
   const removeUrl = (index: number) => {
     onChange(urls.filter((_, i) => i !== index));
+  };
+
+  const handleOpenUrl = async (url: string) => {
+    await openUrl(url);
   };
 
   // If viewing and no URLs, show fallback
@@ -80,16 +85,15 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
                   <div className="p-2 bg-blue-500/10 rounded-md text-blue-500">
                     <Globe className="w-4 h-4" />
                   </div>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Button
+                    variant={"link"}
                     title={url}
-                    className="text-sm text-blue-500 hover:underline truncate flex items-center gap-1 max-w-sm"
+                    className="text-sm text-blue-500 cursor-pointer hover:underline truncate flex items-center gap-1 max-w-sm"
+                    onClick={() => handleOpenUrl(url)}
                   >
                     {url}
                     <ExternalLink className="w-3 h-3 ml-1 opacity-50" />
-                  </a>
+                  </Button>
                 </div>
                 <Button
                   variant="ghost"
