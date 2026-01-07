@@ -7,7 +7,7 @@ import { VaultFileService } from "@/services/vaultFile.service";
 import { useFileStore } from "@/store/file.store";
 import { useSessionStore } from "@/store/session.store";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { IVault } from "@/utils/types/vault";
 import { useSettingsStore } from "@/store/vault/settings.store";
 import { invoke } from "@tauri-apps/api/core";
@@ -18,6 +18,7 @@ import { AppRoutes } from "@/app/AppRouter";
 
 export default function UnlockScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
@@ -27,16 +28,28 @@ export default function UnlockScreen() {
   const setVaultHeader = useFileStore((state) => state.setVaultHeader);
   const setVaultFilePath = useFileStore((state) => state.setVaultFilePath);
   const setVaultSettings = useSettingsStore((state) => state.setVaultSettings);
+
   const [isPasswordWrong, setIsPasswordWrong] = useState(false);
   const [isCheckingAutoLoadVault, setIsCheckingAutoLoadVault] = useState(true);
+  const [isChangedPassword, setIsChangedPassword] = useState(location.state?.isChangedPassword);
 
   const setAppSettings = useSettingsStore((state) => state.setAppSettings);
 
   useEffect(() => {
-    if (isUnlocked) {
+    // Checking this because we cannot set isUnlocked to false when password is changed.
+    // because it triggers the vault screen useEffect and moves user to lock screen
+    // So we are checking if isUnlocked is true and isChangedPassword is false
+
+    if (isUnlocked && !isChangedPassword) {
       navigate(AppRoutes.vault, { replace: true });
     }
-  }, [navigate, isUnlocked]);
+    if (isChangedPassword) {
+      // Set isCheckingAutoLoadVault to false to prevent returning null
+      setIsCheckingAutoLoadVault(false);
+      setIsUnlocked(false);
+      SessionService.lock();
+    }
+  }, [navigate, isUnlocked, isChangedPassword, isCheckingAutoLoadVault]);
 
   useEffect(() => {
     const autoLoadVault = async () => {
@@ -53,7 +66,9 @@ export default function UnlockScreen() {
         navigate(AppRoutes.setup, { replace: true });
       }
     };
-    autoLoadVault();
+
+    // Only check vault if not in password change mode. if not the loaded vault will be replaces the password changed vault
+    !isChangedPassword && autoLoadVault();
   }, []);
 
   const handleUnlock = async (password: string) => {
@@ -73,6 +88,8 @@ export default function UnlockScreen() {
 
       setVaultHeader(decryptedVaultFile.header);
       setIsUnlocked(true);
+      // Setting isChangedPassword to false to prevent not going to vault screen
+      setIsChangedPassword(false);
     } catch (err) {
       setIsPasswordWrong(true);
     }
@@ -99,6 +116,15 @@ export default function UnlockScreen() {
 
   if (isCheckingAutoLoadVault) return null;
 
+  function cancelChangePassword(): void {
+    setIsUnlocked(false);
+    SessionService.lock();
+    setIsChangedPassword(false);
+    setVaultFile(null);
+    setVaultFilePath(null);
+    navigate(AppRoutes.locked, { replace: true });
+  }
+
   return (
     <div
       onContextMenu={(e) => e.preventDefault()}
@@ -120,6 +146,15 @@ export default function UnlockScreen() {
         </div>
       </main>
       <div tabIndex={-1} className="absolute bottom-6 flex w-full max-w-md px-6 flex-col border-t border-border pt-5">
+        {isChangedPassword && (
+          <Button
+            variant="link"
+            onClick={cancelChangePassword}
+            className="h-10 px-6 rounded-lg text-sm font-medium cursor-pointer transition-all"
+          >
+            Cancel Change Password?
+          </Button>
+        )}
         <Button
           tabIndex={-1}
           variant="link"

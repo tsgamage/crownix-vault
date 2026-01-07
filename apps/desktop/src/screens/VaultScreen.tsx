@@ -7,7 +7,6 @@ import CategoryList from "@/components/vault/middlePane/CategoryList/CategoryLis
 import { PasswordDetail } from "@/components/vault/RightPane/Password/PasswordDetail";
 import { CreatePassword } from "@/components/vault/RightPane/Password/CreatePassword";
 import Settings from "./Settings";
-import { Toaster } from "sonner";
 
 import { useUiStore } from "@/store/ui.store";
 import { useSessionStore } from "@/store/session.store";
@@ -140,7 +139,6 @@ export default function VaultScreen() {
       draggable={false}
       className="h-screen w-full bg-background overflow-hidden"
     >
-      <Toaster theme="dark" richColors />
       <div className="flex h-full w-full">
         {isSettingsOpen && <Settings />}
 

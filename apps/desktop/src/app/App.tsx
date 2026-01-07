@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   // Block keyboard shortcuts
@@ -74,6 +75,7 @@ function App() {
 
   return (
     <Providers>
+      <Toaster theme="dark" richColors />
       <AppRouter />
     </Providers>
   );

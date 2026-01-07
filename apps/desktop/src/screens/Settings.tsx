@@ -11,6 +11,8 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { useEffect } from "react";
 import KeyboardModal from "@/modals/Keyboard/Keyboard";
 import { useKeyboardShortcutsModal } from "@/hooks/use-keyboard-shortcuts-modal";
+import PasswordChange from "@/modals/PasswordChange/PasswordChange";
+import { usePasswordChangeModal } from "@/hooks/use-password-change-modal";
 
 export default function Settings() {
   const { appSettings, setAppSettings, vaultSettings, setVaultSettings } = useSettingsStore();
@@ -19,9 +21,15 @@ export default function Settings() {
     open: openKeyboard,
     onOpenChange: onKeyboardOpenChange,
   } = useKeyboardShortcutsModal();
+  const {
+    isOpen: isPasswordChangeOpen,
+    open: openPasswordChange,
+    onOpenChange: setIsPasswordChangeOpen,
+  } = usePasswordChangeModal();
+
   const { setTheme, theme } = useTheme();
-  const debouncedVaultName = useDebounce(vaultSettings.vaultName, 2000);
-  const debouncedAppSettings = useDebounce(appSettings as any, 2000);
+  const debouncedVaultName = useDebounce(vaultSettings.vaultName, 1000);
+  const debouncedAppSettings = useDebounce(appSettings as any, 1000);
 
   useEffect(() => {
     async function saveAppSettings() {
@@ -77,6 +85,13 @@ export default function Settings() {
             description: "Customize keyboard shortcuts",
             actionLabel: "Open Keyboard Shortcuts",
           },
+          {
+            id: "changePassword",
+            type: "button",
+            title: "Change Password",
+            description: "Change your vault password",
+            actionLabel: "Change Password",
+          },
         ],
       },
       {
@@ -129,17 +144,18 @@ export default function Settings() {
   };
 
   const handleSettingsChange = (id: string, value: string) => {
-    if (id === "shortcuts") {
-      openKeyboard();
-      return;
-    }
-
     switch (id) {
       case "theme":
         setTheme(value as Theme);
         break;
       case "vaultName":
         setVaultSettings({ ...vaultSettings, [id]: value });
+        break;
+      case "shortcuts":
+        openKeyboard();
+        break;
+      case "changePassword":
+        openPasswordChange();
         break;
       default:
         setAppSettings({ ...appSettings, [id]: value });
@@ -156,6 +172,7 @@ export default function Settings() {
           // console.log("Saving shortcuts:", shortcuts);
         }}
       />
+      <PasswordChange isOpen={isPasswordChangeOpen} onOpenChange={setIsPasswordChangeOpen} />
     </>
   );
 }

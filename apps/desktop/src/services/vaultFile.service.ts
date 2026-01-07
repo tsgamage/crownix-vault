@@ -1,10 +1,7 @@
 import { CryptoService } from "./crypto.service";
 
 export class VaultFileService {
-  static async createVaultFile(
-    password: string,
-    vaultData: any
-  ): Promise<Uint8Array> {
+  static async createVaultFile(password: string, vaultData: any): Promise<Uint8Array> {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const key = await CryptoService.deriveKey(password, salt);
 
@@ -39,16 +36,9 @@ export class VaultFileService {
 
     const encryptedVault = fileBytes.slice(4 + headerLength);
 
-    const key = await CryptoService.deriveKey(
-      password,
-      CryptoService.base64ToBytes(header.salt)
-    );
+    const key = await CryptoService.deriveKey(password, CryptoService.base64ToBytes(header.salt));
 
-    const vault = await CryptoService.decryptJSON(
-      encryptedVault,
-      CryptoService.base64ToBytes(header.iv),
-      key
-    );
+    const vault = await CryptoService.decryptJSON(encryptedVault, CryptoService.base64ToBytes(header.iv), key);
 
     return { header, vault, key };
   }

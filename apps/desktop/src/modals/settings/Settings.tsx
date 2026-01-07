@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/store/ui.store";
 import { SettingsIcon } from "lucide-react";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface SettingsModalProps {
   config: SettingsConfig;
@@ -40,6 +41,7 @@ export function SettingsModal({ config, onSettingChange }: SettingsModalProps) {
               <DialogTitle className="text-xl font-semibold tracking-tight">Settings</DialogTitle>
             </div>
           </div>
+          <DialogDescription className="sr-only">Settings</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
