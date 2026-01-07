@@ -151,12 +151,30 @@ fn validate_vault_header(buffer: &[u8]) -> bool {
 }
 
 // =======================================================
-// 1️⃣ Pick vault folder (SCAN ONLY)
+// Pick vault folder (SCAN ONLY)
 // =======================================================
 
 #[command]
-pub fn pick_vault_folder(app: AppHandle) -> PickVaultFolderResult {
-    let Some(folder) = app.dialog().file().blocking_pick_folder() else {
+pub async fn pick_vault_folder(app: AppHandle) -> PickVaultFolderResult {
+    let handle = app.clone();
+    
+    // Spawn blocking operation on a separate thread to prevent UI freeze
+    let folder_task = tauri::async_runtime::spawn_blocking(move || {
+        handle.dialog().file().blocking_pick_folder()
+    });
+
+    let folder_opt = match folder_task.await {
+        Ok(res) => res,
+        Err(_) => return PickVaultFolderResult {
+            success: false,
+            file_path: None,
+            found: None,
+            multiple: None,
+            message: Some("Dialog thread failed".into()),
+        },
+    };
+
+    let Some(folder) = folder_opt else {
         return PickVaultFolderResult {
             success: false,
             file_path: None,
@@ -199,7 +217,7 @@ pub fn pick_vault_folder(app: AppHandle) -> PickVaultFolderResult {
 }
 
 // =======================================================
-// 2️⃣ Create vault file
+// Create vault file
 // =======================================================
 
 #[command]
@@ -222,17 +240,33 @@ pub fn create_vault_file(app: AppHandle, file_path: String, buffer: Vec<u8>) -> 
 }
 
 // =======================================================
-// 3️⃣ Pick existing vault file
+// Pick existing vault file
 // =======================================================
 
 #[command]
-pub fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
-    let Some(file) = app
-        .dialog()
-        .file()
-        .add_filter("Crownix Vault", &["cxv"])
-        .blocking_pick_file()
-    else {
+pub async fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
+    let handle = app.clone();
+
+    // Spawn blocking operation on a separate thread
+    let file_task = tauri::async_runtime::spawn_blocking(move || {
+        handle
+            .dialog()
+            .file()
+            .add_filter("Crownix Vault", &["cxv"])
+            .blocking_pick_file()
+    });
+
+    let file_opt = match file_task.await {
+        Ok(res) => res,
+        Err(_) => return PickVaultFileResult {
+            success: false,
+            buffer: None,
+            path: None,
+            message: Some("Dialog thread failed".into()),
+        },
+    };
+
+    let Some(file) = file_opt else {
         return PickVaultFileResult {
             success: false,
             buffer: None,
@@ -271,7 +305,7 @@ pub fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
 }
 
 // =======================================================
-// 4️⃣ Atomic save + SAFE backup
+// Atomic save + SAFE backup
 // =======================================================
 
 #[command]
@@ -311,7 +345,7 @@ pub fn save_vault_file_atomic(app: AppHandle, vault_path: String, buffer: Vec<u8
 }
 
 // =======================================================
-// 5️⃣ Auto-load vault
+// Auto-load vault
 // =======================================================
 
 #[command]
@@ -349,11 +383,11 @@ pub fn auto_load_vault(app: AppHandle) -> AutoLoadResult {
 }
 
 // =======================================================
-// 6️⃣ Export backup
+// Export backup
 // =======================================================
 
 #[command]
-pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
+pub async fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
     let Some(bak) = backup_path(&app) else {
         return ExportBackupResult {
             success: false,
@@ -370,7 +404,23 @@ pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
         };
     }
 
-    let Some(folder) = app.dialog().file().blocking_pick_folder() else {
+    let handle = app.clone();
+    
+    // Spawn blocking operation on a separate thread
+    let folder_task = tauri::async_runtime::spawn_blocking(move || {
+        handle.dialog().file().blocking_pick_folder()
+    });
+
+    let folder_opt = match folder_task.await {
+        Ok(res) => res,
+        Err(_) => return ExportBackupResult {
+            success: false,
+            backup_path: None,
+            message: Some("Dialog thread failed".into()),
+        },
+    };
+
+    let Some(folder) = folder_opt else {
         return ExportBackupResult {
             success: false,
             backup_path: None,
@@ -390,6 +440,7 @@ pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
+    
     let export_path = folder_path.join(format!("CrownixVault_backup_{}.cxv", ts));
 
     match fs::copy(&bak, &export_path) {
@@ -413,7 +464,7 @@ pub fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
 }
 
 // =======================================================
-// 7️⃣ App settings (NON-VAULT)
+// App settings (NON-VAULT)
 // =======================================================
 
 #[command]
@@ -473,7 +524,7 @@ pub fn load_app_settings(app: AppHandle) -> LoadSettingsResult {
 }
 
 // =======================================================
-// 8️⃣ Clear config
+// Clear config
 // =======================================================
 
 #[command]
