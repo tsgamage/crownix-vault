@@ -152,6 +152,7 @@ export default function StartScreen() {
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
                 type={showPassword ? "text" : "password"}
+                autoComplete="one-time-code"
               />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton tabIndex={-1} onClick={() => setShowPassword(!showPassword)}>
@@ -171,6 +172,7 @@ export default function StartScreen() {
                 tabIndex={-1}
                 placeholder={"Select a folder"}
                 value={vaultFilePath ? vaultFilePath : ""}
+                autoComplete="one-time-code"
                 readOnly
               />
               <InputGroupAddon>

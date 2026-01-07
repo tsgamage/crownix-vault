@@ -282,6 +282,7 @@ export function PasswordDetail({ backButton }: Props) {
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="text-lg font-bold h-9"
                     placeholder="Item Title"
+                    autoComplete="one-time-code"
                   />
                 ) : (
                   <h2 className="text-2xl font-bold tracking-tight truncate pr-2 max-w-58.75" title={formData.title}>
@@ -421,7 +422,7 @@ export function PasswordDetail({ backButton }: Props) {
                     readOnly={!isPasswordEditing}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className={cn("font-mono text-sm", !isPasswordEditing && "bg-muted/30 border-transparent")}
-                    autoComplete="off"
+                    autoComplete="one-time-code"
                   />
                 </div>
                 {!isPasswordEditing && (
@@ -452,6 +453,7 @@ export function PasswordDetail({ backButton }: Props) {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className={cn("font-mono text-sm pr-10", !isPasswordEditing && "bg-muted/30 border-transparent")}
                     maxLength={100}
+                    autoComplete="one-time-code"
                   />
                   {/* Eye Toggle (Only in View Mode) */}
                   {!isPasswordEditing && (

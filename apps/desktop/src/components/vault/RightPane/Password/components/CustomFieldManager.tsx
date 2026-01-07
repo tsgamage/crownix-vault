@@ -114,6 +114,7 @@ export function CustomFieldManager({ fields = [], isEditing, onChange }: CustomF
                 <Input
                   value={field.label}
                   onChange={(e) => updateField(field.id, { label: e.target.value })}
+                  autoComplete="one-time-code"
                   className="h-6 text-xs w-32 px-1 hover:border-input focus:border-ring transition-colors"
                 />
               ) : (
@@ -142,6 +143,7 @@ export function CustomFieldManager({ fields = [], isEditing, onChange }: CustomF
                   value={field.value}
                   readOnly={!isEditing}
                   onChange={(e) => updateField(field.id, { value: e.target.value })}
+                  autoComplete="one-time-code"
                   className={cn("font-mono text-sm pr-10", !isEditing && "bg-muted/30 border-transparent pl-3")}
                 />
               </div>

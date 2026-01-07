@@ -161,6 +161,7 @@ export default function CreateAndEditCategory() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="text-lg font-medium"
                 autoFocus
+                autoComplete="one-time-code"
               />
             </div>
 

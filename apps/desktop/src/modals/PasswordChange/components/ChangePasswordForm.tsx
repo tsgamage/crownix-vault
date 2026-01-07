@@ -48,6 +48,7 @@ export function ChangePasswordForm({ onCancel, onSubmit, isLoading }: ChangePass
               placeholder="Enter new password"
               className="pl-2"
               disabled={isLoading}
+              autoComplete="one-time-code"
             />
             <InputGroupButton onClick={() => setShowPassword(!showPassword)} type="button" tabIndex={-1}>
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -68,6 +69,7 @@ export function ChangePasswordForm({ onCancel, onSubmit, isLoading }: ChangePass
               placeholder="Confirm new password"
               className="pl-2"
               disabled={isLoading}
+              autoComplete="one-time-code"
             />
           </InputGroup>
         </div>

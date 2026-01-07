@@ -54,6 +54,7 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="text-sm placeholder:text-muted-foreground/50 h-full"
+        autoComplete="one-time-code"
       />
       <InputGroupAddon align="inline-end" className="gap-1.5">
         {value ? (

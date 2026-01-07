@@ -52,7 +52,7 @@ export function UnlockForm({ onUnlock, isError, setIsError }: UnlockFormProps) {
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             className="pl-9 pr-10"
-            autoComplete="off"
+            autoComplete="one-time-code"
             value={password}
             onBlur={() => {
               setIsError(false);

@@ -74,6 +74,7 @@ export function ShortcutItem({ shortcut, onUpdate }: ShortcutItemProps) {
               }}
               className="w-10 h-8 text-center text-xs uppercase p-0"
               maxLength={1}
+              autoComplete="one-time-code"
             />
 
             <div className="flex items-center gap-1 ml-2">

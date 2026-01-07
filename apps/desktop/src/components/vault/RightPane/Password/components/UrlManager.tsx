@@ -68,6 +68,7 @@ export function UrlManager({ urls = [], isEditing, onChange }: UrlManagerProps) 
                   onChange={(e) => updateUrl(index, e.target.value)}
                   placeholder="https://example.com"
                   className="font-mono text-sm h-9"
+                  autoComplete="one-time-code"
                 />
                 <Button
                   tabIndex={-1}

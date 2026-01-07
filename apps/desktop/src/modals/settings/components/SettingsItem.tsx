@@ -73,6 +73,7 @@ export function SettingsItem({ item, onChange }: SettingsItemProps) {
             placeholder={item.placeholder}
             className="max-w-50"
             disabled={item.disabled}
+            autoComplete="one-time-code"
           />
         );
 
