@@ -3,6 +3,7 @@ use std::{
     fs::{self, File},
     io::{Read, Write},
     path::{Path, PathBuf},
+    sync::atomic::{AtomicBool, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -11,12 +12,15 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
 // =======================================================
-// Constants
+// Constants & Globals
 // =======================================================
 
 const VAULT_FILE_NAME: &str = "CrownixVault.cxv";
 const MAGIC: &str = "CROWNIX_VAULT";
 const VERSION: u32 = 1;
+
+// Global lock to prevent multiple dialogs from opening at once
+static IS_DIALOG_OPEN: AtomicBool = AtomicBool::new(false);
 
 // =======================================================
 // Config model
@@ -156,23 +160,39 @@ fn validate_vault_header(buffer: &[u8]) -> bool {
 
 #[command]
 pub async fn pick_vault_folder(app: AppHandle) -> PickVaultFolderResult {
+    // Check if dialog is already open
+    if IS_DIALOG_OPEN.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+        return PickVaultFolderResult {
+            success: false,
+            file_path: None,
+            found: None,
+            multiple: None,
+            message: Some("A dialog is already open".into()),
+        };
+    }
+
     let handle = app.clone();
     
-    // Spawn blocking operation on a separate thread to prevent UI freeze
     let folder_task = tauri::async_runtime::spawn_blocking(move || {
         handle.dialog().file().blocking_pick_folder()
     });
 
     let folder_opt = match folder_task.await {
         Ok(res) => res,
-        Err(_) => return PickVaultFolderResult {
-            success: false,
-            file_path: None,
-            found: None,
-            multiple: None,
-            message: Some("Dialog thread failed".into()),
-        },
+        Err(_) => {
+            IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
+            return PickVaultFolderResult {
+                success: false,
+                file_path: None,
+                found: None,
+                multiple: None,
+                message: Some("Dialog thread failed".into()),
+            };
+        }
     };
+
+    // Release lock
+    IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
 
     let Some(folder) = folder_opt else {
         return PickVaultFolderResult {
@@ -245,9 +265,18 @@ pub fn create_vault_file(app: AppHandle, file_path: String, buffer: Vec<u8>) -> 
 
 #[command]
 pub async fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
+    // Check if dialog is already open
+    if IS_DIALOG_OPEN.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+        return PickVaultFileResult {
+            success: false,
+            buffer: None,
+            path: None,
+            message: Some("A dialog is already open".into()),
+        };
+    }
+
     let handle = app.clone();
 
-    // Spawn blocking operation on a separate thread
     let file_task = tauri::async_runtime::spawn_blocking(move || {
         handle
             .dialog()
@@ -258,13 +287,19 @@ pub async fn pick_existing_vault_file(app: AppHandle) -> PickVaultFileResult {
 
     let file_opt = match file_task.await {
         Ok(res) => res,
-        Err(_) => return PickVaultFileResult {
-            success: false,
-            buffer: None,
-            path: None,
-            message: Some("Dialog thread failed".into()),
-        },
+        Err(_) => {
+            IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
+            return PickVaultFileResult {
+                success: false,
+                buffer: None,
+                path: None,
+                message: Some("Dialog thread failed".into()),
+            };
+        }
     };
+
+    // Release lock
+    IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
 
     let Some(file) = file_opt else {
         return PickVaultFileResult {
@@ -404,21 +439,35 @@ pub async fn export_backup_vault(app: AppHandle) -> ExportBackupResult {
         };
     }
 
+    // Check if dialog is already open
+    if IS_DIALOG_OPEN.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+        return ExportBackupResult {
+            success: false,
+            backup_path: None,
+            message: Some("A dialog is already open".into()),
+        };
+    }
+
     let handle = app.clone();
     
-    // Spawn blocking operation on a separate thread
     let folder_task = tauri::async_runtime::spawn_blocking(move || {
         handle.dialog().file().blocking_pick_folder()
     });
 
     let folder_opt = match folder_task.await {
         Ok(res) => res,
-        Err(_) => return ExportBackupResult {
-            success: false,
-            backup_path: None,
-            message: Some("Dialog thread failed".into()),
-        },
+        Err(_) => {
+            IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
+            return ExportBackupResult {
+                success: false,
+                backup_path: None,
+                message: Some("Dialog thread failed".into()),
+            };
+        }
     };
+
+    // Release lock
+    IS_DIALOG_OPEN.store(false, Ordering::SeqCst);
 
     let Some(folder) = folder_opt else {
         return ExportBackupResult {
