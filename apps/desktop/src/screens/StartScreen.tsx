@@ -29,6 +29,7 @@ export default function StartScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showBackupDialog, setShowBackupDialog] = useState(isBackup);
+  const [backupShown, setBackupShown] = useState(false);
 
   useEffect(() => {
     if (vaultFile) {
@@ -36,7 +37,8 @@ export default function StartScreen() {
     }
   }, [vaultFile]);
 
-  if (showBackupDialog) {
+  if (showBackupDialog && !backupShown) {
+    setBackupShown(true);
     async function showDialog() {
       const response = await ask(
         "We couldn't find your original vault file, but we found a backup. Would you like to recover it??",

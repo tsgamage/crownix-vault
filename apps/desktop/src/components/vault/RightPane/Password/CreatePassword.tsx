@@ -289,6 +289,7 @@ export function CreatePassword() {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="user@example.com"
                 className="font-mono text-sm"
+                autoComplete="off"
               />
             </div>
 

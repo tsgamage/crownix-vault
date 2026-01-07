@@ -421,6 +421,7 @@ export function PasswordDetail({ backButton }: Props) {
                     readOnly={!isPasswordEditing}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className={cn("font-mono text-sm", !isPasswordEditing && "bg-muted/30 border-transparent")}
+                    autoComplete="off"
                   />
                 </div>
                 {!isPasswordEditing && (

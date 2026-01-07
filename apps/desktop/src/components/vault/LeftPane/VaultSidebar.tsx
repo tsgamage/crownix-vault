@@ -10,6 +10,7 @@ import { useSettingsStore } from "@/store/vault/settings.store";
 import { SessionService } from "@/services/session.service";
 import { useSessionStore } from "@/store/session.store";
 import { appConfig } from "@/utils/constraints";
+import { useFileStore } from "@/store/file.store";
 
 interface PinnedCategory extends IPasswordCategory {
   count?: number;
@@ -34,6 +35,8 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
 
   const vaultSettings = useSettingsStore((state) => state.vaultSettings);
   const setIsUnlocked = useSessionStore((state) => state.setIsUnlocked);
+
+  const setVaultFile = useFileStore((state) => state.setVaultFile);
 
   const mainNav = [
     { id: "all", label: "All Items", icon: LayoutGrid, count: totalPasswords },
@@ -62,6 +65,7 @@ export function VaultSidebar({ pinnedCategories = [] }: VaultSidebarProps) {
   const handleLockVault = () => {
     SessionService.lock();
     setIsUnlocked(false);
+    setVaultFile(null);
   };
 
   return (

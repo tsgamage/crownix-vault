@@ -37,6 +37,7 @@ export default function VaultScreen() {
   const isUnlocked = useSessionStore((state) => state.isUnlocked);
   const activeTabId = useUiStore((state) => state.activeTabId);
 
+  const setVaultFile = useFileStore((state) => state.setVaultFile);
   const syncDB = useUiStore((state) => state.syncDB);
   const saveFile = useFileStore((state) => state.saveFile);
   const resetUi = useUiStore((state) => state.resetUi);
@@ -113,6 +114,7 @@ export default function VaultScreen() {
     saveFile();
     if (vaultConfig.autoLock.enabled) {
       setIsUnlocked(false);
+      setVaultFile(null);
       SessionService.lock();
       if (permissionGranted) {
         sendNotification({
