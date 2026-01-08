@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Crownix Vault",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "identifier": "dev.crownix.vault",
   "build": {
     "frontendDist": "../dist",
@@ -16,7 +16,7 @@
         "title": "Crownix Vault",
         "width": 1050,
         "height": 750,
-        "resizable": true,
+        "resizable": false,
         "fullscreen": false,
         "devtools": false
       }

@@ -17,7 +17,6 @@ use tauri_plugin_opener::OpenerExt;
 
 const VAULT_FILE_NAME: &str = "CrownixVault.cxv";
 const MAGIC: &str = "CROWNIX_VAULT";
-const VERSION: u32 = 1;
 
 // Global lock to prevent multiple dialogs from opening at once
 static IS_DIALOG_OPEN: AtomicBool = AtomicBool::new(false);
@@ -151,7 +150,7 @@ fn validate_vault_header(buffer: &[u8]) -> bool {
         Err(_) => return false,
     };
 
-    header["magic"] == MAGIC && header["version"] == VERSION
+    header["magic"] == MAGIC
 }
 
 // =======================================================

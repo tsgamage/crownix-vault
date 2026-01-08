@@ -1,3 +1,4 @@
+import { appConfig } from "@/utils/constraints";
 import { CryptoService } from "./crypto.service";
 
 export class VaultFileService {
@@ -9,7 +10,7 @@ export class VaultFileService {
 
     const header = {
       magic: "CROWNIX_VAULT",
-      version: 1,
+      version: appConfig.appVersion,
       salt: CryptoService.bytesToBase64(salt),
       iv: CryptoService.bytesToBase64(iv),
     };

@@ -7,7 +7,7 @@ const vaultConfig = {
 
 const appConfig = {
   appName: "Crownix Vault",
-  appVersion: "1.0.0",
+  appVersion: "1.1.0",
 };
 
 export { vaultConfig, appConfig };
