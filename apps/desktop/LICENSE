@@ -4,36 +4,33 @@ Version 1.0
 Copyright (c) 2026 Crownix
 All rights reserved.
 
----
 
-## 1. PURPOSE
+1. PURPOSE
 
-This software is provided as **source-available** for the purpose of
-**transparency, security review, and trust building**.
+This software is provided as source-available for the purpose of
+transparency, security review, and trust building.
 
-This license is **not an open-source license** as defined by the Open Source
+This license is not an open-source license as defined by the Open Source
 Initiative (OSI).
 
 Access to the source code does not grant rights to modify, redistribute,
 or reuse the software beyond the permissions explicitly stated below.
 
----
 
-## 2. PERMISSIONS
+2. PERMISSIONS
 
 You are permitted to:
 
 - View, read, and review the source code for transparency and security auditing
-- Build and run the software **for personal, non-commercial use only**
+- Build and run the software for personal, non-commercial use only
 - Report bugs, issues, or security concerns to the maintainers
 
 No other rights are granted.
 
----
 
-## 3. RESTRICTIONS
+3. RESTRICTIONS
 
-You are **NOT permitted** to:
+You are NOT permitted to:
 
 - Modify the source code and distribute modified versions
 - Redistribute the source code or compiled binaries, publicly or privately
@@ -44,18 +41,16 @@ You are **NOT permitted** to:
 
 Any use outside the permitted scope is strictly prohibited.
 
----
 
-## 4. BINARY DISTRIBUTION
+4. BINARY DISTRIBUTION
 
-Official binaries are distributed **exclusively by Crownix**.
+Official binaries are distributed exclusively by Crownix.
 
 Third-party redistribution of compiled binaries, installers, or portable
 executables is not allowed.
 
----
 
-## 5. NO WARRANTY
+5. NO WARRANTY
 
 THIS SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
@@ -63,9 +58,8 @@ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
 THE SOFTWARE MAY CONTAIN BUGS, ERRORS, OR SECURITY LIMITATIONS.
 
----
 
-## 6. LIMITATION OF LIABILITY
+6. LIMITATION OF LIABILITY
 
 IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS, OR CONTRIBUTORS
 BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, INCLUDING BUT NOT
@@ -79,9 +73,8 @@ LIMITED TO:
 WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
 OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
 
----
 
-## 7. DATA RESPONSIBILITY
+7. DATA RESPONSIBILITY
 
 The user is solely responsible for:
 
@@ -92,16 +85,14 @@ The user is solely responsible for:
 Crownix is not responsible for lost, corrupted, or inaccessible user data
 under any circumstances.
 
----
 
-## 8. TERMINATION
+8. TERMINATION
 
 Any violation of this license automatically terminates all permissions
 granted under this license.
 
----
 
-## 9. CONTACT
+9. CONTACT
 
 For permissions beyond the scope of this license, please contact:
 
