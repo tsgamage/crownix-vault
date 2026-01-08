@@ -1,73 +1,140 @@
-# React + TypeScript + Vite
+# Crownix Vault — Source Code
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Crownix Vault is a local-first password manager focused on privacy, security, and transparency.
 
-Currently, two official plugins are available:
+This repository contains the **full source code** for the Crownix Vault desktop application.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Purpose of This Repository
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This repository exists to provide **full transparency** into how Crownix Vault works internally.
 
-## Expanding the ESLint configuration
+Users are encouraged to:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Review the encryption and security design
+- Audit password generation and analysis logic
+- Build the application themselves
+- Verify that no telemetry or hidden network activity exists
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+This repository is **not** intended for redistribution or derivative works.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Security Philosophy
+
+Crownix Vault follows a strict **local-first, zero-knowledge** model.
+
+### Vault Encryption
+
+- Vault data is encrypted using **AES-256-GCM**.
+- Each vault uses a **unique random salt**.
+- Encryption keys are derived from the master password using:
+
+  - PBKDF2
+  - SHA-256
+  - 200,000 iterations
+
+The master password is never stored or logged.
+
+### Vault File Format
+
+- Custom binary format
+- Header contains metadata (magic value, version, salt, IV)
+- Encrypted payload contains all vault data
+- Entire file is validated before loading
+
+### No Network Dependency
+
+- Vault operations are fully offline.
+- No passwords, keys, or metadata are sent over the network.
+- Network access is used only for update checks (via official releases).
+
+---
+
+## Password Generation & Analysis
+
+Crownix Vault includes a security-focused password engine designed for real-world use:
+
+- Cryptographically secure random generation
+- High-entropy passwords and passphrases
+- Pattern avoidance (keyboard walks, repetition, sequences)
+- Detection of weak, reused, or common passwords
+- Entropy-based scoring and vault health metrics
+
+All logic is implemented client-side and can be reviewed in this repository.
+
+---
+
+## Tech Stack
+
+- **Core**: Tauri v2 (Rust)
+- **Frontend**: React + TypeScript + Vite
+- **UI**: Tailwind CSS v4 + Shadcn
+- **State Management**: Zustand
+- **Database**: sql.js (in-memory)
+
+---
+
+## Building Locally
+
+### Requirements
+
+- Node.js (LTS recommended)
+- pnpm
+- Rust (stable)
+- Tauri prerequisites
+
+### Development
+
+```bash
+pnpm install
+pnpm desktop
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Production Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm build
+pnpm tauri build
 ```
+
+---
+
+## License
+
+Crownix Vault is released under the Crownix Source-Available License (SAL-1.0).
+This means:
+
+- The source code is publicly available for transparency and security review
+- You may build and run the software for personal, non-commercial use
+- You may not redistribute, modify, fork, or create derivative works
+- Commercial use, resale, or rebranding is not permitted
+- Third-party distribution of binaries is not allowed
+
+The software is provided “as is”, without any warranty.
+Crownix is not responsible for data loss, corruption, or misuse.
+
+See the [`LICENSE`](./LICENSE) file for full terms.
+
+---
+
+## Related Repositories
+
+- **Releases**: [https://github.com/tsgamage/crownix-vault-releases](https://github.com/tsgamage/crownix-vault-releases)
+
+---
+
+## Feedback
+
+Security issues, bugs, and suggestions can be reported via GitHub Issues.
+
+Constructive feedback is welcome.
+
+---
+
+<div align="center">
+  <sub>
+    Crownix Vault · Source Code Repository
+  </sub>
+</div>
